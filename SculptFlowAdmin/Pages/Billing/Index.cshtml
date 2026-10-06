@@ -1,0 +1,63 @@
+@page
+@model SculptFlowAdmin.Pages.Billing.IndexModel
+@{
+    ViewData["Title"] = "Billing accounts";
+    var a = Model.Accounts;
+    var cur = Model.Currency;
+}
+<div class="page-head">
+    <div><h1>Billing accounts</h1>
+        <div class="muted">Every clinic's plan, prepaid wallet and included credit. Billing rules and balances live in the main app; changes here go through its billing API.</div></div>
+    <div class="actions"><a class="btn" href="/Billing/Plans">Plans</a><a class="btn" href="/Billing/RateCards">Rate cards</a><a class="btn" href="/Billing/Report">Revenue report</a></div>
+</div>
+
+@if (Model.LoadError is null)
+{
+    <div class="grid grid-stats" style="margin-bottom:16px">
+        <div class="stat"><div class="label">Clinics</div><div class="value">@a.Count</div></div>
+        <div class="stat"><div class="label">Active subscriptions</div><div class="value">@a.Count(x => x.SubscriptionStatus == "active")</div></div>
+        <div class="stat @(a.Any(x => x.SubscriptionStatus == "past_due") ? "warn" : "")"><div class="label">Past due</div><div class="value">@a.Count(x => x.SubscriptionStatus == "past_due")</div></div>
+        <div class="stat"><div class="label">No plan</div><div class="value">@a.Count(x => x.SubscriptionStatus is null)</div></div>
+        <div class="stat"><div class="label">Wallets (total)</div><div class="value">@BillingUi.Money(a.Sum(x => x.WalletBalance)) <span class="muted small">@cur</span></div></div>
+        <div class="stat"><div class="label">Included credit left</div><div class="value">@BillingUi.Money(a.Sum(x => x.IncludedCreditBalance)) <span class="muted small">@cur</span></div></div>
+        <div class="stat"><div class="label">Reserved now</div><div class="value">@BillingUi.Money(a.Sum(x => x.ReservedAmount)) <span class="muted small">@cur</span></div></div>
+    </div>
+
+    <form class="filters" method="get">
+        <label>Clinic or plan<input name="q" value="@Model.Q" /></label>
+        <label>Subscription
+            <select name="status">
+                <option value="">All</option>
+                @foreach (var s in new[] { "active", "past_due", "cancelled", "expired" }) { <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option> }
+                <option value="none" selected="@(Model.Status == "none")">no plan</option>
+            </select>
+        </label>
+        <button class="btn" type="submit">Filter</button>
+    </form>
+
+    @if (Model.Shown.Count == 0)
+    {
+        <div class="card empty">No billing accounts match.</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <tr><th>Clinic</th><th>Plan</th><th>Subscription</th><th>Period ends</th><th class="num">Wallet</th><th class="num">Included credit</th><th class="num">Reserved</th></tr>
+                @foreach (var r in Model.Shown)
+                {
+                    <tr>
+                        <td><a href="/Billing/Clinic?id=@r.ClinicId">@r.ClinicName</a></td>
+                        <td>@(r.PlanCode ?? "—")</td>
+                        <td>@Ui.Badge(r.SubscriptionStatus ?? "none", r.SubscriptionStatus is null ? "no plan" : null)</td>
+                        <td class="small">@Ui.Time(r.CurrentPeriodEnd)</td>
+                        <td class="num @(r.WalletBalance < 0 ? "neg" : "")">@BillingUi.Money(r.WalletBalance)</td>
+                        <td class="num">@BillingUi.Money(r.IncludedCreditBalance)</td>
+                        <td class="num">@BillingUi.Money(r.ReservedAmount)</td>
+                    </tr>
+                }
+            </table>
+        </div>
+        <div class="small muted" style="margin-top:6px">Amounts in @cur.</div>
+    }
+}

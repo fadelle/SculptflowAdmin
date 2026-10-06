@@ -1,0 +1,73 @@
+@{
+    var path = Context.Request.Path.Value ?? "/";
+    string Active(string prefix) => (prefix == "/" ? path == "/" : path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@ViewData["Title"] · SculptFlow Admin</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<div class="shell">
+    <nav class="sidebar">
+        <div class="brand">SculptFlow</div>
+        <div class="brand-sub">Admin portal</div>
+        <a class="@Active("/")" href="/">Dashboard</a>
+
+        <div class="nav-group">Tenants</div>
+        <a class="@Active("/Clinics")" href="/Clinics">Clinics</a>
+        <a class="@Active("/Staff")" href="/Staff">Staff accounts</a>
+
+        <div class="nav-group">Patients</div>
+        <a class="@Active("/Leads")" href="/Leads">Leads</a>
+        <a class="@Active("/Conversations")" href="/Conversations">Conversations</a>
+        <a class="@Active("/Messages")" href="/Messages">Messages</a>
+        <a class="@Active("/Appointments")" href="/Appointments">Appointments</a>
+
+        <div class="nav-group">Billing</div>
+        <a class="@(path.Equals("/Billing", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/Billing/Clinic", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/Billing">Billing accounts</a>
+        <a class="@Active("/Billing/Plans")" href="/Billing/Plans">Plans</a>
+        <a class="@(path.StartsWith("/Billing/RateCards", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/Billing/Rates", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/Billing/RateCards">Rate cards</a>
+        <a class="@Active("/Billing/Report")" href="/Billing/Report">Revenue report</a>
+
+        <div class="nav-group">Setup</div>
+        <a class="@Active("/Channels")" href="/Channels">Channels &amp; integrations</a>
+        <a class="@Active("/Templates")" href="/Templates">WhatsApp templates</a>
+        <a class="@Active("/Campaigns")" href="/Campaigns">Campaigns</a>
+        <a class="@Active("/Procedures")" href="/Procedures">Procedures</a>
+        <a class="@Active("/Knowledge")" href="/Knowledge">Knowledge base</a>
+
+        <div class="nav-group">System</div>
+        <a class="@Active("/Events")" href="/Events">Event log</a>
+        <a class="@Active("/Audit")" href="/Audit">Admin audit log</a>
+        <a class="@Active("/Admins")" href="/Admins">Admin users</a>
+    </nav>
+    <div class="main">
+        <div class="topbar">
+            <span class="muted small">Internal tool. Changes apply to the live SculptFlow data.</span>
+            <span>
+                @AdminClaims.Name(User)
+                <form class="inline" method="post" action="/Logout"><button class="btn sm" type="submit">Sign out</button></form>
+            </span>
+        </div>
+        <div class="content">
+            @if (Model is SculptFlowAdmin.Pages.Shared.AdminPageModel m)
+            {
+                if (!string.IsNullOrEmpty(m.Flash)) { <div class="alert ok">@m.Flash</div> }
+                if (!string.IsNullOrEmpty(m.FlashError)) { <div class="alert err">@m.FlashError</div> }
+            }
+            @if (Model is SculptFlowAdmin.Pages.Shared.BillingPageModel b && !string.IsNullOrEmpty(b.LoadError))
+            {
+                <div class="alert err">@b.LoadError</div>
+            }
+            @RenderBody()
+        </div>
+    </div>
+</div>
+<script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>

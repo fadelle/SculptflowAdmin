@@ -1,0 +1,69 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var t = Model.Totals;
+    var max = Math.Max(1, Model.Daily.Max(d => d.Inbound + d.Ai + d.Staff));
+}
+<div class="page-head"><div><h1>Dashboard</h1><div class="muted">Everything across all clinics.</div></div></div>
+
+<div class="grid grid-stats" style="margin-bottom:16px">
+    <a class="stat" href="/Clinics"><div class="label">Clinics (active / all)</div><div class="value">@t.ActiveClinics <span class="muted small">/ @t.Clinics</span></div></a>
+    <a class="stat" href="/Staff"><div class="label">Active staff accounts</div><div class="value">@t.StaffUsers</div></a>
+    <a class="stat" href="/Leads"><div class="label">Leads (new in 7 days)</div><div class="value">@t.Leads.ToString("N0") <span class="muted small">+@t.LeadsLast7Days</span></div></a>
+    <a class="stat" href="/Conversations?mode=human&status=active"><div class="label">Open conversations with staff</div><div class="value">@t.ConversationsInHumanMode <span class="muted small">/ @t.Conversations</span></div></a>
+    <a class="stat" href="/Messages"><div class="label">Messages 24h / 7d</div><div class="value">@t.MessagesLast24h <span class="muted small">/ @t.MessagesLast7Days</span></div></a>
+    <div class="stat"><div class="label">AI replies / inbound (7d)</div><div class="value">@t.AiMessagesLast7Days <span class="muted small">/ @t.InboundLast7Days</span></div></div>
+    <a class="stat @(t.FailedMessagesLast7Days > 0 ? "warn" : "")" href="/Messages?failed=true"><div class="label">Failed sends (7d)</div><div class="value">@t.FailedMessagesLast7Days</div></a>
+    <a class="stat" href="/Appointments?upcoming=true"><div class="label">Upcoming appointments</div><div class="value">@t.UpcomingAppointments <span class="muted small">+@t.AppointmentsBookedLast7Days booked 7d</span></div></a>
+    <a class="stat" href="/Campaigns?status=running"><div class="label">Running campaigns</div><div class="value">@t.RunningCampaigns</div></a>
+    <a class="stat" href="/Channels"><div class="label">Connected channels</div><div class="value">@t.ConnectedChannels</div></a>
+    <a class="stat @(t.UnhealthyChannels + t.CalendarProblems > 0 ? "warn" : "")" href="/Channels?problems=true"><div class="label">Channel / calendar problems</div><div class="value">@(t.UnhealthyChannels + t.CalendarProblems)</div></a>
+    <a class="stat" href="/Knowledge"><div class="label">Knowledge documents</div><div class="value">@t.KnowledgeDocuments</div></a>
+</div>
+
+<div class="grid grid-2">
+    <div class="card">
+        <h2>Messages per day (last 14 days, UTC)</h2>
+        <div class="bars">
+            @foreach (var d in Model.Daily)
+            {
+                var total = d.Inbound + d.Ai + d.Staff;
+                <div class="col" title="@d.Day: @d.Inbound inbound, @d.Ai AI, @d.Staff staff, @d.Failed failed">
+                    <div class="bar ai" style="height:@(d.Ai * 100 / max)%"></div>
+                    <div class="bar" style="height:@((total - d.Ai) * 100 / max)%"></div>
+                    <div class="lbl">@d.Day.ToString("dd")</div>
+                </div>
+            }
+        </div>
+        <div class="small muted" style="margin-top:6px"><span class="badge purple">AI</span> <span class="badge green">customers + staff</span></div>
+    </div>
+
+    <div class="card">
+        <h2>Needs attention (@Model.Problems.Count)</h2>
+        @if (Model.Problems.Count == 0)
+        {
+            <div class="empty">Nothing broken right now.</div>
+        }
+        else
+        {
+            <table>
+                <tr><th>What</th><th>Clinic</th><th>Detail</th><th>When</th></tr>
+                @foreach (var p in Model.Problems.Take(15))
+                {
+                    <tr>
+                        <td>@Ui.Badge("error", p.Kind) <a href="@p.Link">@p.Title</a></td>
+                        <td><a href="/Clinics/Details?id=@p.ClinicId">@p.ClinicName</a></td>
+                        <td class="small">@Ui.Truncate(p.Detail, 120)</td>
+                        <td class="small">@Ui.Time(p.At)</td>
+                    </tr>
+                }
+            </table>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <h2>Newest clinics</h2>
+    <partial name="_ClinicTable" model="Model.RecentClinics" />
+</div>

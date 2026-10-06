@@ -1,0 +1,15 @@
+@model PagerModel
+@{
+    string Url(int page)
+    {
+        var q = Context.Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
+        q["p"] = page.ToString();
+        return "?" + string.Join("&", q.Where(kv => !string.IsNullOrEmpty(kv.Value))
+            .Select(kv => Uri.EscapeDataString(kv.Key) + "=" + Uri.EscapeDataString(kv.Value)));
+    }
+}
+<div class="pager">
+    <span class="muted small">@Model.Total.ToString("N0") total · page @Model.Page of @Model.Pages</span>
+    @if (Model.HasPrevious) { <a class="btn sm" href="@Url(Model.Page - 1)">Previous</a> }
+    @if (Model.HasNext) { <a class="btn sm" href="@Url(Model.Page + 1)">Next</a> }
+</div>

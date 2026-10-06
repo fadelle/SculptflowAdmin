@@ -1,0 +1,40 @@
+@page
+@model SculptFlowAdmin.Pages.Messages.IndexModel
+@{ ViewData["Title"] = "Messages"; }
+<div class="page-head"><div><h1>Messages</h1><div class="muted">Every message in every clinic. Use "Failed only" to find delivery problems.</div></div></div>
+<form class="filters" method="get">
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    <label>Sender
+        <select name="sender"><option value="">All</option>
+            @foreach (var s in new[] { "lead", "ai", "staff", "system" }) { <option value="@s" selected="@(s == Model.Sender)">@s</option> }
+        </select>
+    </label>
+    <label>Text contains<input name="q" value="@Model.Q" /></label>
+    <label>&nbsp;<span><input type="checkbox" name="failed" value="true" checked="@Model.Failed" /> Failed only</span></label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+@if (Model.Result.Items.Count == 0)
+{
+    <div class="card empty">No messages.</div>
+}
+else
+{
+<div class="table-wrap">
+<table>
+    <tr><th>When</th><th>Clinic</th><th>Channel</th><th>From</th><th>Message</th><th>Delivery</th></tr>
+    @foreach (var m in Model.Result.Items)
+    {
+        <tr>
+            <td class="small">@Ui.Time(m.CreatedAt)</td>
+            <td><a href="/Clinics/Details?id=@m.ClinicId">@m.ClinicName</a></td>
+            <td>@m.Channel</td>
+            <td>@Ui.Badge(m.SenderType) <span class="small muted">@m.Origin</span></td>
+            <td><a href="/Conversations/Details?id=@m.ConversationId">@Ui.Truncate(m.Content ?? "(no text)", 140)</a></td>
+            <td>@Ui.Badge(m.DeliveryStatus)
+                @if (m.FailureReason is not null || m.FailureCode is not null) { <div class="small" style="color:var(--red-text)">@m.FailureCode @m.FailureReason</div> }</td>
+        </tr>
+    }
+</table>
+</div>
+}
+<partial name="_Pager" model="PagerModel.From(Model.Result)" />

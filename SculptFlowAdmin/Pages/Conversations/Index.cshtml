@@ -1,0 +1,27 @@
+@page
+@model SculptFlowAdmin.Pages.Conversations.IndexModel
+@{ ViewData["Title"] = "Conversations"; }
+<div class="page-head"><div><h1>Conversations</h1><div class="muted">Every inbox thread across clinics, newest activity first.</div></div></div>
+<form class="filters" method="get">
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    <label>Channel
+        <select name="channel"><option value="">All</option>
+            @foreach (var c in ConversationChannel.All.OrderBy(x => x)) { <option value="@c" selected="@(c == Model.Channel)">@c</option> }
+        </select>
+    </label>
+    <label>Handled by
+        <select name="mode"><option value="">All</option>
+            <option value="ai" selected="@(Model.Mode == "ai")">AI</option>
+            <option value="human" selected="@(Model.Mode == "human")">Staff</option>
+            <option value="approval" selected="@(Model.Mode == "approval")">Approval</option>
+        </select>
+    </label>
+    <label>Status
+        <select name="status"><option value="">All</option>
+            @foreach (var s in new[] { "active", "closed", "archived" }) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
+        </select>
+    </label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+<partial name="_ConversationTable" model="Model.Result.Items" />
+<partial name="_Pager" model="PagerModel.From(Model.Result)" />

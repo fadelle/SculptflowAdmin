@@ -1,0 +1,24 @@
+@model IReadOnlyList<SculptFlowAdmin.Entities.Models.AdminAuditEntry>
+@if (Model.Count == 0)
+{
+    <div class="empty">No admin changes yet.</div>
+}
+else
+{
+<div class="table-wrap">
+<table>
+    <tr><th>When</th><th>Admin</th><th>Action</th><th>Record</th><th>Details</th></tr>
+    @foreach (var a in Model)
+    {
+        <tr>
+            <td class="small">@Ui.Time(a.CreatedAt)</td>
+            <td class="small">@a.AdminEmail</td>
+            <td>@a.Action</td>
+            <td class="small">@a.EntityType <span class="mono">@a.EntityId</span>
+                @if (a.ClinicId.HasValue) { <div><a href="/Clinics/Details?id=@a.ClinicId">clinic</a></div> }</td>
+            <td class="mono">@Ui.Truncate(a.Details, 300)</td>
+        </tr>
+    }
+</table>
+</div>
+}

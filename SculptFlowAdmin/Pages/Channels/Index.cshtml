@@ -1,0 +1,126 @@
+@page
+@model SculptFlowAdmin.Pages.Channels.IndexModel
+@{
+    ViewData["Title"] = "Channels & integrations";
+    string TabUrl(string tab) => $"?tab={tab}" + (Model.ClinicId.HasValue ? $"&clinicId={Model.ClinicId}" : "");
+}
+<div class="page-head">
+    <div><h1>Channels &amp; integrations</h1>
+        <div class="muted">Messaging connections, calendars and TikTok for every clinic. Main app WhatsApp provider: @Ui.Badge(Model.ActiveProvider)</div></div>
+</div>
+<div class="tabs">
+    <a class="@(Model.Tab == "messaging" ? "active" : "")" href="@TabUrl("messaging")">Messaging (@Model.Rows.Count)</a>
+    <a class="@(Model.Tab == "calendars" ? "active" : "")" href="@TabUrl("calendars")">Calendars (@Model.Calendars.Count)</a>
+    <a class="@(Model.Tab == "tiktok" ? "active" : "")" href="@TabUrl("tiktok")">TikTok (@Model.TikTok.Count)</a>
+</div>
+<form class="filters" method="get">
+    <input type="hidden" name="tab" value="@Model.Tab" />
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    @if (Model.Tab == "messaging")
+    {
+        <label>Channel
+            <select name="channel"><option value="">All</option>
+                @foreach (var c in ChannelType.All) { <option value="@c" selected="@(c == Model.Channel)">@c</option> }
+            </select>
+        </label>
+        <label>&nbsp;<span><input type="checkbox" name="problems" value="true" checked="@Model.Problems" /> Problems only</span></label>
+    }
+    <button class="btn" type="submit">Filter</button>
+</form>
+
+@if (Model.Tab == "messaging")
+{
+    if (Model.Rows.Count == 0) { <div class="card empty">No messaging connections.</div> }
+    else
+    {
+    <div class="table-wrap">
+    <table>
+        <tr><th>Clinic</th><th>Channel</th><th>Provider</th><th>Account / number</th><th>Status</th><th>Health</th><th>Last webhook</th><th>Updated</th></tr>
+        @foreach (var r in Model.Rows)
+        {
+            <tr>
+                <td><a href="/Clinics/Details?id=@r.ClinicId">@r.ClinicName</a></td>
+                <td><a href="/Channels/Details?id=@r.Id">@r.Channel</a></td>
+                <td>@Ui.Badge(r.Provider)</td>
+                <td>@r.DisplayName <div class="small muted mono">@r.SenderId</div></td>
+                <td>@Ui.Badge(r.Status) @if (r.WebhookStatus is not null) { <div class="small muted">webhook @r.WebhookStatus</div> }</td>
+                <td>@Ui.Badge(r.IsHealthy ? (r.HealthLevel ?? "healthy") : (r.HealthLevel ?? "problem"))
+                    @if (r.LastProblemMessage is not null || r.LastError is not null) { <div class="small" style="color:var(--red-text)">@Ui.Truncate(r.LastProblemMessage ?? r.LastError, 120)</div> }</td>
+                <td class="small">@Ui.Time(r.LastWebhookAt)</td>
+                <td class="small">@Ui.Time(r.UpdatedAt)</td>
+            </tr>
+        }
+    </table>
+    </div>
+    }
+}
+else if (Model.Tab == "calendars")
+{
+    if (Model.Calendars.Count == 0) { <div class="card empty">No calendar connections.</div> }
+    else
+    {
+    <div class="table-wrap">
+    <table>
+        <tr><th>Clinic</th><th>Provider</th><th>Account</th><th>Calendar</th><th>Status</th><th>Sync</th><th class="num">Failed syncs</th><th>Last synced</th><th></th></tr>
+        @foreach (var c in Model.Calendars)
+        {
+            <tr>
+                <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
+                <td>@c.Provider</td>
+                <td>@c.Account</td>
+                <td>@c.CalendarName</td>
+                <td>@Ui.Badge(c.Status) @if (!c.IsHealthy) { <div class="small" style="color:var(--red-text)">@c.LastProblemMessage</div> }</td>
+                <td>@Ui.YesNo(c.SyncEnabled, "on", "off")</td>
+                <td class="num">@c.FailedSyncs</td>
+                <td class="small">@Ui.Time(c.LastSyncedAt)</td>
+                <td class="actions">
+                    @if (c.Status == "connected")
+                    {
+                        <form method="post" asp-page-handler="CalendarSync" asp-route-tab="calendars">
+                            <input type="hidden" name="id" value="@c.Id" /><input type="hidden" name="enabled" value="@(!c.SyncEnabled ? "true" : "false")" />
+                            <button class="btn sm" type="submit">@(c.SyncEnabled ? "Pause sync" : "Resume sync")</button>
+                        </form>
+                        <form method="post" asp-page-handler="DisconnectCalendar" asp-route-tab="calendars">
+                            <input type="hidden" name="id" value="@c.Id" />
+                            <button class="btn sm danger" type="submit" data-confirm="Disconnect this calendar? The clinic will have to reconnect it.">Disconnect</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </table>
+    </div>
+    }
+}
+else
+{
+    if (Model.TikTok.Count == 0) { <div class="card empty">No TikTok connections.</div> }
+    else
+    {
+    <div class="table-wrap">
+    <table>
+        <tr><th>Clinic</th><th>Account</th><th>Status</th><th>Health</th><th>Token expires</th><th>Updated</th><th></th></tr>
+        @foreach (var t in Model.TikTok)
+        {
+            <tr>
+                <td><a href="/Clinics/Details?id=@t.ClinicId">@t.ClinicName</a></td>
+                <td>@t.DisplayName</td>
+                <td>@Ui.Badge(t.Status)</td>
+                <td>@Ui.Badge(t.IsHealthy ? "healthy" : "problem") <span class="small">@t.LastProblemMessage</span></td>
+                <td class="small">@Ui.Time(t.TokenExpiresAt)</td>
+                <td class="small">@Ui.Time(t.UpdatedAt)</td>
+                <td>
+                    @if (t.Status != "disconnected")
+                    {
+                        <form method="post" asp-page-handler="DisconnectTikTok" asp-route-tab="tiktok">
+                            <input type="hidden" name="id" value="@t.Id" />
+                            <button class="btn sm danger" type="submit" data-confirm="Disconnect this TikTok account?">Disconnect</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </table>
+    </div>
+    }
+}

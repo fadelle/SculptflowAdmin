@@ -1,0 +1,83 @@
+@page
+@model SculptFlowAdmin.Pages.Knowledge.IndexModel
+@{
+    ViewData["Title"] = "Knowledge base";
+    string TabUrl(string tab) => $"?tab={tab}" + (Model.ClinicId.HasValue ? $"&clinicId={Model.ClinicId}" : "");
+}
+<div class="page-head"><div><h1>Knowledge base</h1><div class="muted">What each clinic's AI answers from. Inactive documents are skipped by the AI's search.</div></div></div>
+<div class="tabs">
+    <a class="@(Model.Tab == "documents" ? "active" : "")" href="@TabUrl("documents")">Documents (@Model.Docs.Total)</a>
+    <a class="@(Model.Tab == "websites" ? "active" : "")" href="@TabUrl("websites")">Websites (@Model.Websites.Count)</a>
+</div>
+<form class="filters" method="get">
+    <input type="hidden" name="tab" value="@Model.Tab" />
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    @if (Model.Tab == "documents")
+    {
+        <label>Search<input name="q" value="@Model.Q" placeholder="Title or text" /></label>
+        <label>Status
+            <select name="active"><option value="">All</option>
+                <option value="true" selected="@(Model.Active == "true")">Active</option>
+                <option value="false" selected="@(Model.Active == "false")">Inactive</option>
+            </select>
+        </label>
+    }
+    <button class="btn" type="submit">Filter</button>
+</form>
+
+@if (Model.Tab == "documents")
+{
+    if (Model.Docs.Items.Count == 0) { <div class="card empty">No documents.</div> }
+    else
+    {
+    <div class="table-wrap">
+    <table>
+        <tr><th>Document</th><th>Clinic</th><th>Category</th><th>Source</th><th class="num">Chunks</th><th class="num">Characters</th><th>Status</th><th>Updated</th><th></th></tr>
+        @foreach (var d in Model.Docs.Items)
+        {
+            <tr>
+                <td><a href="/Knowledge/Details?id=@d.Id">@d.Title</a></td>
+                <td><a href="/Clinics/Details?id=@d.ClinicId">@d.ClinicName</a></td>
+                <td>@KnowledgeCategory.Label(d.Category)</td>
+                <td class="small">@d.SourceType @if (d.SourceUrl is not null) { <div class="muted">@Ui.Truncate(d.SourceUrl, 50)</div> }</td>
+                <td class="num">@d.Chunks</td>
+                <td class="num">@d.ContentLength.ToString("N0")</td>
+                <td>@Ui.Badge(d.IsActive ? "active" : "inactive")</td>
+                <td class="small">@Ui.Time(d.UpdatedAt)</td>
+                <td>
+                    <form method="post" asp-page-handler="SetActive" asp-route-clinicId="@Model.ClinicId" asp-route-q="@Model.Q" asp-route-p="@Model.PageNumber">
+                        <input type="hidden" name="id" value="@d.Id" /><input type="hidden" name="active" value="@(!d.IsActive ? "true" : "false")" />
+                        <button class="btn sm @(d.IsActive ? "danger" : "")" type="submit">@(d.IsActive ? "Deactivate" : "Activate")</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </table>
+    </div>
+    <partial name="_Pager" model="PagerModel.From(Model.Docs)" />
+    }
+}
+else
+{
+    if (Model.Websites.Count == 0) { <div class="card empty">No websites.</div> }
+    else
+    {
+    <div class="table-wrap">
+    <table>
+        <tr><th>Website</th><th>Clinic</th><th>Mode</th><th>Status</th><th class="num">Pages</th><th>Last scraped</th><th>Last error</th></tr>
+        @foreach (var w in Model.Websites)
+        {
+            <tr>
+                <td class="small">@w.StartUrl @if (!w.IsActive) { @Ui.Badge("inactive") }</td>
+                <td><a href="/Clinics/Details?id=@w.ClinicId">@w.ClinicName</a></td>
+                <td>@w.CrawlMode.Replace('_', ' ')</td>
+                <td>@Ui.Badge(w.Status)</td>
+                <td class="num">@w.Pages</td>
+                <td class="small">@Ui.Time(w.LastScrapedAt)</td>
+                <td class="small">@Ui.Truncate(w.LastError, 160)</td>
+            </tr>
+        }
+    </table>
+    </div>
+    }
+}

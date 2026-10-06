@@ -1,0 +1,60 @@
+@page
+@model SculptFlowAdmin.Pages.Billing.RateCardsModel
+@{
+    ViewData["Title"] = "Rate cards";
+}
+<div class="page-head">
+    <div><h1>Rate cards</h1>
+        <div class="muted">Prices for usage SculptFlow charges, with the provider's cost beside each. A clinic is priced by its own custom card first, then its plan's card, then the default card.</div></div>
+</div>
+
+@if (Model.LoadError is null)
+{
+    @if (!Model.Cards.Any(c => c.IsDefault && c.IsActive))
+    {
+        <div class="alert info">There's no active default card. Every charged message is refused until some card prices it, so create a default card and its rates before billing is switched on.</div>
+    }
+    @if (Model.Cards.Count > 0)
+    {
+        <div class="table-wrap" style="margin-bottom:16px">
+            <table>
+                <tr><th>Card</th><th>Used for</th><th class="num">Current rates</th><th>Status</th></tr>
+                @foreach (var c in Model.Cards.OrderByDescending(c => c.IsDefault).ThenBy(c => c.ClinicId is not null).ThenBy(c => c.Name))
+                {
+                    var plans = Model.Plans.Where(p => p.RateCardCode == c.Code).Select(p => p.Name).ToList();
+                    <tr>
+                        <td><a href="/Billing/Rates?code=@c.Code"><strong>@c.Name</strong></a> <div class="small muted mono">@c.Code</div>@if (c.Description is not null) { <div class="small muted">@c.Description</div> }</td>
+                        <td>
+                            @if (c.IsDefault) { @Ui.Badge("new", "default") }
+                            @if (c.ClinicId is not null) { <span>Custom prices for <a href="/Billing/Clinic?id=@c.ClinicId">@Model.ClinicName(c.ClinicId)</a></span> }
+                            @if (plans.Count > 0) { <span>Plans: @string.Join(", ", plans)</span> }
+                            @if (!c.IsDefault && c.ClinicId is null && plans.Count == 0) { <span class="muted">Not used by any plan yet</span> }
+                        </td>
+                        <td class="num">@c.CurrentRates</td>
+                        <td>@Ui.Badge(c.IsActive ? "active" : "inactive")</td>
+                    </tr>
+                }
+            </table>
+        </div>
+    }
+
+    <form class="card" method="post" asp-page-handler="Create">
+        <h2>New rate card</h2>
+        <div class="grid grid-2" style="gap:0 24px">
+            <div>
+                <div class="form-row"><label>Code (lowercase, e.g. default or pro-prices)</label><input name="code" required pattern="[a-z0-9_\-]+" /></div>
+                <div class="form-row"><label>Name</label><input name="name" required maxlength="100" /></div>
+                <div class="form-row"><label>Description (optional)</label><input name="description" maxlength="500" /></div>
+            </div>
+            <div>
+                <div class="form-row"><label>Custom prices for one clinic (optional)</label>
+                    <select name="clinicId"><option value="">No: a default or plan card</option>
+                        @foreach (var c in Model.Clinics) { <option value="@c.Id">@c.Name</option> }
+                    </select></div>
+                <div class="form-row"><label><input type="checkbox" name="isDefault" value="true" /> Make this the default card (replaces the current default)</label></div>
+                <p class="small muted">To use a card for a plan, pick it on the plan.</p>
+            </div>
+        </div>
+        <button class="btn primary" type="submit">Create card</button>
+    </form>
+}

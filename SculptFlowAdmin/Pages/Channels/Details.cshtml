@@ -1,0 +1,98 @@
+@page
+@model SculptFlowAdmin.Pages.Channels.DetailsModel
+@{
+    var r = Model.Row;
+    ViewData["Title"] = r.Channel + " · " + r.Clinic?.Name;
+    var provider = ChannelProvider.Of(r);
+}
+<div class="page-head">
+    <div>
+        <h1>@r.Channel @Ui.Badge(r.Status)</h1>
+        <div class="muted small"><a href="/Clinics/Details?id=@r.ClinicId">@r.Clinic?.Name</a> · <span class="mono">@r.Id</span></div>
+    </div>
+    @if (r.Status != ChannelIntegrationStatus.Disconnected)
+    {
+        <form method="post" asp-page-handler="Disconnect" asp-route-id="@r.Id">
+            <button class="btn danger" type="submit" data-confirm="Disconnect @r.Channel for @r.Clinic?.Name? Messages stop flowing until it's reconnected.">Disconnect</button>
+        </form>
+    }
+</div>
+
+@if (r.Channel == ChannelType.WhatsApp && provider == ChannelProvider.Infobip)
+{
+    <div class="card">
+        <h2>Infobip webhook URL</h2>
+        @if (Model.InfobipWebhookUrl is not null)
+        {
+            <p class="small muted">Paste this as the inbound message and delivery report URL of sender +@r.ProviderSenderId in the Infobip portal. It contains this connection's secret.</p>
+            <div class="mono" style="padding:8px;background:var(--surface-subtle);border-radius:6px">@Model.InfobipWebhookUrl</div>
+        }
+        else
+        {
+            <p class="muted">Not available. The connection must be connected, and MainApp:PublicBaseUrl must be set in the admin portal's config.</p>
+        }
+    </div>
+}
+
+<div class="grid grid-2">
+    <div class="card">
+        <h2>Connection</h2>
+        <dl class="kv">
+            <dt>Provider</dt><dd>@Ui.Badge(r.Channel == ChannelType.Telegram ? "telegram" : provider)</dd>
+            <dt>Display name</dt><dd>@r.DisplayName</dd>
+            <dt>Verified name</dt><dd>@r.VerifiedName</dd>
+            @if (r.ProviderSenderId is not null) { <dt>Sender number</dt><dd>+@r.ProviderSenderId</dd> }
+            @if (r.PhoneNumberId is not null) { <dt>Meta phone number id</dt><dd class="mono">@r.PhoneNumberId</dd> }
+            @if (r.WhatsAppBusinessId is not null) { <dt>WABA id</dt><dd class="mono">@r.WhatsAppBusinessId</dd> }
+            @if (r.MetaBusinessId is not null) { <dt>Meta business id</dt><dd class="mono">@r.MetaBusinessId</dd> }
+            @if (r.PageId is not null) { <dt>Page id</dt><dd class="mono">@r.PageId</dd> }
+            @if (r.InstagramBusinessId is not null) { <dt>Instagram business id</dt><dd class="mono">@r.InstagramBusinessId</dd> }
+            @if (r.TelegramBotUsername is not null) { <dt>Telegram bot</dt><dd>@@@r.TelegramBotUsername <span class="mono">@r.TelegramBotId</span></dd> }
+            @if (r.WebhookStatus is not null) { <dt>Webhook</dt><dd>@Ui.Badge(r.WebhookStatus) @Ui.Time(r.WebhookRegisteredAt)</dd> }
+            <dt>Has access token</dt><dd>@Ui.YesNo(!string.IsNullOrEmpty(r.AccessToken))</dd>
+            <dt>Last verified</dt><dd>@Ui.Time(r.LastVerifiedAt)</dd>
+            <dt>Last error</dt><dd>@r.LastError</dd>
+            <dt>Connected since</dt><dd>@Ui.Time(r.CreatedAt)</dd>
+            <dt>Updated</dt><dd>@Ui.Time(r.UpdatedAt)</dd>
+        </dl>
+    </div>
+    <div class="card">
+        <h2>Health</h2>
+        <dl class="kv">
+            <dt>Healthy</dt><dd>@Ui.YesNo(r.IsHealthy)</dd>
+            <dt>Health level</dt><dd>@Ui.Badge(r.HealthLevel)</dd>
+            <dt>Account status</dt><dd>@r.AccountStatus</dd>
+            <dt>Account review</dt><dd>@r.AccountReviewStatus</dd>
+            <dt>Phone quality</dt><dd>@r.PhoneQualityRating</dd>
+            <dt>Phone status</dt><dd>@r.PhoneStatus</dd>
+            <dt>Name status</dt><dd>@r.NameStatus</dd>
+            <dt>Last problem</dt><dd>@r.LastProblemCode @r.LastProblemMessage</dd>
+            <dt>Last webhook</dt><dd>@Ui.Time(r.LastWebhookAt)</dd>
+            <dt>Last health event</dt><dd>@Ui.Time(r.LastHealthEventAt)</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Health events (latest 100)</h2>
+    @if (Model.Events.Count == 0)
+    {
+        <div class="empty">No health events.</div>
+    }
+    else
+    {
+        <table>
+            <tr><th>When</th><th>Type</th><th>Severity</th><th>Status</th><th>Message</th></tr>
+            @foreach (var e in Model.Events)
+            {
+                <tr>
+                    <td class="small">@Ui.Time(e.OccurredAt)</td>
+                    <td>@e.EventType.Replace('_', ' ')</td>
+                    <td>@Ui.Badge(e.Severity)</td>
+                    <td>@e.Status</td>
+                    <td class="small">@e.Code @e.Message</td>
+                </tr>
+            }
+        </table>
+    }
+</div>

@@ -1,0 +1,17 @@
+@page
+@model SculptFlowAdmin.Pages.Clinics.IndexModel
+@{ ViewData["Title"] = "Clinics"; }
+<div class="page-head"><div><h1>Clinics</h1><div class="muted">Every tenant. Open one to edit it, switch it on or off, and see everything it owns.</div></div></div>
+<form class="filters" method="get">
+    <label>Search<input name="q" value="@Model.Q" placeholder="Name, slug or email" /></label>
+    <label>Status
+        <select name="active">
+            <option value="">All</option>
+            <option value="true" selected="@(Model.Active == "true")">Active</option>
+            <option value="false" selected="@(Model.Active == "false")">Inactive</option>
+        </select>
+    </label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+<partial name="_ClinicTable" model="Model.Result.Items" />
+<partial name="_Pager" model="PagerModel.From(Model.Result)" />

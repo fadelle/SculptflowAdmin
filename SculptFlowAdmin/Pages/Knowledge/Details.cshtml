@@ -1,0 +1,24 @@
+@page
+@model SculptFlowAdmin.Pages.Knowledge.DetailsModel
+@{
+    var d = Model.Doc;
+    ViewData["Title"] = d.Title;
+}
+<div class="page-head">
+    <div>
+        <h1>@d.Title @Ui.Badge(d.IsActive ? "active" : "inactive")</h1>
+        <div class="muted small"><a href="/Clinics/Details?id=@d.ClinicId">@d.Clinic?.Name</a> · @KnowledgeCategory.Label(d.Category) · @d.SourceType · updated @Ui.Time(d.UpdatedAt)</div>
+    </div>
+    <form method="post" asp-page-handler="SetActive" asp-route-id="@d.Id">
+        <input type="hidden" name="active" value="@(!d.IsActive ? "true" : "false")" />
+        <button class="btn @(d.IsActive ? "danger" : "primary")" type="submit">@(d.IsActive ? "Deactivate" : "Activate")</button>
+    </form>
+</div>
+<div class="card">
+    <dl class="kv" style="margin-bottom:12px">
+        @if (d.OriginalFileName is not null) { <dt>File</dt><dd>@d.OriginalFileName (@d.MimeType, @((d.FileSizeBytes ?? 0) / 1024) KB)</dd> }
+        @if (d.SourceUrl is not null) { <dt>Source URL</dt><dd>@d.SourceUrl</dd> }
+    </dl>
+    <p class="small muted">Read-only here. Editing text means re-embedding, which only the main app can do.</p>
+    <div style="white-space:pre-wrap">@d.Content</div>
+</div>

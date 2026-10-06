@@ -1,0 +1,25 @@
+@model IReadOnlyList<ConversationRow>
+@if (Model.Count == 0)
+{
+    <div class="empty">No conversations.</div>
+}
+else
+{
+<div class="table-wrap">
+<table>
+    <tr><th>Lead</th><th>Clinic</th><th>Channel</th><th>Handled by</th><th>Status</th><th class="num">Messages</th><th>Last message</th></tr>
+    @foreach (var c in Model)
+    {
+        <tr>
+            <td><a href="/Conversations/Details?id=@c.Id">@(string.IsNullOrWhiteSpace(c.LeadName) ? "(no name)" : c.LeadName)</a></td>
+            <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
+            <td>@c.Channel</td>
+            <td>@Ui.Badge(c.Mode, c.Mode == "ai" ? "AI" : c.Mode == "human" ? "staff" : c.Mode)</td>
+            <td>@Ui.Badge(c.Status)</td>
+            <td class="num">@c.MessageCount</td>
+            <td class="small">@Ui.Time(c.LastMessageAt) <span class="muted">@c.LastMessageDirection</span></td>
+        </tr>
+    }
+</table>
+</div>
+}

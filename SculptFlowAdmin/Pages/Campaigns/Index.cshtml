@@ -1,0 +1,42 @@
+@page
+@model SculptFlowAdmin.Pages.Campaigns.IndexModel
+@{ ViewData["Title"] = "Campaigns"; }
+<div class="page-head"><div><h1>Campaigns</h1><div class="muted">Outbound template campaigns across clinics, with delivery and reply counts.</div></div></div>
+<form class="filters" method="get">
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    <label>Status
+        <select name="status"><option value="">All</option>
+            @foreach (var s in CampaignStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
+        </select>
+    </label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+@if (Model.Result.Items.Count == 0)
+{
+    <div class="card empty">No campaigns.</div>
+}
+else
+{
+<div class="table-wrap">
+<table>
+    <tr><th>Campaign</th><th>Clinic</th><th>Status</th><th class="num">Audience</th><th class="num">Sent</th><th class="num">Delivered</th><th class="num">Read</th><th class="num">Replied</th><th class="num">Booked</th><th class="num">Failed</th><th>Started</th></tr>
+    @foreach (var c in Model.Result.Items)
+    {
+        <tr>
+            <td><a href="/Campaigns/Details?id=@c.Id">@c.Name</a><div class="small muted">@c.CampaignType.Replace('_', ' ') · @c.TemplateName</div></td>
+            <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
+            <td>@Ui.Badge(c.Status)</td>
+            <td class="num">@c.Recipients</td>
+            <td class="num">@c.Sent</td>
+            <td class="num">@c.Delivered</td>
+            <td class="num">@c.Read</td>
+            <td class="num">@c.Replied</td>
+            <td class="num">@c.Booked</td>
+            <td class="num">@c.Failed</td>
+            <td class="small">@Ui.Time(c.StartedAt ?? c.ScheduledAt)</td>
+        </tr>
+    }
+</table>
+</div>
+}
+<partial name="_Pager" model="PagerModel.From(Model.Result)" />

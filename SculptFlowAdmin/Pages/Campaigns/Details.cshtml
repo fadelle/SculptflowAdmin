@@ -1,0 +1,72 @@
+@page
+@model SculptFlowAdmin.Pages.Campaigns.DetailsModel
+@{
+    var c = Model.Campaign;
+    ViewData["Title"] = c.Name;
+}
+<div class="page-head">
+    <div>
+        <h1>@c.Name @Ui.Badge(c.Status)</h1>
+        <div class="muted small"><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a> · @c.CampaignType.Replace('_', ' ') on @c.Channel · template @c.TemplateName · created @Ui.Time(c.CreatedAt)</div>
+    </div>
+    @if (c.Status is not ("completed" or "cancelled"))
+    {
+        <form method="post" asp-page-handler="Cancel" asp-route-id="@c.Id">
+            <button class="btn danger" type="submit" data-confirm="Cancel this campaign? Recipients not yet sent will be skipped.">Cancel campaign</button>
+        </form>
+    }
+</div>
+
+<div class="grid grid-stats" style="margin-bottom:16px">
+    <div class="stat"><div class="label">Audience</div><div class="value">@c.Recipients</div></div>
+    <div class="stat"><div class="label">Sent</div><div class="value">@c.Sent</div></div>
+    <div class="stat"><div class="label">Delivered</div><div class="value">@c.Delivered</div></div>
+    <div class="stat"><div class="label">Read</div><div class="value">@c.Read</div></div>
+    <div class="stat"><div class="label">Replied</div><div class="value">@c.Replied</div></div>
+    <div class="stat"><div class="label">Booked</div><div class="value">@c.Booked</div></div>
+    <div class="stat @(c.Failed > 0 ? "warn" : "")"><div class="label">Failed</div><div class="value">@c.Failed</div></div>
+    <div class="stat"><div class="label">Skipped</div><div class="value">@c.Skipped</div></div>
+</div>
+<div class="card">
+    <dl class="kv">
+        <dt>Scheduled</dt><dd>@Ui.Time(c.ScheduledAt)</dd>
+        <dt>Started</dt><dd>@Ui.Time(c.StartedAt)</dd>
+        <dt>Completed</dt><dd>@Ui.Time(c.CompletedAt)</dd>
+    </dl>
+</div>
+
+<h2>Recipients</h2>
+<form class="filters" method="get">
+    <input type="hidden" name="id" value="@c.Id" />
+    <label>Status
+        <select name="status"><option value="">All</option>
+            @foreach (var s in CampaignRecipientStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
+        </select>
+    </label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+@if (Model.Recipients.Items.Count == 0)
+{
+    <div class="card empty">No recipients.</div>
+}
+else
+{
+<div class="table-wrap">
+<table>
+    <tr><th>Lead</th><th>Phone</th><th>Status</th><th>Reason</th><th>Sent</th><th>Replied</th><th>Booked</th></tr>
+    @foreach (var r in Model.Recipients.Items)
+    {
+        <tr>
+            <td><a href="/Leads/Details?id=@r.LeadId">@(string.IsNullOrWhiteSpace(r.LeadName) ? "(no name)" : r.LeadName)</a></td>
+            <td>@r.PhoneNumber</td>
+            <td>@Ui.Badge(r.Status)</td>
+            <td class="small">@(r.SkipReason ?? r.FailureReason)</td>
+            <td class="small">@Ui.Time(r.SentAt)</td>
+            <td class="small">@Ui.Time(r.RepliedAt)</td>
+            <td class="small">@Ui.Time(r.BookedAt)</td>
+        </tr>
+    }
+</table>
+</div>
+}
+<partial name="_Pager" model="PagerModel.From(Model.Recipients)" />

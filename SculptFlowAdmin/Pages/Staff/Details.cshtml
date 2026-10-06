@@ -1,0 +1,51 @@
+@page
+@model SculptFlowAdmin.Pages.Staff.DetailsModel
+@{
+    var s = Model.Staff;
+    ViewData["Title"] = s.FullName ?? s.Email;
+}
+<div class="page-head"><div><h1>@(s.FullName ?? s.Email)</h1><div class="muted small">@s.Email · <span class="mono">@s.UserId</span></div></div></div>
+
+<div class="grid grid-2">
+    <div class="card">
+        <h2>Account</h2>
+        <dl class="kv">
+            <dt>Clinic</dt><dd>@if (s.ClinicId.HasValue) { <a href="/Clinics/Details?id=@s.ClinicId">@s.ClinicName</a> } else { <span class="muted">none</span> }</dd>
+            <dt>Clinic membership</dt><dd>@Ui.Badge(s.MembershipActive ? "active" : "inactive")</dd>
+            <dt>Sign-in</dt><dd>@Ui.Badge(s.LoginLocked ? "locked" : "active", s.LoginLocked ? "locked" : "can sign in")</dd>
+            <dt>Email confirmed</dt><dd>@Ui.YesNo(s.EmailConfirmed)</dd>
+            <dt>Failed sign-ins</dt><dd>@s.AccessFailedCount</dd>
+            <dt>Sign-in methods</dt><dd>@(s.HasPassword ? "Password" : "") @(s.HasGoogleLogin ? "Google" : "")</dd>
+            <dt>Joined clinic</dt><dd>@Ui.Time(s.JoinedAt)</dd>
+        </dl>
+    </div>
+
+    <div class="card">
+        <h2>Access</h2>
+        <p class="small muted">Lock sign-in to stop new sign-ins (password and Google). A browser that is already signed in stays signed in until its cookie expires, because the main app doesn't re-check accounts yet; deactivate the membership too if access must stop now. Deactivating the membership keeps their login but removes them from the clinic, so they see no data.</p>
+        <div class="actions" style="margin-bottom:12px">
+            <form method="post" asp-page-handler="Lock" asp-route-id="@s.UserId">
+                <input type="hidden" name="locked" value="@(!s.LoginLocked ? "true" : "false")" />
+                @if (s.LoginLocked) { <button class="btn primary" type="submit">Unlock sign-in</button> }
+                else { <button class="btn danger" type="submit" data-confirm="Lock this account? They won't be able to sign in.">Lock sign-in</button> }
+            </form>
+            @if (s.MembershipId.HasValue)
+            {
+                <form method="post" asp-page-handler="Membership" asp-route-id="@s.UserId">
+                    <input type="hidden" name="active" value="@(!s.MembershipActive ? "true" : "false")" />
+                    @if (s.MembershipActive) { <button class="btn danger" type="submit" data-confirm="Remove this person from @s.ClinicName?">Deactivate membership</button> }
+                    else { <button class="btn" type="submit">Reactivate membership</button> }
+                </form>
+            }
+            <form method="post" asp-page-handler="EmailConfirmed" asp-route-id="@s.UserId">
+                <input type="hidden" name="confirmed" value="@(!s.EmailConfirmed ? "true" : "false")" />
+                <button class="btn" type="submit">@(s.EmailConfirmed ? "Mark email unconfirmed" : "Mark email confirmed")</button>
+            </form>
+        </div>
+
+        <form method="post" asp-page-handler="Password" asp-route-id="@s.UserId">
+            <div class="form-row"><label>Set a new password (min 8 characters)</label><input type="password" name="password" minlength="8" autocomplete="new-password" required /></div>
+            <button class="btn" type="submit" data-confirm="Replace this person's password?">Set password</button>
+        </form>
+    </div>
+</div>

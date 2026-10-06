@@ -1,0 +1,16 @@
+@page
+@model SculptFlowAdmin.Pages.Appointments.IndexModel
+@{ ViewData["Title"] = "Appointments"; }
+<div class="page-head"><div><h1>Appointments</h1><div class="muted">Times are shown in each clinic's own time zone. Changing a status here doesn't update the clinic's connected Google/Outlook calendar.</div></div></div>
+<form class="filters" method="get">
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    <label>Status
+        <select name="status"><option value="">All</option>
+            @foreach (var s in AppointmentStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option> }
+        </select>
+    </label>
+    <label>&nbsp;<span><input type="checkbox" name="upcoming" value="true" checked="@Model.Upcoming" /> Upcoming only</span></label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+<partial name="_AppointmentTable" model="Model.Result.Items" />
+<partial name="_Pager" model="PagerModel.From(Model.Result)" />

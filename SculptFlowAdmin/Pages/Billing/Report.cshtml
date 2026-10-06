@@ -1,0 +1,69 @@
+@page
+@model SculptFlowAdmin.Pages.Billing.ReportModel
+@{
+    ViewData["Title"] = "Revenue report";
+    var r = Model.Report;
+    var cur = r?.Currency ?? "";
+    string GroupUrl(string g) => $"?from={Model.From}&to={Model.To}&groupBy={g}";
+}
+<div class="page-head">
+    <div><h1>Revenue report</h1>
+        <div class="muted">SculptFlow's billing revenue and costs for a period (dates in UTC). Usage counts only what counted at the provider.</div></div>
+</div>
+
+<form class="filters" method="get">
+    <label>From<input type="date" name="from" value="@Model.From" /></label>
+    <label>To (inclusive)<input type="date" name="to" value="@Model.To" /></label>
+    <input type="hidden" name="groupBy" value="@Model.GroupBy" />
+    <button class="btn" type="submit">Show</button>
+</form>
+
+@if (r is not null)
+{
+    var totalRevenue = r.UsageRevenue + r.SubscriptionRevenue;
+    <div class="grid grid-stats" style="margin-bottom:16px">
+        <div class="stat"><div class="label">Subscription revenue</div><div class="value">@BillingUi.Money(r.SubscriptionRevenue)</div><div class="small muted">@cur</div></div>
+        <div class="stat"><div class="label">Usage revenue</div><div class="value">@BillingUi.Money(r.UsageRevenue)</div><div class="small muted">@cur, after refunds</div></div>
+        <div class="stat"><div class="label">Provider cost paid by SculptFlow</div><div class="value">@BillingUi.Money(r.ProviderCostPaidBySculptFlow)</div><div class="small muted">@cur</div></div>
+        <div class="stat @(r.Margin < 0 ? "warn" : "")"><div class="label">Usage margin</div><div class="value">@BillingUi.Money(r.Margin)</div><div class="small muted">usage revenue − cost SculptFlow paid</div></div>
+        <div class="stat"><div class="label">Provider cost paid by clinics</div><div class="value">@BillingUi.Money(r.ProviderCostPaidExternally)</div><div class="small muted">estimate, not SculptFlow money</div></div>
+        <div class="stat"><div class="label">Wallet top-ups</div><div class="value">@BillingUi.Money(r.TopUps)</div><div class="small muted">cash received</div></div>
+        <div class="stat"><div class="label">Total revenue</div><div class="value">@BillingUi.Money(totalRevenue)</div><div class="small muted">subscriptions + usage</div></div>
+    </div>
+
+    <div class="tabs">
+        <a class="@(Model.GroupBy == "clinic" ? "active" : "")" href="@GroupUrl("clinic")">By clinic</a>
+        <a class="@(Model.GroupBy == "channel" ? "active" : "")" href="@GroupUrl("channel")">By channel</a>
+        <a class="@(Model.GroupBy == "event" ? "active" : "")" href="@GroupUrl("event")">By event type</a>
+        <a class="@(Model.GroupBy == "who_pays" ? "active" : "")" href="@GroupUrl("who_pays")">By who pays the provider</a>
+    </div>
+
+    var groups = Model.Groups();
+    @if (groups.Count == 0)
+    {
+        <div class="card empty">No usage in this period.</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <tr><th>@(Model.GroupBy switch { "channel" => "Channel", "event" => "Event type", "who_pays" => "Who pays the provider", _ => "Clinic" })</th>
+                    <th class="num">Count</th><th class="num">Quantity</th><th class="num">Usage revenue</th><th class="num">Provider cost</th><th class="num">Margin</th></tr>
+                @foreach (var g in groups)
+                {
+                    <tr>
+                        <td>@if (g.ClinicId is not null) { <a href="/Billing/Clinic?id=@g.ClinicId">@g.Label</a> } else { @g.Label }</td>
+                        <td class="num">@g.Count.ToString("N0")</td>
+                        <td class="num">@BillingUi.Number(g.Quantity)</td>
+                        <td class="num">@BillingUi.Money(g.Revenue)</td>
+                        <td class="num">@BillingUi.Money(g.ProviderCost)</td>
+                        <td class="num @(g.Margin < 0 ? "neg" : "")">@BillingUi.Money(g.Margin)</td>
+                    </tr>
+                }
+                <tr><th>Total (@cur)</th><th class="num">@groups.Sum(g => g.Count).ToString("N0")</th><th class="num">@BillingUi.Number(groups.Sum(g => g.Quantity))</th>
+                    <th class="num">@BillingUi.Money(groups.Sum(g => g.Revenue))</th><th class="num">@BillingUi.Money(groups.Sum(g => g.ProviderCost))</th><th class="num">@BillingUi.Money(groups.Sum(g => g.Margin))</th></tr>
+            </table>
+        </div>
+        <div class="small muted" style="margin-top:6px">Provider cost includes cost clinics paid directly (where known); margin only subtracts cost SculptFlow paid.</div>
+    }
+}

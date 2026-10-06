@@ -1,0 +1,43 @@
+@page
+@model SculptFlowAdmin.Pages.Admins.IndexModel
+@{ ViewData["Title"] = "Admin users"; }
+<div class="page-head"><div><h1>Admin users</h1><div class="muted">People who can sign in to this portal. Separate from clinic staff accounts.</div></div></div>
+
+<div class="table-wrap" style="margin-bottom:16px">
+<table>
+    <tr><th>Name</th><th>Email</th><th>Status</th><th>Last sign-in</th><th>Set password</th><th></th></tr>
+    @foreach (var a in Model.Admins)
+    {
+        <tr>
+            <td>@a.FullName @if (a.Id == Model.Me) { <span class="badge blue">you</span> }</td>
+            <td>@a.Email</td>
+            <td>@Ui.Badge(a.IsActive ? "active" : "inactive") @if (a.LockedUntil > DateTimeOffset.UtcNow) { @Ui.Badge("locked", "locked out") }</td>
+            <td class="small">@Ui.Time(a.LastLoginAt)</td>
+            <td>
+                <form class="actions" method="post" asp-page-handler="Password">
+                    <input type="hidden" name="id" value="@a.Id" />
+                    <input type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" placeholder="New password" autocomplete="new-password" required />
+                    <button class="btn sm" type="submit">Set</button>
+                </form>
+            </td>
+            <td>
+                @if (a.Id != Model.Me)
+                {
+                    <form method="post" asp-page-handler="SetActive">
+                        <input type="hidden" name="id" value="@a.Id" /><input type="hidden" name="active" value="@(!a.IsActive ? "true" : "false")" />
+                        <button class="btn sm @(a.IsActive ? "danger" : "")" type="submit" data-confirm="@(a.IsActive ? "Remove portal access for " + a.Email + "?" : "Restore access?")">@(a.IsActive ? "Deactivate" : "Activate")</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+</table>
+</div>
+
+<form class="card" method="post" asp-page-handler="Create" style="max-width:520px">
+    <h2>Add an admin</h2>
+    <div class="form-row"><label>Full name</label><input name="fullName" required /></div>
+    <div class="form-row"><label>Email</label><input type="email" name="email" required /></div>
+    <div class="form-row"><label>Password (min @AdminAuthService.MinPasswordLength characters)</label><input type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /></div>
+    <button class="btn primary" type="submit">Add admin</button>
+</form>

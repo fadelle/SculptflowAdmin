@@ -1,0 +1,15 @@
+@page
+@model SculptFlowAdmin.Pages.Events.IndexModel
+@{ ViewData["Title"] = "Event log"; }
+<div class="page-head"><div><h1>Event log</h1><div class="muted">The main app's activity log (the events table): leads, bookings, handoffs, sends, webhook events.</div></div></div>
+<form class="filters" method="get">
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    <label>Event
+        <select name="type"><option value="">All</option>
+            @foreach (var t in Model.Types) { <option value="@t" selected="@(t == Model.Type)">@t.Replace('_', ' ')</option> }
+        </select>
+    </label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+<partial name="_EventTable" model="Model.Result.Items" />
+<partial name="_Pager" model="PagerModel.From(Model.Result)" />

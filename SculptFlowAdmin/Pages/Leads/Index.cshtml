@@ -1,0 +1,45 @@
+@page
+@model SculptFlowAdmin.Pages.Leads.IndexModel
+@{ ViewData["Title"] = "Leads"; }
+<div class="page-head"><div><h1>Leads</h1><div class="muted">Patients and prospects across every clinic.</div></div></div>
+<form class="filters" method="get">
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    <label>Status
+        <select name="status">
+            <option value="">All</option>
+            @foreach (var s in LeadStatus.All.OrderBy(x => x))
+            {
+                <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option>
+            }
+        </select>
+    </label>
+    <label>Search<input name="q" value="@Model.Q" placeholder="Name, phone or email" /></label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+@if (Model.Result.Items.Count == 0)
+{
+    <div class="card empty">No leads.</div>
+}
+else
+{
+<div class="table-wrap">
+<table>
+    <tr><th>Lead</th><th>Clinic</th><th>Status</th><th>Qualification</th><th>Procedure</th><th>Source</th><th>Marketing</th><th>Last contact</th><th>Created</th></tr>
+    @foreach (var l in Model.Result.Items)
+    {
+        <tr>
+            <td><a href="/Leads/Details?id=@l.Id">@(string.IsNullOrWhiteSpace(l.Name) ? "(no name)" : l.Name)</a><div class="small muted">@l.Phone @l.Email</div></td>
+            <td><a href="/Clinics/Details?id=@l.ClinicId">@l.ClinicName</a></td>
+            <td>@Ui.Badge(l.Status)</td>
+            <td>@Ui.Badge(l.QualificationStatus)</td>
+            <td>@l.ProcedureName</td>
+            <td class="small">@l.Source</td>
+            <td>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</td>
+            <td class="small">@Ui.Time(l.LastContactAt)</td>
+            <td class="small">@Ui.Time(l.CreatedAt)</td>
+        </tr>
+    }
+</table>
+</div>
+}
+<partial name="_Pager" model="PagerModel.From(Model.Result)" />

@@ -1,0 +1,380 @@
+@page
+@model SculptFlowAdmin.Pages.Billing.ClinicModel
+@{
+    var o = Model.Overview;
+    var s = o?.Summary;
+    var sub = o?.Subscription;
+    var cur = Model.Currency;
+    ViewData["Title"] = (o?.ClinicName ?? "Clinic") + " · Billing";
+    string TabUrl(string tab) => $"?id={Model.Id}&tab={tab}";
+}
+<div class="page-head">
+    <div>
+        <h1>@(o?.ClinicName ?? "Clinic") <span class="muted">· Billing</span></h1>
+        @if (s is not null)
+        {
+            <div class="muted small">
+                <a href="/Clinics/Details?id=@Model.Id">Clinic details</a> ·
+                Billing in the main app is @Ui.Badge(s.BillingEnabled ? "active" : "paused", s.BillingEnabled ? "on" : "off")
+                @if (!s.BillingEnabled) { <span>(plans and wallets can be set up; nothing is charged yet)</span> }
+                · Ledger @Ui.Badge(o!.Reconciliation.IsBalanced ? "healthy" : "error", o.Reconciliation.IsBalanced ? "balanced" : "NOT balanced")
+            </div>
+        }
+    </div>
+</div>
+
+@if (o is not null && s is not null)
+{
+    <div class="tabs">
+        <a class="@(Model.Tab == "overview" ? "active" : "")" href="@TabUrl("overview")">Overview</a>
+        <a class="@(Model.Tab == "usage" ? "active" : "")" href="@TabUrl("usage")">Usage records</a>
+        <a class="@(Model.Tab == "ledger" ? "active" : "")" href="@TabUrl("ledger")">Ledger</a>
+    </div>
+
+    @if (Model.Tab == "overview")
+    {
+        <div class="grid grid-stats" style="margin-bottom:16px">
+            <div class="stat"><div class="label">Plan</div><div class="value" style="font-size:18px">@(s.PlanName ?? "No plan")</div>
+                @if (s.PlanPrice is not null) { <div class="small muted">@BillingUi.Money(s.PlanPrice, cur) per @s.BillingPeriod</div> }</div>
+            <div class="stat @(s.SubscriptionStatus is "past_due" or "expired" ? "warn" : "")"><div class="label">Subscription</div><div class="value" style="font-size:18px">@Ui.Badge(s.SubscriptionStatus ?? "none", s.SubscriptionStatus is null ? "none" : null)</div>
+                <div class="small muted">@(s.HasAccess ? "features available" : "features blocked")</div></div>
+            <div class="stat @(s.WalletBalance < 0 ? "warn" : "")"><div class="label">Wallet</div><div class="value">@BillingUi.Money(s.WalletBalance)</div><div class="small muted">@cur</div></div>
+            <div class="stat"><div class="label">Included credit left</div><div class="value">@BillingUi.Money(s.IncludedCreditRemaining)</div><div class="small muted">of @BillingUi.Money(s.PlanIncludedCredit, cur) this period</div></div>
+            <div class="stat"><div class="label">Reserved</div><div class="value">@BillingUi.Money(s.ReservedAmount)</div><div class="small muted">@o.OpenReservations open</div></div>
+            <div class="stat @(s.Spendable <= 0 ? "warn" : "")"><div class="label">Spendable</div><div class="value">@BillingUi.Money(s.Spendable)</div><div class="small muted">wallet + credit − reserved</div></div>
+        </div>
+
+        <div class="grid grid-2">
+            <div>
+                <div class="card">
+                    <h2>Subscription</h2>
+                    @if (sub is null)
+                    {
+                        <div class="empty">No subscription. Start a plan below.</div>
+                    }
+                    else
+                    {
+                        <dl class="kv" style="margin-bottom:12px">
+                            <dt>Plan</dt><dd>@sub.PlanName <span class="muted small mono">@sub.PlanCode</span></dd>
+                            <dt>Status</dt><dd>@Ui.Badge(sub.Status) @if (sub.CancelAtPeriodEnd) { @Ui.Badge("pending", "ends at period end") }</dd>
+                            <dt>Current period</dt><dd>@Ui.Time(sub.CurrentPeriodStart) → @Ui.Time(sub.CurrentPeriodEnd)</dd>
+                            @if (sub.PastDueSince is not null) { <dt>Past due since</dt><dd>@Ui.Time(sub.PastDueSince) · grace ends @Ui.Time(s.GraceEndsAt)</dd> }
+                            @if (sub.EndedAt is not null) { <dt>Ended</dt><dd>@Ui.Time(sub.EndedAt)</dd> }
+                            @if (o.CustomRateCardCode is not null) { <dt>Custom prices</dt><dd><a href="/Billing/Rates?code=@o.CustomRateCardCode">@o.CustomRateCardCode</a></dd> }
+                        </dl>
+                        <div class="actions">
+                            @if (sub.Status is "active" or "past_due")
+                            {
+                                @if (sub.CancelAtPeriodEnd)
+                                {
+                                    <form method="post" asp-page-handler="Resume" asp-route-id="@Model.Id"><button class="btn sm" type="submit">Keep renewing</button></form>
+                                }
+                                <form method="post" asp-page-handler="Renew" asp-route-id="@Model.Id"><button class="btn sm" type="submit" title="Run the renewal check now (e.g. right after a top-up for a past-due clinic)">Run renewal now</button></form>
+                            }
+                        </div>
+                        @if (sub.Status is "active" or "past_due")
+                        {
+                            <form method="post" asp-page-handler="Cancel" asp-route-id="@Model.Id" style="margin-top:12px">
+                                <div class="form-row"><label>Cancel: reason (optional)</label><input name="reason" maxlength="500" /></div>
+                                <div class="actions">
+                                    @if (!sub.CancelAtPeriodEnd)
+                                    {
+                                        <button class="btn sm" type="submit" name="immediately" value="false" data-confirm="End the subscription at the end of the current period?">Cancel at period end</button>
+                                    }
+                                    <button class="btn sm danger" type="submit" name="immediately" value="true" data-confirm="Cancel now? Sending, campaigns and the AI stop for this clinic right away.">Cancel now</button>
+                                </div>
+                            </form>
+                        }
+                    }
+                </div>
+
+                <form class="card" method="post" asp-page-handler="StartPlan" asp-route-id="@Model.Id">
+                    <h2>@(sub is null ? "Start a plan" : "Change plan")</h2>
+                    <p class="small muted">Starts a new period now (no proration). The previous period's included credit expires and the new plan's credit is granted.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="form-row"><label>Plan</label>
+                        <select name="planCode" required>
+                            <option value="">Choose…</option>
+                            @foreach (var p in Model.Plans.Where(p => p.IsActive))
+                            {
+                                <option value="@p.Code" selected="@(p.Code == sub?.PlanCode)">@p.Name (@p.Code): @BillingUi.Money(p.Price, p.Currency) / @p.BillingPeriod, credit @BillingUi.Money(p.IncludedUsageCredit)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-row"><label><input type="checkbox" name="chargeFirstPeriod" value="true" checked /> Charge the first period from the wallet (untick for a free first period)</label></div>
+                    <div class="form-row"><label>Reason (optional)</label><input name="reason" maxlength="500" /></div>
+                    <button class="btn primary" type="submit" data-confirm="Start this plan for @o.ClinicName now?">@(sub is null ? "Start plan" : "Change plan")</button>
+                </form>
+
+                <div class="card">
+                    <h2>Plan features</h2>
+                    @if (s.Entitlements.Count == 0)
+                    {
+                        <div class="empty">No plan, so no features (or billing is off: then everything is allowed).</div>
+                    }
+                    else
+                    {
+                        <table>
+                            @foreach (var e in s.Entitlements)
+                            {
+                                <tr><td>@e.Label</td><td>@(e.Kind == "feature" ? Ui.YesNo(e.Value == "true") : Ui.Badge("new", e.Value))</td></tr>
+                            }
+                        </table>
+                    }
+                </div>
+            </div>
+
+            <div>
+                <form class="card" method="post" asp-page-handler="TopUp" asp-route-id="@Model.Id">
+                    <h2>Top up the wallet</h2>
+                    <p class="small muted">Record money the clinic paid SculptFlow outside the app.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="form-row"><label>Amount (@cur)</label><input type="number" name="amount" min="0.01" step="0.01" required /></div>
+                    <div class="form-row"><label>Payment reference (optional)</label><input name="reference" maxlength="200" placeholder="Invoice or transfer number" /></div>
+                    <div class="form-row"><label>Note (optional)</label><input name="reason" maxlength="500" /></div>
+                    <button class="btn primary" type="submit" data-confirm="Add this amount to @o.ClinicName's wallet?">Top up</button>
+                </form>
+
+                <form class="card" method="post" asp-page-handler="Adjust" asp-route-id="@Model.Id">
+                    <h2>Manual adjustment</h2>
+                    <p class="small muted">A correction, positive or negative. It's written to the ledger with your name and the reason.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="form-row"><label>Balance</label>
+                        <select name="balanceType">@foreach (var b in BillingVocab.BalanceTypes) { <option value="@b">@BillingUi.BalanceLabel(b)</option> }</select></div>
+                    <div class="form-row"><label>Amount (@cur, negative to deduct)</label><input type="number" name="amount" step="0.01" required /></div>
+                    <div class="form-row"><label>Reason (required)</label><input name="reason" maxlength="500" required /></div>
+                    <button class="btn" type="submit" data-confirm="Apply this adjustment?">Apply adjustment</button>
+                </form>
+
+                <div class="card">
+                    <h2>Recent transactions</h2>
+                    @if (s.RecentTransactions.Count == 0) { <div class="empty">None yet.</div> }
+                    else
+                    {
+                        <table>
+                            <tr><th>When</th><th>What</th><th class="num">Amount</th><th class="num">Balance after</th></tr>
+                            @foreach (var t in s.RecentTransactions)
+                            {
+                                <tr><td class="small">@Ui.Time(t.CreatedAt)</td><td>@t.Label <div class="small muted">@BillingUi.BalanceLabel(t.BalanceType)@(t.Reason is null ? "" : " · " + t.Reason)</div></td>
+                                    <td class="num @(t.Amount < 0 ? "neg" : "")">@BillingUi.Money(t.Amount)</td><td class="num">@BillingUi.Money(t.BalanceAfter)</td></tr>
+                            }
+                        </table>
+                        <div class="small" style="margin-top:6px"><a href="@TabUrl("ledger")">Full ledger</a></div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Messaging accounts: who pays the provider</h2>
+            <p class="small muted">Set per connected account. "SculptFlow pays provider" means SculptFlow charges the clinic for the usage from its credit and wallet. In the other modes usage is only recorded, unless you turn on a SculptFlow usage fee (priced by rates set for that mode). Changes apply to new messages only.</p>
+            @if (o.ChannelAccounts.Count == 0)
+            {
+                <div class="empty">No connected messaging accounts.</div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                <table>
+                    <tr><th>Account</th><th>Who pays the provider</th><th>SculptFlow charges usage</th><th>Set by</th><th style="min-width:420px">Change</th></tr>
+                    @foreach (var acc in o.ChannelAccounts)
+                    {
+                        var hasOverride = acc.Source == "account";
+                        <tr>
+                            <td><strong>@acc.Channel</strong> @Ui.Badge(acc.Provider) <div>@acc.DisplayName</div><div class="small muted">@Ui.Badge(acc.Status)</div></td>
+                            <td>@acc.ProviderBillingLabel
+                                @if (hasOverride && acc.DefaultProviderBilling != acc.ProviderBilling) { <div class="small muted">default: @BillingUi.ResponsibilityLabel(acc.DefaultProviderBilling)</div> }</td>
+                            <td>@Ui.YesNo(acc.OmniUsageBilling)</td>
+                            <td class="small">
+                                @if (hasOverride)
+                                {
+                                    @Ui.Badge("approval", "override")
+                                    <div>@acc.OverrideReason</div>
+                                    <div class="muted">@acc.OverrideUpdatedBy · @Ui.Time(acc.OverrideUpdatedAt)</div>
+                                }
+                                else
+                                {
+                                    <span class="muted">Default for @acc.Channel@(acc.Provider is null ? "" : " via " + acc.Provider)</span>
+                                    @if (acc.OverrideAppliesToProvider is not null) { <div class="muted">(an override set for @acc.OverrideAppliesToProvider no longer applies)</div> }
+                                }
+                            </td>
+                            <td>
+                                <form method="post" asp-page-handler="ProviderBilling" asp-route-id="@Model.Id" class="pb-form">
+                                    <input type="hidden" name="accountId" value="@acc.ChannelIntegrationId" />
+                                    <select name="providerBilling" aria-label="Who pays the provider">
+                                        <option value="">Default (@BillingUi.ResponsibilityLabel(acc.DefaultProviderBilling))</option>
+                                        @foreach (var m in Model.Modes?.Modes ?? [])
+                                        {
+                                            <option value="@m.Value" selected="@(hasOverride && acc.OverrideProviderBilling == m.Value)">@m.Label</option>
+                                        }
+                                    </select>
+                                    <select name="usageBilling" aria-label="SculptFlow usage billing">
+                                        <option value="default" selected="@(acc.OverrideOmniUsageBilling is null)">Charge usage: default</option>
+                                        <option value="on" selected="@(acc.OverrideOmniUsageBilling == true)">Charge usage: yes</option>
+                                        <option value="off" selected="@(acc.OverrideOmniUsageBilling == false)">Charge usage: no</option>
+                                    </select>
+                                    <input name="reason" placeholder="Reason (required)" maxlength="500" required />
+                                    <button class="btn sm primary" type="submit" data-confirm="Change who pays for this account's messages from now on?">Save</button>
+                                </form>
+                                @if (hasOverride)
+                                {
+                                    <form method="post" asp-page-handler="ResetProviderBilling" asp-route-id="@Model.Id" class="pb-form" style="margin-top:6px">
+                                        <input type="hidden" name="accountId" value="@acc.ChannelIntegrationId" />
+                                        <input name="reason" placeholder="Reason for reset (required)" maxlength="500" required />
+                                        <button class="btn sm" type="submit">Back to default</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </table>
+                </div>
+            }
+        </div>
+
+        <div class="card">
+            <h2>Usage this period (since @Ui.Time(s.UsageSince))</h2>
+            @if (o.UsageWithCosts.Count == 0)
+            {
+                <div class="empty">No usage this period.</div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                <table>
+                    <tr><th>Event</th><th>Channel</th><th>Who pays the provider</th><th class="num">Count</th><th class="num">Quantity</th><th class="num">Charged</th><th class="num">Provider cost</th><th class="num">Margin</th></tr>
+                    @foreach (var u in o.UsageWithCosts)
+                    {
+                        <tr><td>@BillingUi.EventLabel(u.EventType)</td><td>@u.Channel</td><td>@BillingUi.ResponsibilityLabel(u.ProviderBilling)</td>
+                            <td class="num">@u.Count</td><td class="num">@BillingUi.Number(u.Quantity)</td><td class="num">@BillingUi.Money(u.Amount)</td>
+                            <td class="num">@BillingUi.Money(u.ProviderCost)</td><td class="num @(u.Margin < 0 ? "neg" : "")">@BillingUi.Money(u.Margin)</td></tr>
+                    }
+                    <tr><th colspan="5">Total (@cur)</th><th class="num">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.Amount))</th><th class="num">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.ProviderCost))</th><th class="num">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.Margin))</th></tr>
+                </table>
+                </div>
+                <div class="small muted" style="margin-top:6px">Provider cost is shown whoever paid it; margin only subtracts cost SculptFlow paid itself.</div>
+            }
+        </div>
+
+        <div class="grid grid-2">
+            <form class="card" method="get">
+                <h2>Price check</h2>
+                <p class="small muted">What SculptFlow would charge this clinic for one unit right now, and which rate card prices it.</p>
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="form-row"><label>Event type</label><input name="quoteEvent" list="event-types" value="@Model.QuoteEvent" required /></div>
+                <div class="form-row"><label>Country (ISO 2, optional)</label><input name="quoteCountry" value="@Model.QuoteCountry" maxlength="2" /></div>
+                <div class="form-row"><label>Provider (optional, e.g. infobip)</label><input name="quoteProvider" value="@Model.QuoteProvider" /></div>
+                <div class="form-row"><label>Who pays the provider</label>
+                    <select name="quoteBilling"><option value="">SculptFlow pays provider (default)</option>
+                        @foreach (var m in Model.Modes?.Modes ?? []) { if (m.Value != "platform_funded") { <option value="@m.Value" selected="@(m.Value == Model.QuoteBilling)">@m.Label (usage fee)</option> } }
+                    </select></div>
+                <button class="btn" type="submit">Check price</button>
+                @if (Model.Quote is { } q)
+                {
+                    <dl class="kv" style="margin-top:12px">
+                        <dt>Charge</dt><dd><strong>@BillingUi.Money(q.UnitPrice, q.Currency)</strong> per @q.Unit</dd>
+                        <dt>Provider cost</dt><dd>@BillingUi.Money(q.UnitProviderCost, q.Currency)</dd>
+                        <dt>Priced by</dt><dd><a href="/Billing/Rates?code=@q.RateCardCode">@q.RateCardCode</a> (@q.RateSource card)</dd>
+                    </dl>
+                }
+                else if (Model.QuoteMissing)
+                {
+                    <div class="alert err" style="margin-top:12px">No rate card prices this for this clinic, so a charged message of this type would be refused.</div>
+                }
+            </form>
+
+            <div class="card">
+                <h2>Ledger check</h2>
+                @{ var r = o.Reconciliation; }
+                <dl class="kv">
+                    <dt>Wallet</dt><dd>@BillingUi.Money(r.WalletBalance) · ledger @BillingUi.Money(r.WalletLedgerTotal)</dd>
+                    <dt>Included credit</dt><dd>@BillingUi.Money(r.IncludedCreditBalance) · ledger @BillingUi.Money(r.IncludedCreditLedgerTotal)</dd>
+                    <dt>Reserved</dt><dd>@BillingUi.Money(r.ReservedAmount) · open reservations @BillingUi.Money(r.OpenReservationsTotal)</dd>
+                    <dt>Result</dt><dd>@Ui.Badge(r.IsBalanced ? "healthy" : "error", r.IsBalanced ? "balanced" : "NOT balanced: investigate before changing money")</dd>
+                </dl>
+            </div>
+        </div>
+        <datalist id="event-types">@foreach (var e in BillingVocab.EventTypes) { <option value="@e"></option> }</datalist>
+    }
+    else if (Model.Tab == "usage" && Model.Usage is { } usage)
+    {
+        <form class="filters" method="get">
+            <input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="tab" value="usage" />
+            <label>Charge status
+                <select name="status"><option value="">All</option>
+                    @foreach (var st in BillingVocab.ChargeStatuses) { <option value="@st" selected="@(st == Model.Status)">@st.Replace('_', ' ')</option> }
+                </select></label>
+            <label>Event type<input name="eventType" list="event-types" value="@Model.EventType" /></label>
+            <button class="btn" type="submit">Filter</button>
+        </form>
+        <datalist id="event-types">@foreach (var e in BillingVocab.EventTypes) { <option value="@e"></option> }</datalist>
+        @if (usage.Items.Count == 0)
+        {
+            <div class="card empty">No usage records.</div>
+        }
+        else
+        {
+            <div class="table-wrap">
+            <table>
+                <tr><th>When</th><th>Event</th><th>Who pays</th><th class="num">Qty</th><th>Charge</th><th>At provider</th><th class="num">Unit price</th><th class="num">Charged</th><th class="num">Provider cost</th><th>Paid from</th><th></th></tr>
+                @foreach (var u in usage.Items)
+                {
+                    <tr>
+                        <td class="small">@Ui.Time(u.OccurredAt)</td>
+                        <td>@BillingUi.EventLabel(u.EventType) <div class="small muted">@u.Channel@(u.Provider is null ? "" : " · " + u.Provider)@(u.CountryCode is null ? "" : " · " + u.CountryCode)</div></td>
+                        <td class="small">@BillingUi.ResponsibilityLabel(u.ProviderBilling)</td>
+                        <td class="num">@BillingUi.Number(u.Quantity)</td>
+                        <td>@Ui.Badge(u.ChargeStatus) @if (u.FailureReason is not null) { <div class="small muted">@Ui.Truncate(u.FailureReason, 80)</div> }
+                            @if (u.ReleaseReason is not null) { <div class="small muted">@Ui.Truncate(u.ReleaseReason, 80)</div> }</td>
+                        <td>@Ui.Badge(u.ProviderOutcome)</td>
+                        <td class="num">@BillingUi.Money(u.UnitPrice)</td>
+                        <td class="num">@BillingUi.Money(u.Amount) @if (u.RefundedAmount > 0) { <div class="small muted">refunded @BillingUi.Money(u.RefundedAmount)</div> }</td>
+                        <td class="num">@BillingUi.Money(u.ProviderCost)</td>
+                        <td class="small">@if (u.CreditAmount > 0) { <div>credit @BillingUi.Money(u.CreditAmount)</div> } @if (u.WalletAmount > 0) { <div>wallet @BillingUi.Money(u.WalletAmount)</div> }</td>
+                        <td>
+                            @if (u.ChargeStatus == "settled" && u.RefundedAmount == 0 && (u.Amount ?? 0) > 0)
+                            {
+                                <form method="post" asp-page-handler="Refund" asp-route-id="@Model.Id" asp-route-tab="usage" asp-route-p="@Model.PageNumber" asp-route-status="@Model.Status" asp-route-eventType="@Model.EventType" class="pb-form">
+                                    <input type="hidden" name="usageId" value="@u.Id" />
+                                    <input name="reason" placeholder="Refund reason" maxlength="500" required style="width:140px" />
+                                    <button class="btn sm danger" type="submit" data-confirm="Refund @BillingUi.Money(u.Amount, u.Currency) back to where it was paid from?">Refund</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </table>
+            </div>
+            <partial name="_Pager" model="new PagerModel(usage.Page, usage.Pages, usage.Total, usage.Page > 1, usage.Page < usage.Pages)" />
+        }
+    }
+    else if (Model.Tab == "ledger" && Model.Ledger is { } ledger)
+    {
+        <p class="muted small">Every balance change, in posting order. The ledger is append-only; corrections are new entries.</p>
+        @if (ledger.Items.Count == 0)
+        {
+            <div class="card empty">No ledger entries.</div>
+        }
+        else
+        {
+            <div class="table-wrap">
+            <table>
+                <tr><th>When</th><th>Entry</th><th>Balance</th><th class="num">Amount</th><th class="num">Balance after</th><th>By</th><th>Reason / reference</th></tr>
+                @foreach (var l in ledger.Items)
+                {
+                    <tr>
+                        <td class="small">@Ui.Time(l.CreatedAt)</td>
+                        <td>@l.EntryType.Replace('_', ' ')</td>
+                        <td>@BillingUi.BalanceLabel(l.BalanceType)</td>
+                        <td class="num @(l.Amount < 0 ? "neg" : "")">@BillingUi.Money(l.Amount)</td>
+                        <td class="num">@BillingUi.Money(l.BalanceAfter)</td>
+                        <td class="small">@l.Source@(l.Actor is null ? "" : " · " + l.Actor)</td>
+                        <td class="small">@l.Reason @if (l.Reference is not null) { <div class="muted">ref @l.Reference</div> }</td>
+                    </tr>
+                }
+            </table>
+            </div>
+            <partial name="_Pager" model="new PagerModel(ledger.Page, ledger.Pages, ledger.Total, ledger.Page > 1, ledger.Page < ledger.Pages)" />
+        }
+    }
+}

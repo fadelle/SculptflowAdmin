@@ -1,0 +1,27 @@
+@model IReadOnlyList<EventRow>
+@if (Model.Count == 0)
+{
+    <div class="empty">No events.</div>
+}
+else
+{
+<div class="table-wrap">
+<table>
+    <tr><th>When</th><th>Event</th><th>Clinic</th><th>Source</th><th>Links</th><th>Metadata</th></tr>
+    @foreach (var e in Model)
+    {
+        <tr>
+            <td class="small">@Ui.Time(e.CreatedAt)</td>
+            <td>@e.EventType.Replace('_', ' ')</td>
+            <td><a href="/Clinics/Details?id=@e.ClinicId">@e.ClinicName</a></td>
+            <td class="small">@e.Source</td>
+            <td class="small">
+                @if (e.LeadId.HasValue) { <a href="/Leads/Details?id=@e.LeadId">lead</a> }
+                @if (e.ConversationId.HasValue) { <a href="/Conversations/Details?id=@e.ConversationId">conversation</a> }
+            </td>
+            <td class="mono">@(e.Metadata == "{}" ? "" : Ui.Truncate(e.Metadata, 240))</td>
+        </tr>
+    }
+</table>
+</div>
+}

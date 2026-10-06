@@ -1,0 +1,11 @@
+@page
+@model SculptFlowAdmin.Pages.Audit.IndexModel
+@{ ViewData["Title"] = "Admin audit log"; }
+<div class="page-head"><div><h1>Admin audit log</h1><div class="muted">Every sign-in and every change made from this portal.</div></div></div>
+<form class="filters" method="get">
+    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    <label>Search<input name="q" value="@Model.Q" placeholder="Action, admin email or record id" /></label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+<partial name="_AuditTable" model="Model.Result.Items" />
+<partial name="_Pager" model="PagerModel.From(Model.Result)" />

@@ -1,0 +1,73 @@
+@page
+@model SculptFlowAdmin.Pages.Conversations.DetailsModel
+@{
+    var c = Model.Conversation;
+    var lead = c.Lead;
+    var leadName = lead?.FullName ?? $"{lead?.FirstName} {lead?.LastName}".Trim();
+    if (string.IsNullOrWhiteSpace(leadName)) leadName = "(no name)";
+    ViewData["Title"] = "Conversation with " + leadName;
+}
+<div class="page-head">
+    <div>
+        <h1>@leadName <span class="muted small">on @c.Channel</span></h1>
+        <div class="muted small">
+            <a href="/Clinics/Details?id=@c.ClinicId">@Model.Clinic?.Name</a> ·
+            <a href="/Leads/Details?id=@c.LeadId">lead</a> ·
+            @Ui.Badge(c.Mode, c.Mode == "ai" ? "AI" : c.Mode == "human" ? "staff" : c.Mode) @Ui.Badge(c.Status) ·
+            24h window @(c.IsServiceWindowOpen(DateTimeOffset.UtcNow) ? "open until " : "closed")
+            @if (c.IsServiceWindowOpen(DateTimeOffset.UtcNow)) { @Ui.Time(c.ServiceWindowExpiresAt) }
+        </div>
+    </div>
+    <div class="actions">
+        <form method="post" asp-page-handler="Mode" asp-route-id="@c.Id">
+            @if (c.Mode == ConversationMode.Ai)
+            {
+                <input type="hidden" name="mode" value="human" />
+                <button class="btn" type="submit" data-confirm="Hand this conversation to the clinic's staff? The AI stops replying.">Hand to staff</button>
+            }
+            else
+            {
+                <input type="hidden" name="mode" value="ai" />
+                <button class="btn" type="submit" data-confirm="Return this conversation to the AI?">Return to AI</button>
+            }
+        </form>
+        <form method="post" asp-page-handler="Status" asp-route-id="@c.Id">
+            @if (c.Status == ConversationStatus.Active)
+            {
+                <input type="hidden" name="status" value="closed" />
+                <button class="btn" type="submit">Close</button>
+            }
+            else
+            {
+                <input type="hidden" name="status" value="active" />
+                <button class="btn" type="submit">Reopen</button>
+            }
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Messages (@Model.Messages.Count@(Model.Messages.Count >= 500 ? ", latest 500" : ""))</h2>
+    <p class="small muted">Read-only. Staff reply from the main app's Inbox.</p>
+    @if (Model.Messages.Count == 0)
+    {
+        <div class="empty">No messages.</div>
+    }
+    <div class="timeline">
+        @foreach (var m in Model.Messages)
+        {
+            var cls = m.Origin == MessageOrigin.System ? "system" : m.Direction == MessageDirection.Outbound ? (m.SenderType == MessageSenderType.Ai ? "out ai" : "out") : "";
+            <div class="msg @cls">@(m.Content ?? $"[{m.MessageType}]")
+                @if (m.Origin != MessageOrigin.System)
+                {
+                    <div class="meta">
+                        @m.SenderType · @m.Origin · @Ui.Time(m.CreatedAt)
+                        @if (!string.IsNullOrEmpty(m.DeliveryStatus)) { <span>· @Ui.Badge(m.DeliveryStatus)</span> }
+                        @if (m.FailedAt.HasValue) { <div style="color:var(--red-text)">Failed: @m.FailureCode @m.FailureReason</div> }
+                        @if (m.CampaignId.HasValue) { <a href="/Campaigns/Details?id=@m.CampaignId">campaign</a> }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
