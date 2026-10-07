@@ -1,14 +1,14 @@
-using SculptFlowAdmin.Business.Contracts.HttpClients.MainApp;
+using SculptFlowAdmin.Business.Contracts.Services.Billing;
 using SculptFlowAdmin.Entities.Dtos.Billing;
 using SculptFlowAdmin.Pages.Shared;
 
 namespace SculptFlowAdmin.Pages.Billing;
 
-public class IndexModel : BillingPageModel
+public class IndexModel : MainAppPageModel
 {
-    private readonly IBillingApiClient _api;
+    private readonly IBillingAdminService _billing;
 
-    public IndexModel(IBillingApiClient api) => _api = api;
+    public IndexModel(IBillingAdminService billing) => _billing = billing;
 
     public string? Q { get; set; }
     public string? Status { get; set; }
@@ -20,7 +20,7 @@ public class IndexModel : BillingPageModel
     {
         Q = Clean(q);
         Status = Clean(status);
-        await LoadAsync(async () => Accounts = await _api.AccountsAsync(ct));
+        await LoadAsync(async () => Accounts = await _billing.AccountsAsync(ct));
         Shown = Accounts
             .Where(a => Q is null || a.ClinicName.Contains(Q, StringComparison.OrdinalIgnoreCase) || (a.PlanCode ?? "").Contains(Q, StringComparison.OrdinalIgnoreCase))
             .Where(a => Status is null || (Status == "none" ? a.SubscriptionStatus is null : a.SubscriptionStatus == Status))

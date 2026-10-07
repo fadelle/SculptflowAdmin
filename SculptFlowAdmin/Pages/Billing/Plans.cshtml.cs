@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using SculptFlowAdmin.Business.Contracts.HttpClients.MainApp;
+using SculptFlowAdmin.Business.Contracts.Services.Billing;
 using SculptFlowAdmin.Entities.Dtos.Billing;
 using SculptFlowAdmin.Entities.Requests.Billing;
 using SculptFlowAdmin.Entities.Responses.Billing;
@@ -8,11 +8,11 @@ using SculptFlowAdmin.Pages.Shared;
 namespace SculptFlowAdmin.Pages.Billing;
 
 /// <summary>Subscription plans: price, period, included credit, rate card and features/limits (entitlements).</summary>
-public class PlansModel : BillingPageModel
+public class PlansModel : MainAppPageModel
 {
-    private readonly IBillingApiClient _api;
+    private readonly IBillingAdminService _billing;
 
-    public PlansModel(IBillingApiClient api) => _api = api;
+    public PlansModel(IBillingAdminService billing) => _billing = billing;
 
     [BindProperty(SupportsGet = true)] public string? Edit { get; set; }
     public List<PlanResponse> Plans { get; private set; } = new();
@@ -24,9 +24,9 @@ public class PlansModel : BillingPageModel
     {
         await LoadAsync(async () =>
         {
-            Plans = await _api.PlansAsync(ct);
-            Catalog = await _api.EntitlementsAsync(ct);
-            RateCards = await _api.RateCardsAsync(ct);
+            Plans = await _billing.PlansAsync(ct);
+            Catalog = await _billing.EntitlementsAsync(ct);
+            RateCards = await _billing.RateCardsAsync(ct);
             Editing = string.IsNullOrWhiteSpace(Edit) ? null : Plans.FirstOrDefault(p => p.Code == Edit.Trim().ToLowerInvariant());
         });
     }
@@ -35,11 +35,11 @@ public class PlansModel : BillingPageModel
         string? billingPeriod, decimal includedUsageCredit, string? rateCardCode, bool isActive, int sortOrder, CancellationToken ct) =>
         RunAsync(async () =>
         {
-            var entitlements = ReadEntitlements(await _api.EntitlementsAsync(ct));
+            var entitlements = ReadEntitlements(await _billing.EntitlementsAsync(ct));
             var request = new PlanRequest((originalCode ?? code ?? "").Trim(), (name ?? "").Trim(), Clean(description), price,
                 billingPeriod ?? "month", includedUsageCredit, Clean(rateCardCode), isActive, sortOrder, entitlements);
-            if (string.IsNullOrWhiteSpace(originalCode)) await _api.CreatePlanAsync(request, ct);
-            else await _api.UpdatePlanAsync(originalCode, request, ct);
+            if (string.IsNullOrWhiteSpace(originalCode)) await _billing.CreatePlanAsync(request, ct);
+            else await _billing.UpdatePlanAsync(originalCode, request, ct);
         }, string.IsNullOrWhiteSpace(originalCode) ? "Plan created." : "Plan saved. Price and credit changes apply from each subscriber's next renewal.",
         string.IsNullOrWhiteSpace(originalCode) ? new { } : new { edit = originalCode });
 

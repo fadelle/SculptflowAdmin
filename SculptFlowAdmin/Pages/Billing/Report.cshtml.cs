@@ -1,6 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
-using SculptFlowAdmin.Business.Contracts.HttpClients.MainApp;
+using SculptFlowAdmin.Business.Contracts.Services.Billing;
 using SculptFlowAdmin.Business.Mappers.Billing;
 using SculptFlowAdmin.Entities.Dtos.Billing;
 using SculptFlowAdmin.Entities.Responses.Billing;
@@ -9,11 +9,11 @@ using SculptFlowAdmin.Pages.Shared;
 namespace SculptFlowAdmin.Pages.Billing;
 
 /// <summary>Revenue report: usage revenue, provider cost (paid by SculptFlow vs externally), margin, subscriptions, top-ups.</summary>
-public class ReportModel : BillingPageModel
+public class ReportModel : MainAppPageModel
 {
-    private readonly IBillingApiClient _api;
+    private readonly IBillingAdminService _billing;
 
-    public ReportModel(IBillingApiClient api) => _api = api;
+    public ReportModel(IBillingAdminService billing) => _billing = billing;
 
     /// <summary>yyyy-MM-dd, UTC; default = the current month.</summary>
     [BindProperty(SupportsGet = true)] public string? From { get; set; }
@@ -32,7 +32,7 @@ public class ReportModel : BillingPageModel
         From = from.ToString("yyyy-MM-dd");
         To = to.AddDays(-1).ToString("yyyy-MM-dd");
         GroupBy = GroupBy is "channel" or "event" or "who_pays" ? GroupBy : "clinic";
-        await LoadAsync(async () => Report = await _api.ReportAsync(from, to, ct));
+        await LoadAsync(async () => Report = await _billing.ReportAsync(from, to, ct));
     }
 
     public List<BillingReportGroup> Groups() => BillingReportGrouping.Group(Report, GroupBy);

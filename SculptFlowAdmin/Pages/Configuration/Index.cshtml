@@ -1,0 +1,74 @@
+@page
+@model SculptFlowAdmin.Pages.Configuration.IndexModel
+@{
+    ViewData["Title"] = "Configuration";
+}
+<div class="page-head">
+    <div><h1>Configuration</h1>
+        <div class="muted">The main app's settings, by section and key. A value saved here applies to every clinic, and the main app uses it at once.
+            Without one, the built-in default applies. Secrets are never managed here; they stay in the server's environment.</div></div>
+</div>
+
+@if (Model.LoadError is null)
+{
+    <form class="filters" method="get">
+        <label>Setting<input name="q" value="@Model.Q" placeholder="e.g. Availability" /></label>
+        <label><input type="checkbox" name="changed" value="true" checked="@Model.ChangedOnly" /> Changed from default only</label>
+        <button class="btn" type="submit">Filter</button>
+    </form>
+
+    @if (Model.Sections.Count == 0)
+    {
+        <div class="card empty">No settings match.</div>
+    }
+    @foreach (var group in Model.Sections)
+    {
+        <h2 style="margin-top:16px">@group.Key</h2>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Key</th><th>Default</th><th>Saved value</th><th>In use now</th><th></th></tr>
+                @foreach (var s in group)
+                {
+                    var range = s.Min is null && s.Max is null ? "" : $" ({s.Min?.ToString("0.##")}–{s.Max?.ToString("0.##")})";
+                    <tr>
+                        <td><span class="mono small">@s.Key</span>
+                            <div class="small muted">@s.Description <span class="nowrap">@s.Type.ToLowerInvariant()@range</span></div>
+                        </td>
+                        <td class="mono small">@(s.IsSecret ? "(none)" : s.DefaultValue)</td>
+                        <td class="small">
+                            <form method="post" asp-page-handler="Set" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                                <input type="hidden" name="section" value="@s.Section" />
+                                <input type="hidden" name="key" value="@s.Key" />
+                                @if (s.IsSecret)
+                                {
+                                    <input type="hidden" name="isSecret" value="true" />
+                                    <input type="password" name="value" autocomplete="new-password" placeholder="@(string.IsNullOrEmpty(s.StoredValue) ? "not set" : "set; type to replace")" maxlength="4000" style="width:160px" required />
+                                }
+                                else
+                                {
+                                    <input name="value" value="@s.StoredValue" placeholder="default" maxlength="4000" style="width:110px" required />
+                                }
+                                <input name="note" value="@s.Note" placeholder="reason (optional)" maxlength="1000" style="min-width:140px" />
+                                <button class="btn sm" type="submit">Save</button>
+                            </form>
+                            @if (s.UpdatedAt is not null) { <div class="small muted">by @s.UpdatedBy, @s.UpdatedAt.Value.ToString("yyyy-MM-dd HH:mm") UTC</div> }
+                        </td>
+                        <td class="mono small">@(s.IsSecret ? (string.IsNullOrEmpty(s.EffectiveValue) ? "not set" : "set (hidden)") : s.EffectiveValue)
+                            @if (!s.IsSecret && s.StoredValue is not null && s.StoredValue != s.EffectiveValue) { <div><span class="badge amber">saved value is invalid; using the default</span></div> }
+                        </td>
+                        <td>
+                            @if (s.StoredValue is not null)
+                            {
+                                <form method="post" asp-page-handler="Reset" onsubmit="return confirm('Reset @s.Section:@s.Key to its default?')">
+                                    <input type="hidden" name="section" value="@s.Section" />
+                                    <input type="hidden" name="key" value="@s.Key" />
+                                    <button class="btn sm" type="submit">Reset</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+    }
+}

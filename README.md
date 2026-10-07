@@ -27,6 +27,7 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 | Knowledge base | Documents and website sources | Activate/deactivate documents |
 | Event log / Admin audit log | The main app's `events`; this portal's own changes | |
 | Admin users | Portal accounts | Add, deactivate, set password |
+| Configuration | The main app's tunable settings by section and key: default, saved value, value in use | Save a value (the main app uses it at once), reset to the default. Through the main app's settings API (below) |
 
 The same data and actions are available as JSON under `/api/admin/*` (see `Controllers/Admin/AdminApiController.cs`); they
 need a signed-in admin.
@@ -41,16 +42,18 @@ need a signed-in admin.
    `MainApp:WhatsAppProvider` (`meta` or `infobip`, shown on the Channels page). Set these to match the main app.
    For the Billing pages: `MainApp:PlatformAdminApiKey` (a SECRET, user-secrets or `MainApp__PlatformAdminApiKey`) equal
    to the main app's `PlatformAdmin:ApiKey`, and optionally `MainApp:ApiBaseUrl` (where to call the main app; blank =
-   `PublicBaseUrl`). Without them the Billing pages say billing isn't connected; the rest of the portal works.
+   `PublicBaseUrl`). Without them the Billing and Configuration pages say they aren't connected; the rest of the portal works.
 4. Create the first admin: `cd SculptFlowAdmin` then `dotnet run -- create-admin you@example.com "Your Name"` (type the
    password when asked, or pass it in `ADMIN_PASSWORD`). Add more admins from the Admin users page.
 5. `dotnet run` and sign in.
 
-## Billing goes through the main app
+## Billing and Configuration go through the main app
 
-Billing is the first area where the main app owns the rules and the writes and this portal is only the control panel:
-the Billing pages call `/api/platform-admin/billing/*` on the main app (`Business/HttpClients/MainApp/BillingApiClient.cs`) with the shared key
-and the signed-in admin's email as the actor, and never touch the `billing.*` tables directly. Money-moving forms carry an
+In these areas the main app owns the rules and the data, and this portal is only the control panel. The pages call a
+service (`Business/Services/Billing/BillingAdminService`, `Business/Services/Configuration/SettingsAdminService`). The
+service calls the main app's `/api/platform-admin/billing/*` or `/api/platform-admin/settings` through a client in
+`Business/HttpClients/MainApp`; the clients share `MainAppApiClient` for the key, the actor header, errors and
+idempotency. The portal never reads or writes the `billing.*` or `config.*` tables directly. Money-moving forms carry an
 operation id that becomes the API's `Idempotency-Key`, so a double submit applies once. Each successful change is also
 written to `admin_audit_log`. Future areas with money or complex rules should follow the same pattern
 (`/api/platform-admin/{domain}` in the main app).

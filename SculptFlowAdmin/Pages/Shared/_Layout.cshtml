@@ -42,6 +42,7 @@
         <a class="@Active("/Knowledge")" href="/Knowledge">Knowledge base</a>
 
         <div class="nav-group">System</div>
+        <a class="@Active("/Configuration")" href="/Configuration">Configuration</a>
         <a class="@Active("/Events")" href="/Events">Event log</a>
         <a class="@Active("/Audit")" href="/Audit">Admin audit log</a>
         <a class="@Active("/Admins")" href="/Admins">Admin users</a>
@@ -60,7 +61,7 @@
                 if (!string.IsNullOrEmpty(m.Flash)) { <div class="alert ok">@m.Flash</div> }
                 if (!string.IsNullOrEmpty(m.FlashError)) { <div class="alert err">@m.FlashError</div> }
             }
-            @if (Model is SculptFlowAdmin.Pages.Shared.BillingPageModel b && !string.IsNullOrEmpty(b.LoadError))
+            @if (Model is SculptFlowAdmin.Pages.Shared.MainAppPageModel b && !string.IsNullOrEmpty(b.LoadError))
             {
                 <div class="alert err">@b.LoadError</div>
             }

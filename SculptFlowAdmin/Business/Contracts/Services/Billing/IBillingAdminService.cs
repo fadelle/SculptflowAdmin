@@ -1,13 +1,20 @@
 using SculptFlowAdmin.Entities.Dtos.Billing;
+using SculptFlowAdmin.Entities.Dtos.Clinics;
 using SculptFlowAdmin.Entities.Requests.Billing;
 using SculptFlowAdmin.Entities.Responses.Billing;
 
-namespace SculptFlowAdmin.Business.Contracts.HttpClients.MainApp;
+namespace SculptFlowAdmin.Business.Contracts.Services.Billing;
 
-/// <summary>Client for the main app's platform-admin billing API (/api/platform-admin/billing). HTTP only: no audit, no rules.</summary>
-public interface IBillingApiClient
+/// <summary>
+/// What the billing pages call. Everything goes through the main app's platform-admin billing API; this portal never
+/// reads or writes billing tables. Every successful write is recorded in admin_audit_log.
+/// </summary>
+public interface IBillingAdminService
 {
     Task<List<BillingAccountRow>> AccountsAsync(CancellationToken ct);
+
+    /// <summary>Every clinic (id and name) as the main app lists it, for clinic pickers on billing pages.</summary>
+    Task<List<ClinicOption>> ClinicOptionsAsync(CancellationToken ct);
 
     Task<AdminBillingOverview?> ClinicAsync(Guid clinicId, CancellationToken ct);
 
@@ -61,9 +68,9 @@ public interface IBillingApiClient
 
     Task RefundAsync(Guid clinicId, Guid usageId, RefundRequest r, CancellationToken ct);
 
-    Task SetProviderBillingAsync(Guid channelIntegrationId, ProviderBillingRequest r, CancellationToken ct);
+    Task SetProviderBillingAsync(Guid clinicId, Guid channelIntegrationId, ProviderBillingRequest r, CancellationToken ct);
 
-    Task ResetProviderBillingAsync(Guid channelIntegrationId, ResetProviderBillingRequest r, CancellationToken ct);
+    Task ResetProviderBillingAsync(Guid clinicId, Guid channelIntegrationId, ResetProviderBillingRequest r, CancellationToken ct);
 
     bool IsConfigured { get; }
 

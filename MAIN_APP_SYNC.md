@@ -7,8 +7,8 @@ The admin portal reads the main app's database directly, so it has to keep up wi
 
 | | |
 |---|---|
-| Synced on | 2026-10-05 |
-| Main app commit | `12fad04` on branch `feature/infobip-whatsapp-provider` (Add Infobip as a WhatsApp provider behind a provider seam), on top of `main` `febef3c` |
+| Synced on | 2026-10-07 |
+| Main app commit | `bf917b6` on branch `refactor/architecture` (layered architecture, repositories) plus that branch's uncommitted schema split (tables in `core`, `identity`, `crm`, `scheduling`, `channels`, `marketing`, `knowledge`, `activity`) and `config.settings` work. Earlier: `12fad04` on `feature/infobip-whatsapp-provider` |
 | Main app tables mapped | 32 DbSets in `Persistence/Contexts/ApplicationDbContext.cs` + Identity users/claims/logins/tokens |
 
 ## How to update the portal ("update the admin portal")
@@ -47,6 +47,7 @@ If any of these change in the main app, the admin's copy must change too.
 | Area | Main-app API | Portal copy to keep in step |
 |---|---|---|
 | Billing (plans, rate cards, subscriptions, wallets, provider billing, usage, ledger, report) | `/api/platform-admin/billing/*`, `PlatformAdmin:ApiKey` (`X-Platform-Admin-Key`), actor `X-Admin-Actor`, `Idempotency-Key` on money writes | `Entities/{Requests,Responses,Dtos}/Billing/*` = the admin part of the main app's `Entities/{Requests,Responses,Dtos}/Billing/*`. If those shapes change, update the copy. |
+| Configuration (the main app's settings by section + key, `config.settings`; defaults in its `Common/Statics/ConfigDefaults`) | `/api/platform-admin/settings` (`GET`, `PUT {section}/{key}`, `DELETE {section}/{key}`), same key and actor | `Entities/Requests/Configuration/SetSettingRequest`, `Entities/Responses/Configuration/SettingResponse` |
 
 Added 2026-10-06 against the main app's `feature/subscription-billing` branch (not committed there yet). Its tables
 (`billing.*`) are deliberately not mapped in `Persistence/Contexts/ApplicationDbContext.cs`.

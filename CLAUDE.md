@@ -16,7 +16,7 @@ Same layout as the main app (its `CLAUDE.md` has the full table). The namespace 
 | Folder | What goes there |
 |---|---|
 | `Controllers/Admin` | The portal's JSON API (`/api/admin/*`, signed-in admin) |
-| `Pages/` | Razor Pages. `Pages/Shared` holds the base PageModels (`AdminPageModel`, `BillingPageModel`) and partials |
+| `Pages/` | Razor Pages. `Pages/Shared` holds the base PageModels (`AdminPageModel`, `MainAppPageModel`) and partials |
 | `Business/Services/<Feature>` | What controllers and PageModels call |
 | `Business/Engines/<Feature>` | Backend logic that isn't called by a page (e.g. the `create-admin` CLI) |
 | `Business/Managers` | Cross-cutting helpers (`AdminAudit`) |
@@ -25,15 +25,18 @@ Same layout as the main app (its `CLAUDE.md` has the full table). The namespace 
 | `Entities/Models` | Table classes. The main-app tables are copies of the main app's `Entities/Models` (see `MAIN_APP_SYNC.md`); `AdminUser` and `AdminAuditEntry` are the portal's own |
 | `Entities/Requests`, `Entities/Responses`, `Entities/Dtos` (`/<Feature>`) | Input, output and other data shapes |
 | `Common/Enums`, `Common/Statics`, `Common/Configs`, `Common/Helpers` (static only), `Common/Exceptions` | As in the main app |
-| `Persistence/Contexts` | `ApplicationDbContext` (copy of the main app's mapping) and `AdminDbContext` |
+| `Persistence/Contexts` | `ApplicationDbContext` (copy of the main app's mapping, including each table's Postgres schema: `core`, `crm`, ...) and `AdminDbContext` (schema `admin`) |
 | `Persistence/Repositories/<Feature>`, `Persistence/Contracts/<Feature>` | Repositories and their interfaces; `IUnitOfWork` (main-app tables) and `IAdminUnitOfWork` (portal tables) at the root |
 | `Persistence/Helpers` | EF-specific helpers (`QueryPaging.ToPagedAsync`) — nothing outside Persistence references EF Core |
 
 Rules:
 
 1. **One top-level type per file**, named after the type. Only private nested helper types may stay inside a class.
-2. **Request flow: Controller or PageModel → Service → Repository** (or → a main-app API client for writes). Controllers
-   and PageModels contain no logic and never touch a DbContext.
+2. **Request flow: Controller or PageModel → Service → Repository**, or **→ Service → main-app API client** for areas the
+   main app owns (Billing, Configuration). Pages never call an API client directly; the service audits each write.
+   API clients derive from `Business/HttpClients/MainApp/MainAppApiClient` (key, actor, idempotency, readable errors as
+   `MainAppApiException`), and pages that read through them derive from `MainAppPageModel`. Controllers and PageModels
+   contain no logic and never touch a DbContext.
 3. **Database access only in repositories**, one per area with intent-named methods, never a generic `Repository<T>` or an
    `IQueryable` handed out. Read-only lookups return `Entities/Dtos` rows or untracked entities; `...ForUpdateAsync` returns
    a tracked entity. Repositories never save.

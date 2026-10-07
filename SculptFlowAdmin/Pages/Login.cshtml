@@ -10,19 +10,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Sign in · SculptFlow Admin</title>
+    <link rel="icon" type="image/svg+xml" href="~/logo.svg" />
+    <link rel="icon" href="~/favicon.ico" sizes="32x32" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
-<div class="auth">
-    <form class="card" method="post">
-        <h1>SculptFlow Admin</h1>
-        <p class="muted">Admin accounts only. Clinic staff accounts can't sign in here.</p>
-        @if (!string.IsNullOrEmpty(Model.Error)) { <div class="alert err">@Model.Error</div> }
-        <div class="form-row"><label for="email">Email</label><input id="email" name="Email" type="email" value="@Model.Email" autocomplete="username" required autofocus /></div>
-        <div class="form-row"><label for="pw">Password</label><input id="pw" name="Password" type="password" autocomplete="current-password" required /></div>
-        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
-        <button class="btn primary" type="submit" style="width:100%">Sign in</button>
-    </form>
+<body class="login-body">
+<div class="login-split">
+    <aside class="login-side">
+        <div class="login-logo"><img src="~/logo.svg" alt="" width="32" height="32" /> SculptFlow <span class="login-tag">Admin</span></div>
+        <div class="login-side-body">
+            <h2>The control panel for every SculptFlow clinic.</h2>
+            <ul class="login-points">
+                <li><span>▦</span>Clinics, staff accounts, channels and integrations in one place</li>
+                <li><span>$</span>Plans, wallets, rate cards and revenue, through the main app's billing API</li>
+                <li><span>⚙</span>Platform settings, with every change recorded in the audit log</li>
+            </ul>
+        </div>
+        <div class="login-side-foot">© @DateTime.UtcNow.Year SculptFlow · Internal use only</div>
+    </aside>
+
+    <main class="login-main">
+        <form class="login-form" method="post" data-login-form>
+            <h1>Welcome back</h1>
+            <p class="muted">Sign in with your admin account. Clinic staff accounts can't sign in here.</p>
+
+            @if (!string.IsNullOrEmpty(Model.Error))
+            {
+                <div class="login-error" role="alert"><span aria-hidden="true">!</span><div>@Model.Error</div></div>
+            }
+
+            <label class="login-field">
+                <span>Email</span>
+                <input id="email" name="Email" type="email" value="@Model.Email" autocomplete="username" placeholder="you@sculptflow.com"
+                       required autofocus="@string.IsNullOrEmpty(Model.Email)" />
+            </label>
+            <label class="login-field">
+                <span>Password</span>
+                <span class="login-pw">
+                    <input id="pw" name="Password" type="password" autocomplete="current-password" required data-pw
+                           autofocus="@(!string.IsNullOrEmpty(Model.Email))" />
+                    <button type="button" class="login-eye" data-pw-toggle aria-label="Show password" title="Show password">👁</button>
+                </span>
+            </label>
+            <div class="login-caps" data-caps hidden>⇪ Caps Lock is on</div>
+
+            <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+            <button class="btn primary login-submit" type="submit" data-busy-label="Signing in…">Sign in</button>
+        </form>
+    </main>
 </div>
+<script src="~/js/login.js" asp-append-version="true"></script>
 </body>
 </html>

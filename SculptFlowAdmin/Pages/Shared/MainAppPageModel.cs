@@ -4,8 +4,9 @@ using SculptFlowAdmin.Common.Exceptions;
 
 namespace SculptFlowAdmin.Pages.Shared;
 
-/// <summary>Base for billing pages: a GET that fails to reach the main app shows the reason instead of an error page.</summary>
-public abstract class BillingPageModel : AdminPageModel
+/// <summary>Base for pages that read through the main app's platform-admin API (billing, configuration): a GET that fails
+/// to reach the main app shows the reason instead of an error page.</summary>
+public abstract class MainAppPageModel : AdminPageModel
 {
     public string? LoadError { get; protected set; }
 

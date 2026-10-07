@@ -12,6 +12,10 @@ using SculptFlowAdmin.Business.Contracts.Services.Overview;
 using SculptFlowAdmin.Business.Contracts.Services.Staff;
 using SculptFlowAdmin.Business.Engines.Admins;
 using SculptFlowAdmin.Business.HttpClients.MainApp;
+using SculptFlowAdmin.Business.Services.Billing;
+using SculptFlowAdmin.Business.Services.Configuration;
+using SculptFlowAdmin.Business.Contracts.Services.Configuration;
+using SculptFlowAdmin.Business.Contracts.Services.Billing;
 using SculptFlowAdmin.Business.Managers;
 using SculptFlowAdmin.Business.Services.Auth;
 using SculptFlowAdmin.Business.Services.Channels;
@@ -78,9 +82,14 @@ builder.Services.AddScoped<IContentAdminService, ContentAdminService>();
 builder.Services.AddScoped<IOverviewAdminService, OverviewAdminService>();
 
 // Billing is owned by the main app: the portal calls its platform-admin API (MainApp:ApiBaseUrl / PublicBaseUrl +
-// MainApp:PlatformAdminApiKey) and never writes the billing.* tables itself.
+// MainApp:PlatformAdminApiKey) and never reads or writes the billing.* tables itself. Pages call IBillingAdminService,
+// which calls the API client and records each write in admin_audit_log.
 builder.Services.Configure<SculptFlowAdmin.Common.Configs.MainAppApiOptions>(builder.Configuration.GetSection("MainApp"));
 builder.Services.AddHttpClient<IBillingApiClient, BillingApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddScoped<IBillingAdminService, BillingAdminService>();
+// The main app's configuration overrides (config.settings), through its platform-admin settings API.
+builder.Services.AddHttpClient<ISettingsApiClient, SettingsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddScoped<ISettingsAdminService, SettingsAdminService>();
 
 // Admin-only cookie. Its own name, so it can never be confused with the main app's staff cookie.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -134,7 +143,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
+// Static files (CSS, JS, logo) are public: the fallback policy would otherwise send the sign-in page's own stylesheet
+// to the sign-in page.
+app.MapStaticAssets().AllowAnonymous();
 app.MapRazorPages().WithStaticAssets();
 app.MapControllers();
 
