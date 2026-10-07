@@ -46,7 +46,10 @@ Rules:
    path and are registered against it in DI; pages and controllers inject the interface.
 6. Never commit or push unless Mohammad says so.
 
-## Other docs
+## Other docs (read on demand)
 
-- `README.md` — what the portal covers and setup.
-- `MAIN_APP_SYNC.md` — which main-app commit the portal was last checked against and how to update it.
+`README.md` (coverage, setup), `MAIN_APP_SYNC.md` (last-checked main-app commit, how to sync).
+**Do not read the main app's `PROJECT_HANDOFF.md` unless Mohammad asks.**
+
+Keep threads short; if a task is unrelated to the current thread's task or the thread has grown long, suggest or start a
+new thread.
