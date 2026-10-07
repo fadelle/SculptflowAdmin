@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SculptFlowAdmin.Business.Contracts.Services.Leads;
 using SculptFlowAdmin.Entities.Dtos.Leads;
-using SculptFlowAdmin.Entities.Models;
+using SculptFlowAdmin.Entities.Responses.PlatformAdmin;
 using SculptFlowAdmin.Entities.Requests.Leads;
 using SculptFlowAdmin.Pages.Shared;
 
@@ -14,10 +14,10 @@ public class DetailsModel : AdminPageModel
     public DetailsModel(ILeadAdminService leads) => _leads = leads;
 
     [BindProperty(SupportsGet = true)] public Guid Id { get; set; }
-    public Lead Lead { get; private set; } = null!;
+    public LeadDetail Lead { get; private set; } = null!;
     public IReadOnlyList<ConversationRow> Conversations { get; private set; } = [];
     public IReadOnlyList<AppointmentRow> Appointments { get; private set; } = [];
-    public List<EventLog> Events { get; private set; } = new();
+    public List<LeadEventRow> Events { get; private set; } = new();
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {

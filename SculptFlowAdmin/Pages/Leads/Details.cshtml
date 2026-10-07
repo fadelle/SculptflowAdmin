@@ -59,5 +59,5 @@
 
 <div class="card">
     <h2>Events (latest 100)</h2>
-    <partial name="_EventTable" model="Model.Events.Select(e => new EventRow(e.Id, e.ClinicId, l.Clinic?.Name ?? string.Empty, e.EventType, e.Source, e.LeadId, e.ConversationId, e.AppointmentId, e.Metadata, e.CreatedAt)).ToList()" />
+    <partial name="_EventTable" model="Model.Events.Select(e => new EventRow(e.Id, l.ClinicId, l.Clinic?.Name ?? string.Empty, e.EventType, e.Source, e.LeadId, e.ConversationId, e.AppointmentId, e.Metadata, e.CreatedAt)).ToList()" />
 </div>

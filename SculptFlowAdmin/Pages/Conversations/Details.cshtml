@@ -14,8 +14,8 @@
             <a href="/Clinics/Details?id=@c.ClinicId">@Model.Clinic?.Name</a> ·
             <a href="/Leads/Details?id=@c.LeadId">lead</a> ·
             @Ui.Badge(c.Mode, c.Mode == "ai" ? "AI" : c.Mode == "human" ? "staff" : c.Mode) @Ui.Badge(c.Status) ·
-            24h window @(c.IsServiceWindowOpen(DateTimeOffset.UtcNow) ? "open until " : "closed")
-            @if (c.IsServiceWindowOpen(DateTimeOffset.UtcNow)) { @Ui.Time(c.ServiceWindowExpiresAt) }
+            24h window @(c.IsServiceWindowOpen ? "open until " : "closed")
+            @if (c.IsServiceWindowOpen) { @Ui.Time(c.ServiceWindowExpiresAt) }
         </div>
     </div>
     <div class="actions">

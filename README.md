@@ -61,5 +61,5 @@ written to `admin_audit_log`. Future areas with money or complex rules should fo
 ## Keeping up with the main app
 
 `MAIN_APP_SYNC.md` records which main-app commit this portal was last checked against, how to update it, and which
-main-app rules the admin actions mirror. `Entities/Models`, the entity vocabularies in `Common/Enums` and `Persistence/Contexts/ApplicationDbContext.cs` are
-copies of the main app's. Code layout and rules: `CLAUDE.md`.
+main-app API shapes the portal copies. The portal has no access to the main app's tables; it reads and writes
+everything through `/api/platform-admin`. Code layout and rules: `CLAUDE.md`.

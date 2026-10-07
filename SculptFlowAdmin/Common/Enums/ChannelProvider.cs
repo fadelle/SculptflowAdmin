@@ -1,4 +1,4 @@
-using SculptFlowAdmin.Entities.Models;
+using SculptFlowAdmin.Entities.Responses.PlatformAdmin;
 
 namespace SculptFlowAdmin.Common.Enums;
 
@@ -11,6 +11,6 @@ public static class ChannelProvider
     public const string Infobip = "infobip";
 
     /// <summary>The row's provider, treating the legacy null as Meta.</summary>
-    public static string Of(ChannelIntegration integration) =>
+    public static string Of(ChannelDetail integration) =>
         string.IsNullOrWhiteSpace(integration.Provider) ? Meta : integration.Provider;
 }

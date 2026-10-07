@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SculptFlowAdmin.Business.Contracts.Services.Clinics;
 using SculptFlowAdmin.Business.Contracts.Services.Leads;
 using SculptFlowAdmin.Common.Enums;
-using SculptFlowAdmin.Entities.Models;
+using SculptFlowAdmin.Entities.Responses.PlatformAdmin;
 using SculptFlowAdmin.Pages.Shared;
 
 namespace SculptFlowAdmin.Pages.Conversations;
@@ -19,9 +19,9 @@ public class DetailsModel : AdminPageModel
     }
 
     [BindProperty(SupportsGet = true)] public Guid Id { get; set; }
-    public Conversation Conversation { get; private set; } = null!;
-    public Clinic? Clinic { get; private set; }
-    public List<Message> Messages { get; private set; } = new();
+    public ConversationDetail Conversation { get; private set; } = null!;
+    public ClinicDetail? Clinic { get; private set; }
+    public List<MessageDetail> Messages { get; private set; } = new();
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {

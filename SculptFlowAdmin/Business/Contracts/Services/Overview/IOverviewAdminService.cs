@@ -5,14 +5,13 @@ using SculptFlowAdmin.Entities.Responses.Paging;
 
 namespace SculptFlowAdmin.Business.Contracts.Services.Overview;
 
+/// <summary>Dashboard totals, problems and the event log (main app's overview API), plus this portal's own audit log.</summary>
 public interface IOverviewAdminService
 {
     Task<SystemTotals> TotalsAsync(CancellationToken ct = default);
 
-    /// <summary>Messages per UTC day for the last <paramref name="days"/> days, split by who sent them.</summary>
     Task<List<DailyCount>> DailyMessagesAsync(int days = 14, CancellationToken ct = default);
 
-    /// <summary>Everything that probably needs an admin: broken channels and calendars, failing sends, stuck campaigns.</summary>
     Task<List<ProblemRow>> ProblemsAsync(CancellationToken ct = default);
 
     Task<List<ClinicRow>> RecentClinicsAsync(int take, CancellationToken ct = default);

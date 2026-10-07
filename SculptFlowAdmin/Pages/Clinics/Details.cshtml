@@ -111,9 +111,8 @@
 
         <form class="card" method="post" asp-page-handler="ConnectWhatsApp" asp-route-id="@c.Id">
             <h2>Connect a WhatsApp sender (Infobip)</h2>
-            <p class="small muted">Register the number as a WhatsApp sender in the Infobip portal first. This sets the clinic's WhatsApp to that sender, replacing whatever was connected before. It does not check the number with Infobip.</p>
+            <p class="small muted">Register the number as a WhatsApp sender in the Infobip portal first. This sets the clinic's WhatsApp to that sender, replacing whatever was connected before. The main app checks the number with Infobip first and applies the clinic's plan limits.</p>
             <div class="form-row"><label>Sender number (international)</label><input name="sender" placeholder="+44 7860 099299" required /></div>
-            <div class="form-row"><label>Business display name (optional)</label><input name="verifiedName" /></div>
             <button class="btn" type="submit" data-confirm="Connect this number as the clinic's WhatsApp?">Connect sender</button>
         </form>
 

@@ -1,0 +1,74 @@
+@page
+@model SculptFlowAdmin.Pages.Cache.IndexModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Cache";
+}
+<div class="page-head">
+    <div><h1>Cache</h1>
+        <div class="muted">What the main app keeps in memory to answer faster. Every change in the app clears what it affects, so
+            removing keys here is only needed after editing the database by hand. A removed key is loaded again on next use.
+            With more than one main-app server, this reaches only the server that answers.</div></div>
+    <form method="post" asp-page-handler="Clear" onsubmit="return confirm('Clear the whole cache and reload settings?')">
+        <button class="btn" type="submit">Clear all</button>
+    </form>
+</div>
+
+@if (Model.LoadError is null)
+{
+    <form class="filters" method="get">
+        <label>Key starts with<input name="prefix" value="@Model.Prefix" placeholder="e.g. billing:" /></label>
+        <button class="btn" type="submit">Filter</button>
+    </form>
+    @if (Model.Prefix is not null && Model.Keys.Count > 0)
+    {
+        <form method="post" asp-page-handler="RemovePrefix" onsubmit="return confirm('Remove every key starting with @Model.Prefix?')" style="margin-bottom:12px">
+            <input type="hidden" name="prefix" value="@Model.Prefix" />
+            <button class="btn sm" type="submit">Remove all @Model.Keys.Count matching</button>
+        </form>
+    }
+
+    @if (Model.SelectedKey is not null)
+    {
+        <div class="card" style="margin-bottom:16px">
+            <h2 class="mono small">@Model.SelectedKey</h2>
+            @if (Model.Selected is null)
+            {
+                <div class="muted">Not cached (it may have expired or been removed).</div>
+            }
+            else
+            {
+                <div class="small muted">Expires @Model.Selected.ExpiresAt.ToString("yyyy-MM-dd HH:mm:ss") UTC · @Model.Selected.SizeBytes bytes</div>
+                <pre class="mono small" style="white-space:pre-wrap;max-height:420px;overflow:auto">@JsonSerializer.Serialize(Model.Selected.Value, new JsonSerializerOptions { WriteIndented = true })</pre>
+            }
+        </div>
+    }
+
+    @if (Model.Keys.Count == 0)
+    {
+        <div class="card empty">Nothing cached@(Model.Prefix is null ? "" : " with that prefix").</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <tr><th>Key</th><th>Expires (UTC)</th><th>Size</th><th></th></tr>
+                @foreach (var k in Model.Keys)
+                {
+                    <tr>
+                        <td><a class="mono small" asp-page="/Cache/Index" asp-route-key="@k.Key" asp-route-prefix="@Model.Prefix">@k.Key</a></td>
+                        <td class="small">@k.ExpiresAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td class="small">@k.SizeBytes B</td>
+                        <td>
+                            <form method="post" asp-page-handler="Remove">
+                                <input type="hidden" name="key" value="@k.Key" />
+                                <input type="hidden" name="prefix" value="@Model.Prefix" />
+                                <button class="btn sm" type="submit">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+    }
+}

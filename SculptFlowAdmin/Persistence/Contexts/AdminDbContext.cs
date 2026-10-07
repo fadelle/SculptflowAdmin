@@ -4,8 +4,8 @@ using SculptFlowAdmin.Entities.Models;
 namespace SculptFlowAdmin.Persistence.Contexts;
 
 /// <summary>
-/// The admin portal's own tables (Database/admin-schema.sql). Kept apart from ApplicationDbContext, which is a
-/// copy of the main app's context and is refreshed from it on every sync (see MAIN_APP_SYNC.md).
+/// The admin portal's own tables (Database/admin-schema.sql). The portal has no access to the main app's tables;
+/// it reads and changes those only through the main app's platform-admin APIs.
 /// </summary>
 public class AdminDbContext : DbContext
 {

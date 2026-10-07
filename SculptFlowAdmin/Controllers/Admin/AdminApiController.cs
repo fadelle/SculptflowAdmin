@@ -104,8 +104,8 @@ public class AdminApiController : ControllerBase
     {
         try
         {
-            var row = await _channels.ConnectInfobipSenderAsync(id, body.Sender, body.VerifiedName, ct);
-            return Ok(new { row.Id, row.Status, row.DisplayName, webhookUrl = _channels.InfobipWebhookUrl(row) });
+            var row = await _channels.ConnectInfobipSenderAsync(id, body.Sender, ct);
+            return Ok(new { row.Id, row.Status, row.DisplayName, webhookUrl = row.InfobipWebhookUrl });
         }
         catch (Exception ex) when (ex is AdminRuleException or ArgumentException) { return BadRequest(new { error = ex.Message }); }
         catch (KeyNotFoundException) { return NotFound(); }

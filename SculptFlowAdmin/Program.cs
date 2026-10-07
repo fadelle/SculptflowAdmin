@@ -14,6 +14,8 @@ using SculptFlowAdmin.Business.Engines.Admins;
 using SculptFlowAdmin.Business.HttpClients.MainApp;
 using SculptFlowAdmin.Business.Services.Billing;
 using SculptFlowAdmin.Business.Services.Configuration;
+using SculptFlowAdmin.Business.Services.Caching;
+using SculptFlowAdmin.Business.Contracts.Services.Caching;
 using SculptFlowAdmin.Business.Contracts.Services.Configuration;
 using SculptFlowAdmin.Business.Contracts.Services.Billing;
 using SculptFlowAdmin.Business.Managers;
@@ -28,24 +30,13 @@ using SculptFlowAdmin.Entities.Models;
 using SculptFlowAdmin.Persistence.Contexts;
 using SculptFlowAdmin.Persistence.Contracts;
 using SculptFlowAdmin.Persistence.Contracts.Admins;
-using SculptFlowAdmin.Persistence.Contracts.Channels;
-using SculptFlowAdmin.Persistence.Contracts.Clinics;
-using SculptFlowAdmin.Persistence.Contracts.Content;
-using SculptFlowAdmin.Persistence.Contracts.Leads;
-using SculptFlowAdmin.Persistence.Contracts.Overview;
-using SculptFlowAdmin.Persistence.Contracts.Staff;
 using SculptFlowAdmin.Persistence.Repositories;
 using SculptFlowAdmin.Persistence.Repositories.Admins;
-using SculptFlowAdmin.Persistence.Repositories.Channels;
-using SculptFlowAdmin.Persistence.Repositories.Clinics;
-using SculptFlowAdmin.Persistence.Repositories.Content;
-using SculptFlowAdmin.Persistence.Repositories.Leads;
-using SculptFlowAdmin.Persistence.Repositories.Overview;
-using SculptFlowAdmin.Persistence.Repositories.Staff;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Same database as the main app (ConnectionStrings:Postgres, same key name as SculptFlowApp).
+// The portal's own tables (schema admin) live in the same database as the main app (ConnectionStrings:Postgres, same key
+// name as SculptFlowApp); it never touches the main app's tables, only the main app's platform-admin APIs.
 var connectionString = builder.Configuration.GetConnectionString("Postgres");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
@@ -54,23 +45,14 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "or the ConnectionStrings__Postgres environment variable when hosted.");
 }
 
-builder.Services.AddDbContext<ApplicationDbContext>(o => o.UseNpgsql(connectionString));
 builder.Services.AddDbContext<AdminDbContext>(o => o.UseNpgsql(connectionString));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
-builder.Services.AddScoped<IPasswordHasher<IdentityUser>, PasswordHasher<IdentityUser>>();
-// Persistence: repositories + units of work (main-app tables via ApplicationDbContext, portal tables via AdminDbContext).
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+// Persistence: only the portal's own tables (schema admin). Everything about clinics goes through the main app's APIs.
 builder.Services.AddScoped<IAdminUnitOfWork, AdminUnitOfWork>();
 builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 builder.Services.AddScoped<IAdminAuditRepository, AdminAuditRepository>();
-builder.Services.AddScoped<IClinicAdminRepository, ClinicAdminRepository>();
-builder.Services.AddScoped<IStaffAdminRepository, StaffAdminRepository>();
-builder.Services.AddScoped<ILeadAdminRepository, LeadAdminRepository>();
-builder.Services.AddScoped<IChannelAdminRepository, ChannelAdminRepository>();
-builder.Services.AddScoped<IContentAdminRepository, ContentAdminRepository>();
-builder.Services.AddScoped<IOverviewAdminRepository, OverviewAdminRepository>();
 
 builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
 builder.Services.AddScoped<IAdminAudit, AdminAudit>();
@@ -90,6 +72,15 @@ builder.Services.AddScoped<IBillingAdminService, BillingAdminService>();
 // The main app's configuration overrides (config.settings), through its platform-admin settings API.
 builder.Services.AddHttpClient<ISettingsApiClient, SettingsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddScoped<ISettingsAdminService, SettingsAdminService>();
+builder.Services.AddHttpClient<ICacheApiClient, CacheApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddScoped<ICacheAdminService, CacheAdminService>();
+// Clinics, channels, staff, leads, content and the dashboard: the main app's platform-admin APIs (reads and writes).
+builder.Services.AddHttpClient<IClinicsApiClient, ClinicsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<IChannelsApiClient, ChannelsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(60));
+builder.Services.AddHttpClient<IStaffApiClient, StaffApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<ILeadsApiClient, LeadsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<IContentApiClient, ContentApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<IOverviewApiClient, OverviewApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 
 // Admin-only cookie. Its own name, so it can never be confused with the main app's staff cookie.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

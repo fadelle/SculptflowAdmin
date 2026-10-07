@@ -8,6 +8,7 @@ using SculptFlowAdmin.Entities.Dtos.Channels;
 using SculptFlowAdmin.Entities.Dtos.Clinics;
 using SculptFlowAdmin.Entities.Dtos.Staff;
 using SculptFlowAdmin.Entities.Models;
+using SculptFlowAdmin.Entities.Responses.PlatformAdmin;
 using SculptFlowAdmin.Entities.Requests.Clinics;
 using SculptFlowAdmin.Pages.Shared;
 
@@ -32,13 +33,13 @@ public class DetailsModel : AdminPageModel
     }
 
     [BindProperty(SupportsGet = true)] public Guid Id { get; set; }
-    public Clinic Clinic { get; private set; } = null!;
+    public ClinicDetail Clinic { get; private set; } = null!;
     public ClinicCounts Counts { get; private set; } = null!;
     public IReadOnlyList<StaffRow> Staff { get; private set; } = [];
     public List<ChannelRow> Channels { get; private set; } = new();
     public List<CalendarRow> Calendars { get; private set; } = new();
     public List<TikTokRow> TikTok { get; private set; } = new();
-    public KnowledgeSearchSettings? SearchSettings { get; private set; }
+    public SearchSettingsDetail? SearchSettings { get; private set; }
     public IReadOnlyList<AdminAuditEntry> Audit { get; private set; } = [];
 
     [BindProperty] public ClinicUpdate Edit { get; set; } = new("", null, null, null, null, "UTC", null, null, null);
@@ -66,8 +67,8 @@ public class DetailsModel : AdminPageModel
     public Task<IActionResult> OnPostSetActiveAsync(bool active, CancellationToken ct) =>
         RunAsync(() => _clinics.SetActiveAsync(Id, active, ct), active ? "Clinic activated." : "Clinic deactivated.", new { id = Id });
 
-    public Task<IActionResult> OnPostConnectWhatsAppAsync(string? sender, string? verifiedName, CancellationToken ct) =>
-        RunAsync(() => _channels.ConnectInfobipSenderAsync(Id, sender, verifiedName, ct),
+    public Task<IActionResult> OnPostConnectWhatsAppAsync(string? sender, CancellationToken ct) =>
+        RunAsync(() => _channels.ConnectInfobipSenderAsync(Id, sender, ct),
             "WhatsApp sender connected. Paste its webhook URL into the Infobip sender (see the channel's page).", new { id = Id });
 
     public Task<IActionResult> OnPostSearchSettingsAsync(int topK, double minimumSimilarity, CancellationToken ct) =>

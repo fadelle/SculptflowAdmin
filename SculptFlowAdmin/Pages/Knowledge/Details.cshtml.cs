@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SculptFlowAdmin.Business.Contracts.Services.Content;
-using SculptFlowAdmin.Entities.Models;
+using SculptFlowAdmin.Entities.Responses.PlatformAdmin;
 using SculptFlowAdmin.Pages.Shared;
 
 namespace SculptFlowAdmin.Pages.Knowledge;
@@ -12,7 +12,7 @@ public class DetailsModel : AdminPageModel
     public DetailsModel(IContentAdminService content) => _content = content;
 
     [BindProperty(SupportsGet = true)] public Guid Id { get; set; }
-    public KnowledgeDocument Doc { get; private set; } = null!;
+    public KnowledgeDocDetail Doc { get; private set; } = null!;
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {

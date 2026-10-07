@@ -49,7 +49,7 @@
             @if (r.InstagramBusinessId is not null) { <dt>Instagram business id</dt><dd class="mono">@r.InstagramBusinessId</dd> }
             @if (r.TelegramBotUsername is not null) { <dt>Telegram bot</dt><dd>@@@r.TelegramBotUsername <span class="mono">@r.TelegramBotId</span></dd> }
             @if (r.WebhookStatus is not null) { <dt>Webhook</dt><dd>@Ui.Badge(r.WebhookStatus) @Ui.Time(r.WebhookRegisteredAt)</dd> }
-            <dt>Has access token</dt><dd>@Ui.YesNo(!string.IsNullOrEmpty(r.AccessToken))</dd>
+            <dt>Has access token</dt><dd>@Ui.YesNo(r.HasAccessToken)</dd>
             <dt>Last verified</dt><dd>@Ui.Time(r.LastVerifiedAt)</dd>
             <dt>Last error</dt><dd>@r.LastError</dd>
             <dt>Connected since</dt><dd>@Ui.Time(r.CreatedAt)</dd>

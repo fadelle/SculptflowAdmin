@@ -56,19 +56,42 @@ public abstract class MainAppApiClient
     /// only mean the main app has the API off.</summary>
     protected async Task WriteAsync(HttpMethod method, string path, object? body, string? opId, bool isCreate, CancellationToken ct)
     {
+        using var response = await SendWriteAsync(method, path, body, opId, isCreate, ct);
+    }
+
+    /// <summary>A write whose answer the caller needs (same 404 rules as <see cref="WriteAsync"/>).</summary>
+    protected async Task<T> WriteForAsync<T>(HttpMethod method, string path, object? body, string? opId, bool isCreate, CancellationToken ct)
+        where T : class
+    {
+        using var response = await SendWriteAsync(method, path, body, opId, isCreate, ct);
+        return await response.Content.ReadFromJsonAsync<T>(Json, ct)
+            ?? throw new MainAppApiException("The main app answered with an empty body.");
+    }
+
+    private async Task<HttpResponseMessage> SendWriteAsync(HttpMethod method, string path, object? body, string? opId, bool isCreate, CancellationToken ct)
+    {
         string? key = null;
         if (opId is not null)
         {
             if (!Guid.TryParse(opId, out var op)) throw new MainAppApiException("This form expired. Reload the page and try again.");
             key = $"admin-portal:{op:N}";
         }
-        using var response = await SendAsync(method, path, body, key, ct);
-        if (response.StatusCode == HttpStatusCode.NotFound)
+        var response = await SendAsync(method, path, body, key, ct);
+        try
         {
-            if (isCreate) throw ApiOff();
-            throw new KeyNotFoundException();
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                if (isCreate) throw ApiOff();
+                throw new KeyNotFoundException();
+            }
+            await EnsureSuccessAsync(response, ct);
+            return response;
         }
-        await EnsureSuccessAsync(response, ct);
+        catch
+        {
+            response.Dispose();
+            throw;
+        }
     }
 
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, object? body, string? idempotencyKey, CancellationToken ct)
@@ -138,4 +161,22 @@ public abstract class MainAppApiClient
         new("The main app's platform-admin API is off: PlatformAdmin:ApiKey isn't set on the main app.", HttpStatusCode.NotFound);
 
     protected static string Esc(string value) => Uri.EscapeDataString(value.Trim());
+
+    /// <summary>"?a=1&amp;b=x" from the non-empty values (empty string when none).</summary>
+    protected static string Query(params (string Key, object? Value)[] parts)
+    {
+        var pairs = parts
+            .Select(p => (p.Key, Value: p.Value switch
+            {
+                null => null,
+                bool b => b ? "true" : null,
+                int i => i > 0 ? i.ToString(System.Globalization.CultureInfo.InvariantCulture) : null,
+                string s => string.IsNullOrWhiteSpace(s) ? null : s,
+                var v => Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture),
+            }))
+            .Where(p => p.Value is not null)
+            .Select(p => $"{p.Key}={Esc(p.Value!)}")
+            .ToList();
+        return pairs.Count == 0 ? "" : "?" + string.Join("&", pairs);
+    }
 }
