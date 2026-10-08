@@ -9,8 +9,8 @@
             @foreach (var s in AppointmentStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option> }
         </select>
     </label>
-    <label>&nbsp;<span><input type="checkbox" name="upcoming" value="true" checked="@Model.Upcoming" /> Upcoming only</span></label>
-    <button class="btn" type="submit">Filter</button>
+    <label class="check"><input type="checkbox" name="upcoming" value="true" checked="@Model.Upcoming" /> Upcoming only</label>
+    <partial name="_FilterActions" />
 </form>
 <partial name="_AppointmentTable" model="Model.Result.Items" />
 <partial name="_Pager" model="PagerModel.From(Model.Result)" />

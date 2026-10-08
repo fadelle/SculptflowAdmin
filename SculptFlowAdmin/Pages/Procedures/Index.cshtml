@@ -3,8 +3,9 @@
 @{ ViewData["Title"] = "Procedures"; }
 <div class="page-head"><div><h1>Procedures</h1><div class="muted">Each clinic's service catalog. Inactive procedures are hidden from the AI and from booking.</div></div></div>
 <form class="filters" method="get">
+    <label class="search">Find<input type="search" data-filter="#rows" placeholder="Name, code or clinic" /></label>
     <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <button class="btn" type="submit">Filter</button>
+    <partial name="_FilterActions" />
 </form>
 @if (Model.Rows.Count == 0)
 {
@@ -13,7 +14,7 @@
 else
 {
 <div class="table-wrap">
-<table>
+<table id="rows">
     <tr><th>Procedure</th><th>Clinic</th><th>Code</th><th class="num">Consultation (min)</th><th class="num">Leads interested</th><th>Status</th><th></th></tr>
     @foreach (var p in Model.Rows)
     {

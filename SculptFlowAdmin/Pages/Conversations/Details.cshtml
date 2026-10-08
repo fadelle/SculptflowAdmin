@@ -9,6 +9,7 @@
 }
 <div class="page-head">
     <div>
+        <div class="crumbs"><a href="/Conversations">Conversations</a> /</div>
         <h1>@leadName <span class="muted small">on @c.Channel</span></h1>
         <div class="muted small">
             <a href="/Clinics/Details?id=@c.ClinicId">@Model.Clinic?.Name</a> ·
@@ -53,6 +54,8 @@
     {
         <div class="empty">No messages.</div>
     }
+    else
+    {
     <div class="timeline">
         @foreach (var m in Model.Messages)
         {
@@ -70,4 +73,5 @@
             </div>
         }
     </div>
+    }
 </div>

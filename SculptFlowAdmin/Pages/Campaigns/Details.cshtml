@@ -6,6 +6,7 @@
 }
 <div class="page-head">
     <div>
+        <div class="crumbs"><a href="/Campaigns">Campaigns</a> /</div>
         <h1>@c.Name @Ui.Badge(c.Status)</h1>
         <div class="muted small"><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a> · @c.CampaignType.Replace('_', ' ') on @c.Channel · template @c.TemplateName · created @Ui.Time(c.CreatedAt)</div>
     </div>
@@ -17,7 +18,7 @@
     }
 </div>
 
-<div class="grid grid-stats" style="margin-bottom:16px">
+<div class="grid grid-stats">
     <div class="stat"><div class="label">Audience</div><div class="value">@c.Recipients</div></div>
     <div class="stat"><div class="label">Sent</div><div class="value">@c.Sent</div></div>
     <div class="stat"><div class="label">Delivered</div><div class="value">@c.Delivered</div></div>
@@ -35,7 +36,7 @@
     </dl>
 </div>
 
-<h2>Recipients</h2>
+<h2 style="margin-top:24px">Recipients</h2>
 <form class="filters" method="get">
     <input type="hidden" name="id" value="@c.Id" />
     <label>Status
@@ -43,7 +44,7 @@
             @foreach (var s in CampaignRecipientStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
         </select>
     </label>
-    <button class="btn" type="submit">Filter</button>
+    <button class="btn" type="submit">Search</button>
 </form>
 @if (Model.Recipients.Items.Count == 0)
 {

@@ -3,12 +3,12 @@
 @{
     ViewData["Title"] = "Main app unavailable";
 }
-<div class="page-head">
-    <div><h1>Couldn't load this page</h1>
-        <div class="muted">This portal reads everything through the main app, and the main app didn't answer.</div></div>
+<div class="card state">
+    <h1>Couldn't load this page</h1>
+    <p class="muted">This portal reads everything through the main app, and the main app didn't answer.</p>
+    <div class="alert err">@Model.Reason</div>
+    @if (Model.From is not null)
+    {
+        <div class="actions" style="justify-content:center"><a class="btn primary" href="@Model.From">Try again</a></div>
+    }
 </div>
-<div class="alert err">@Model.Reason</div>
-@if (Model.From is not null)
-{
-    <a class="btn" href="@Model.From">Try again</a>
-}

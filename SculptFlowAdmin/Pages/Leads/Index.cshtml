@@ -13,8 +13,8 @@
             }
         </select>
     </label>
-    <label>Search<input name="q" value="@Model.Q" placeholder="Name, phone or email" /></label>
-    <button class="btn" type="submit">Filter</button>
+    <label class="search">Search<input type="search" name="q" value="@Model.Q" placeholder="Name, phone or email" /></label>
+    <partial name="_FilterActions" />
 </form>
 @if (Model.Result.Items.Count == 0)
 {

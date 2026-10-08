@@ -21,7 +21,7 @@
             @foreach (var s in new[] { "active", "closed", "archived" }) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
         </select>
     </label>
-    <button class="btn" type="submit">Filter</button>
+    <partial name="_FilterActions" />
 </form>
 <partial name="_ConversationTable" model="Model.Result.Items" />
 <partial name="_Pager" model="PagerModel.From(Model.Result)" />

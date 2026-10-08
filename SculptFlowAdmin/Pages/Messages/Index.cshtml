@@ -9,9 +9,9 @@
             @foreach (var s in new[] { "lead", "ai", "staff", "system" }) { <option value="@s" selected="@(s == Model.Sender)">@s</option> }
         </select>
     </label>
-    <label>Text contains<input name="q" value="@Model.Q" /></label>
-    <label>&nbsp;<span><input type="checkbox" name="failed" value="true" checked="@Model.Failed" /> Failed only</span></label>
-    <button class="btn" type="submit">Filter</button>
+    <label class="search">Text contains<input type="search" name="q" value="@Model.Q" /></label>
+    <label class="check"><input type="checkbox" name="failed" value="true" checked="@Model.Failed" /> Failed only</label>
+    <partial name="_FilterActions" />
 </form>
 @if (Model.Result.Items.Count == 0)
 {

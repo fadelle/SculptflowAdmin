@@ -14,7 +14,7 @@
     <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
     @if (Model.Tab == "documents")
     {
-        <label>Search<input name="q" value="@Model.Q" placeholder="Title or text" /></label>
+        <label class="search">Search<input type="search" name="q" value="@Model.Q" placeholder="Title or text" /></label>
         <label>Status
             <select name="active"><option value="">All</option>
                 <option value="true" selected="@(Model.Active == "true")">Active</option>
@@ -22,7 +22,7 @@
             </select>
         </label>
     }
-    <button class="btn" type="submit">Filter</button>
+    <partial name="_FilterActions" />
 </form>
 
 @if (Model.Tab == "documents")

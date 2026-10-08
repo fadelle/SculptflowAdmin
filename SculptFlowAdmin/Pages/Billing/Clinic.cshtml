@@ -10,6 +10,7 @@
 }
 <div class="page-head">
     <div>
+        <div class="crumbs"><a href="/Billing">Billing accounts</a> /</div>
         <h1>@(o?.ClinicName ?? "Clinic") <span class="muted">· Billing</span></h1>
         @if (s is not null)
         {
@@ -21,6 +22,14 @@
             </div>
         }
     </div>
+    @if (o is not null && s is not null && Model.Tab == "overview")
+    {
+        <div class="actions">
+            <button class="btn" type="button" data-open="adjust">Adjust</button>
+            <button class="btn" type="button" data-open="start-plan">@(sub is null ? "Start a plan" : "Change plan")</button>
+            <button class="btn primary" type="button" data-open="top-up">Top up wallet</button>
+        </div>
+    }
 </div>
 
 @if (o is not null && s is not null)
@@ -33,7 +42,7 @@
 
     @if (Model.Tab == "overview")
     {
-        <div class="grid grid-stats" style="margin-bottom:16px">
+        <div class="grid grid-stats">
             <div class="stat"><div class="label">Plan</div><div class="value" style="font-size:18px">@(s.PlanName ?? "No plan")</div>
                 @if (s.PlanPrice is not null) { <div class="small muted">@BillingUi.Money(s.PlanPrice, cur) per @s.BillingPeriod</div> }</div>
             <div class="stat @(s.SubscriptionStatus is "past_due" or "expired" ? "warn" : "")"><div class="label">Subscription</div><div class="value" style="font-size:18px">@Ui.Badge(s.SubscriptionStatus ?? "none", s.SubscriptionStatus is null ? "none" : null)</div>
@@ -50,11 +59,11 @@
                     <h2>Subscription</h2>
                     @if (sub is null)
                     {
-                        <div class="empty">No subscription. Start a plan below.</div>
+                        <div class="empty">No subscription yet. Use “Start a plan” above.</div>
                     }
                     else
                     {
-                        <dl class="kv" style="margin-bottom:12px">
+                        <dl class="kv" style="margin-bottom:14px">
                             <dt>Plan</dt><dd>@sub.PlanName <span class="muted small mono">@sub.PlanCode</span></dd>
                             <dt>Status</dt><dd>@Ui.Badge(sub.Status) @if (sub.CancelAtPeriodEnd) { @Ui.Badge("pending", "ends at period end") }</dd>
                             <dt>Current period</dt><dd>@Ui.Time(sub.CurrentPeriodStart) → @Ui.Time(sub.CurrentPeriodEnd)</dd>
@@ -70,41 +79,12 @@
                                     <form method="post" asp-page-handler="Resume" asp-route-id="@Model.Id"><button class="btn sm" type="submit">Keep renewing</button></form>
                                 }
                                 <form method="post" asp-page-handler="Renew" asp-route-id="@Model.Id"><button class="btn sm" type="submit" title="Run the renewal check now (e.g. right after a top-up for a past-due clinic)">Run renewal now</button></form>
+                                <button class="btn sm danger" type="button" data-open="cancel-sub">Cancel subscription</button>
                             }
                         </div>
-                        @if (sub.Status is "active" or "past_due")
-                        {
-                            <form method="post" asp-page-handler="Cancel" asp-route-id="@Model.Id" style="margin-top:12px">
-                                <div class="form-row"><label>Cancel: reason (optional)</label><input name="reason" maxlength="500" /></div>
-                                <div class="actions">
-                                    @if (!sub.CancelAtPeriodEnd)
-                                    {
-                                        <button class="btn sm" type="submit" name="immediately" value="false" data-confirm="End the subscription at the end of the current period?">Cancel at period end</button>
-                                    }
-                                    <button class="btn sm danger" type="submit" name="immediately" value="true" data-confirm="Cancel now? Sending, campaigns and the AI stop for this clinic right away.">Cancel now</button>
-                                </div>
-                            </form>
-                        }
                     }
                 </div>
 
-                <form class="card" method="post" asp-page-handler="StartPlan" asp-route-id="@Model.Id">
-                    <h2>@(sub is null ? "Start a plan" : "Change plan")</h2>
-                    <p class="small muted">Starts a new period now (no proration). The previous period's included credit expires and the new plan's credit is granted.</p>
-                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
-                    <div class="form-row"><label>Plan</label>
-                        <select name="planCode" required>
-                            <option value="">Choose…</option>
-                            @foreach (var p in Model.Plans.Where(p => p.IsActive))
-                            {
-                                <option value="@p.Code" selected="@(p.Code == sub?.PlanCode)">@p.Name (@p.Code): @BillingUi.Money(p.Price, p.Currency) / @p.BillingPeriod, credit @BillingUi.Money(p.IncludedUsageCredit)</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-row"><label><input type="checkbox" name="chargeFirstPeriod" value="true" checked /> Charge the first period from the wallet (untick for a free first period)</label></div>
-                    <div class="form-row"><label>Reason (optional)</label><input name="reason" maxlength="500" /></div>
-                    <button class="btn primary" type="submit" data-confirm="Start this plan for @o.ClinicName now?">@(sub is null ? "Start plan" : "Change plan")</button>
-                </form>
 
                 <div class="card">
                     <h2>Plan features</h2>
@@ -125,26 +105,7 @@
             </div>
 
             <div>
-                <form class="card" method="post" asp-page-handler="TopUp" asp-route-id="@Model.Id">
-                    <h2>Top up the wallet</h2>
-                    <p class="small muted">Record money the clinic paid SculptFlow outside the app.</p>
-                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
-                    <div class="form-row"><label>Amount (@cur)</label><input type="number" name="amount" min="0.01" step="0.01" required /></div>
-                    <div class="form-row"><label>Payment reference (optional)</label><input name="reference" maxlength="200" placeholder="Invoice or transfer number" /></div>
-                    <div class="form-row"><label>Note (optional)</label><input name="reason" maxlength="500" /></div>
-                    <button class="btn primary" type="submit" data-confirm="Add this amount to @o.ClinicName's wallet?">Top up</button>
-                </form>
 
-                <form class="card" method="post" asp-page-handler="Adjust" asp-route-id="@Model.Id">
-                    <h2>Manual adjustment</h2>
-                    <p class="small muted">A correction, positive or negative. It's written to the ledger with your name and the reason.</p>
-                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
-                    <div class="form-row"><label>Balance</label>
-                        <select name="balanceType">@foreach (var b in BillingVocab.BalanceTypes) { <option value="@b">@BillingUi.BalanceLabel(b)</option> }</select></div>
-                    <div class="form-row"><label>Amount (@cur, negative to deduct)</label><input type="number" name="amount" step="0.01" required /></div>
-                    <div class="form-row"><label>Reason (required)</label><input name="reason" maxlength="500" required /></div>
-                    <button class="btn" type="submit" data-confirm="Apply this adjustment?">Apply adjustment</button>
-                </form>
 
                 <div class="card">
                     <h2>Recent transactions</h2>
@@ -159,8 +120,18 @@
                                     <td class="num @(t.Amount < 0 ? "neg" : "")">@BillingUi.Money(t.Amount)</td><td class="num">@BillingUi.Money(t.BalanceAfter)</td></tr>
                             }
                         </table>
-                        <div class="small" style="margin-top:6px"><a href="@TabUrl("ledger")">Full ledger</a></div>
+                        <div class="small" style="margin-top:12px"><a href="@TabUrl("ledger")">Full ledger →</a></div>
                     }
+                </div>
+                <div class="card">
+                    <h2>Ledger check</h2>
+                    @{ var r = o.Reconciliation; }
+                    <dl class="kv">
+                        <dt>Wallet</dt><dd>@BillingUi.Money(r.WalletBalance) · ledger @BillingUi.Money(r.WalletLedgerTotal)</dd>
+                        <dt>Included credit</dt><dd>@BillingUi.Money(r.IncludedCreditBalance) · ledger @BillingUi.Money(r.IncludedCreditLedgerTotal)</dd>
+                        <dt>Reserved</dt><dd>@BillingUi.Money(r.ReservedAmount) · open reservations @BillingUi.Money(r.OpenReservationsTotal)</dd>
+                        <dt>Result</dt><dd>@Ui.Badge(r.IsBalanced ? "healthy" : "error", r.IsBalanced ? "balanced" : "NOT balanced: investigate before changing money")</dd>
+                    </dl>
                 </div>
             </div>
         </div>
@@ -176,7 +147,7 @@
             {
                 <div class="table-wrap">
                 <table>
-                    <tr><th>Account</th><th>Who pays the provider</th><th>SculptFlow charges usage</th><th>Set by</th><th style="min-width:420px">Change</th></tr>
+                    <tr><th>Account</th><th>Who pays the provider</th><th>SculptFlow charges usage</th><th>Set by</th><th></th></tr>
                     @foreach (var acc in o.ChannelAccounts)
                     {
                         var hasOverride = acc.Source == "account";
@@ -199,31 +170,38 @@
                                 }
                             </td>
                             <td>
-                                <form method="post" asp-page-handler="ProviderBilling" asp-route-id="@Model.Id" class="pb-form">
+                                <button class="btn sm" type="button" data-open="pb-@acc.ChannelIntegrationId">Change</button>
+                                <dialog class="modal" id="pb-@acc.ChannelIntegrationId">
+                                    <div class="modal-head"><h2>Who pays for @acc.Channel · @acc.DisplayName</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+                                    <div class="modal-body">
+                                    <form method="post" asp-page-handler="ProviderBilling" asp-route-id="@Model.Id" style="margin-bottom:16px">
                                     <input type="hidden" name="accountId" value="@acc.ChannelIntegrationId" />
-                                    <select name="providerBilling" aria-label="Who pays the provider">
+                                    <div class="form-row"><label>Who pays the provider</label><select name="providerBilling">
                                         <option value="">Default (@BillingUi.ResponsibilityLabel(acc.DefaultProviderBilling))</option>
                                         @foreach (var m in Model.Modes?.Modes ?? [])
                                         {
                                             <option value="@m.Value" selected="@(hasOverride && acc.OverrideProviderBilling == m.Value)">@m.Label</option>
                                         }
-                                    </select>
-                                    <select name="usageBilling" aria-label="SculptFlow usage billing">
-                                        <option value="default" selected="@(acc.OverrideOmniUsageBilling is null)">Charge usage: default</option>
-                                        <option value="on" selected="@(acc.OverrideOmniUsageBilling == true)">Charge usage: yes</option>
-                                        <option value="off" selected="@(acc.OverrideOmniUsageBilling == false)">Charge usage: no</option>
-                                    </select>
-                                    <input name="reason" placeholder="Reason (required)" maxlength="500" required />
-                                    <button class="btn sm primary" type="submit" data-confirm="Change who pays for this account's messages from now on?">Save</button>
-                                </form>
-                                @if (hasOverride)
-                                {
-                                    <form method="post" asp-page-handler="ResetProviderBilling" asp-route-id="@Model.Id" class="pb-form" style="margin-top:6px">
-                                        <input type="hidden" name="accountId" value="@acc.ChannelIntegrationId" />
-                                        <input name="reason" placeholder="Reason for reset (required)" maxlength="500" required />
-                                        <button class="btn sm" type="submit">Back to default</button>
+                                    </select></div>
+                                    <div class="form-row"><label>SculptFlow charges usage</label><select name="usageBilling">
+                                        <option value="default" selected="@(acc.OverrideOmniUsageBilling is null)">Default</option>
+                                        <option value="on" selected="@(acc.OverrideOmniUsageBilling == true)">Yes</option>
+                                        <option value="off" selected="@(acc.OverrideOmniUsageBilling == false)">No</option>
+                                    </select></div>
+                                    <div class="form-row"><label>Reason</label><input name="reason" maxlength="500" required /></div>
+                                        <button class="btn primary" type="submit" data-confirm="Change who pays for this account's messages from now on?">Save</button>
                                     </form>
-                                }
+                                    @if (hasOverride)
+                                    {
+                                        <hr style="border:0;border-top:1px solid var(--border);margin:6px 0 16px" />
+                                        <form method="post" asp-page-handler="ResetProviderBilling" asp-route-id="@Model.Id">
+                                            <input type="hidden" name="accountId" value="@acc.ChannelIntegrationId" />
+                                            <div class="form-row"><label>Or go back to the default</label><input name="reason" placeholder="Reason for reset (required)" maxlength="500" required /></div>
+                                            <button class="btn" type="submit">Back to default</button>
+                                        </form>
+                                    }
+                                    </div>
+                                </dialog>
                             </td>
                         </tr>
                     }
@@ -283,18 +261,77 @@
                 }
             </form>
 
-            <div class="card">
-                <h2>Ledger check</h2>
-                @{ var r = o.Reconciliation; }
-                <dl class="kv">
-                    <dt>Wallet</dt><dd>@BillingUi.Money(r.WalletBalance) · ledger @BillingUi.Money(r.WalletLedgerTotal)</dd>
-                    <dt>Included credit</dt><dd>@BillingUi.Money(r.IncludedCreditBalance) · ledger @BillingUi.Money(r.IncludedCreditLedgerTotal)</dd>
-                    <dt>Reserved</dt><dd>@BillingUi.Money(r.ReservedAmount) · open reservations @BillingUi.Money(r.OpenReservationsTotal)</dd>
-                    <dt>Result</dt><dd>@Ui.Badge(r.IsBalanced ? "healthy" : "error", r.IsBalanced ? "balanced" : "NOT balanced: investigate before changing money")</dd>
-                </dl>
-            </div>
         </div>
         <datalist id="event-types">@foreach (var e in BillingVocab.EventTypes) { <option value="@e"></option> }</datalist>
+
+        <dialog class="modal" id="start-plan">
+            <form method="post" asp-page-handler="StartPlan" asp-route-id="@Model.Id">
+                <div class="modal-head"><h2>@(sub is null ? "Start a plan" : "Change plan")</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+                <div class="modal-body">
+                    <p class="small muted">Starts a new period now (no proration). The previous period's included credit expires and the new plan's credit is granted.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="form-row"><label>Plan</label>
+                        <select name="planCode" required>
+                            <option value="">Choose…</option>
+                            @foreach (var p in Model.Plans.Where(p => p.IsActive))
+                            {
+                                <option value="@p.Code" selected="@(p.Code == sub?.PlanCode)">@p.Name (@p.Code): @BillingUi.Money(p.Price, p.Currency) / @p.BillingPeriod, credit @BillingUi.Money(p.IncludedUsageCredit)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-row check"><label><input type="checkbox" name="chargeFirstPeriod" value="true" checked /> Charge the first period from the wallet (untick for a free first period)</label></div>
+                    <div class="form-row"><label>Reason (optional)</label><input name="reason" maxlength="500" /></div>
+                </div>
+                <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit" data-confirm="Start this plan for @o.ClinicName now?">@(sub is null ? "Start plan" : "Change plan")</button></div>
+            </form>
+        </dialog>
+        <dialog class="modal" id="top-up">
+            <form method="post" asp-page-handler="TopUp" asp-route-id="@Model.Id">
+                <div class="modal-head"><h2>Top up the wallet</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+                <div class="modal-body">
+                    <p class="small muted">Record money the clinic paid SculptFlow outside the app.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="form-row"><label>Amount (@cur)</label><input type="number" name="amount" min="0.01" step="0.01" required /></div>
+                    <div class="form-row"><label>Payment reference (optional)</label><input name="reference" maxlength="200" placeholder="Invoice or transfer number" /></div>
+                    <div class="form-row"><label>Note (optional)</label><input name="reason" maxlength="500" /></div>
+                </div>
+                <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit" data-confirm="Add this amount to @o.ClinicName's wallet?">Top up</button></div>
+            </form>
+        </dialog>
+        <dialog class="modal" id="adjust">
+            <form method="post" asp-page-handler="Adjust" asp-route-id="@Model.Id">
+                <div class="modal-head"><h2>Manual adjustment</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+                <div class="modal-body">
+                    <p class="small muted">A correction, positive or negative. It's written to the ledger with your name and the reason.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="form-row"><label>Balance</label>
+                        <select name="balanceType">@foreach (var b in BillingVocab.BalanceTypes) { <option value="@b">@BillingUi.BalanceLabel(b)</option> }</select></div>
+                    <div class="form-row"><label>Amount (@cur, negative to deduct)</label><input type="number" name="amount" step="0.01" required /></div>
+                    <div class="form-row"><label>Reason (required)</label><input name="reason" maxlength="500" required /></div>
+                </div>
+                <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit" data-confirm="Apply this adjustment?">Apply adjustment</button></div>
+            </form>
+        </dialog>
+        @if (sub is not null && sub.Status is "active" or "past_due")
+        {
+            <dialog class="modal" id="cancel-sub">
+                <form method="post" asp-page-handler="Cancel" asp-route-id="@Model.Id">
+                    <div class="modal-head"><h2>Cancel the subscription</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+                    <div class="modal-body">
+                        <p class="small muted">"At period end" keeps everything working until @Ui.Time(sub.CurrentPeriodEnd). "Cancel now" stops sending, campaigns and the AI for this clinic right away.</p>
+                        <div class="form-row"><label>Reason (optional)</label><input name="reason" maxlength="500" /></div>
+                    </div>
+                    <div class="modal-foot">
+                        <button class="btn" type="button" data-close>Keep it</button>
+                        @if (!sub.CancelAtPeriodEnd)
+                        {
+                            <button class="btn" type="submit" name="immediately" value="false" data-confirm="End the subscription at the end of the current period?">Cancel at period end</button>
+                        }
+                        <button class="btn danger" type="submit" name="immediately" value="true" data-confirm="Cancel now? Sending, campaigns and the AI stop for this clinic right away.">Cancel now</button>
+                    </div>
+                </form>
+            </dialog>
+        }
     }
     else if (Model.Tab == "usage" && Model.Usage is { } usage)
     {
@@ -305,7 +342,7 @@
                     @foreach (var st in BillingVocab.ChargeStatuses) { <option value="@st" selected="@(st == Model.Status)">@st.Replace('_', ' ')</option> }
                 </select></label>
             <label>Event type<input name="eventType" list="event-types" value="@Model.EventType" /></label>
-            <button class="btn" type="submit">Filter</button>
+            <button class="btn" type="submit">Search</button>
         </form>
         <datalist id="event-types">@foreach (var e in BillingVocab.EventTypes) { <option value="@e"></option> }</datalist>
         @if (usage.Items.Count == 0)

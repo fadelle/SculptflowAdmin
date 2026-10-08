@@ -8,12 +8,11 @@
 <div class="page-head">
     <div><h1>Billing accounts</h1>
         <div class="muted">Every clinic's plan, prepaid wallet and included credit. Billing rules and balances live in the main app; changes here go through its billing API.</div></div>
-    <div class="actions"><a class="btn" href="/Billing/Plans">Plans</a><a class="btn" href="/Billing/RateCards">Rate cards</a><a class="btn" href="/Billing/Report">Revenue report</a></div>
 </div>
 
 @if (Model.LoadError is null)
 {
-    <div class="grid grid-stats" style="margin-bottom:16px">
+    <div class="grid grid-stats">
         <div class="stat"><div class="label">Clinics</div><div class="value">@a.Count</div></div>
         <div class="stat"><div class="label">Active subscriptions</div><div class="value">@a.Count(x => x.SubscriptionStatus == "active")</div></div>
         <div class="stat @(a.Any(x => x.SubscriptionStatus == "past_due") ? "warn" : "")"><div class="label">Past due</div><div class="value">@a.Count(x => x.SubscriptionStatus == "past_due")</div></div>
@@ -24,7 +23,7 @@
     </div>
 
     <form class="filters" method="get">
-        <label>Clinic or plan<input name="q" value="@Model.Q" /></label>
+        <label class="search">Clinic or plan<input type="search" name="q" value="@Model.Q" /></label>
         <label>Subscription
             <select name="status">
                 <option value="">All</option>
@@ -32,7 +31,7 @@
                 <option value="none" selected="@(Model.Status == "none")">no plan</option>
             </select>
         </label>
-        <button class="btn" type="submit">Filter</button>
+        <partial name="_FilterActions" />
     </form>
 
     @if (Model.Shown.Count == 0)
@@ -58,6 +57,6 @@
                 }
             </table>
         </div>
-        <div class="small muted" style="margin-top:6px">Amounts in @cur.</div>
+        <div class="small muted" style="margin-top:10px">Amounts in @cur.</div>
     }
 }

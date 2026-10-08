@@ -7,18 +7,22 @@
 <div class="page-head">
     <div><h1>Plans</h1>
         <div class="muted">What a clinic pays SculptFlow for access, the usage credit it includes each period, and which features and limits it unlocks.</div></div>
-    @if (e is not null) { <a class="btn" href="/Billing/Plans">New plan</a> }
+    @if (Model.LoadError is null)
+    {
+        if (e is null) { <button class="btn primary" type="button" data-open="plan-form">+ New plan</button> }
+        else { <a class="btn primary" href="/Billing/Plans?new=1">+ New plan</a> }
+    }
 </div>
 
 @if (Model.LoadError is null)
 {
     @if (Model.Plans.Count == 0)
     {
-        <div class="card empty">No plans yet. Create the first one below.</div>
+        <div class="card empty">No plans yet. Use “New plan” to create the first one.</div>
     }
     else
     {
-        <div class="table-wrap" style="margin-bottom:16px">
+        <div class="table-wrap">
             <table>
                 <tr><th>Plan</th><th class="num">Price</th><th class="num">Included credit</th><th>Rate card</th><th>Features &amp; limits</th><th class="num">Subscribers</th><th>Status</th><th></th></tr>
                 @foreach (var p in Model.Plans.OrderBy(p => p.SortOrder).ThenBy(p => p.Name))
@@ -45,8 +49,10 @@
         </div>
     }
 
-    <form class="card" method="post" asp-page-handler="Save">
-        <h2>@(e is null ? "New plan" : $"Edit {e.Name}")</h2>
+    <dialog class="modal modal-lg" id="plan-form" @(e is not null || Request.Query["new"] == "1" ? "data-autoopen" : "")>
+        <form method="post" asp-page-handler="Save">
+            <div class="modal-head"><h2>@(e is null ? "New plan" : $"Edit {e.Name}")</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+            <div class="modal-body">
         @if (e is not null)
         {
             <input type="hidden" name="originalCode" value="@e.Code" />
@@ -58,7 +64,7 @@
                 <div class="form-row"><label>Name</label><input name="name" value="@e?.Name" required maxlength="100" /></div>
                 <div class="form-row"><label>Description (optional)</label><input name="description" value="@e?.Description" maxlength="500" /></div>
                 <div class="form-row"><label>Sort order</label><input type="number" name="sortOrder" value="@(e?.SortOrder ?? 0)" /></div>
-                <div class="form-row"><label><input type="checkbox" name="isActive" value="true" checked="@(e?.IsActive ?? true)" /> Active (offered for new subscriptions)</label></div>
+                <div class="form-row check"><label><input type="checkbox" name="isActive" value="true" checked="@(e?.IsActive ?? true)" /> Active (offered for new subscriptions)</label></div>
             </div>
             <div>
                 <div class="form-row"><label>Price per period</label><input type="number" name="price" min="0" step="0.01" value="@(e is null ? "0" : BillingUi.Input(e.Price))" required /></div>
@@ -71,7 +77,7 @@
                     </select></div>
             </div>
         </div>
-        <h2 style="margin-top:8px">Features &amp; limits</h2>
+        <h2 style="margin-top:4px">Features &amp; limits</h2>
         <p class="small muted">A feature that isn't ticked is off. A limit is a whole number or "unlimited"; blank means 0.</p>
         <div class="ent-grid" style="margin-bottom:12px">
             @foreach (var d in Model.Catalog)
@@ -79,7 +85,7 @@
                 var value = e is not null && e.Entitlements.TryGetValue(d.Key, out var v2) ? v2 : null;
                 if (d.Kind == "feature")
                 {
-                    <label class="form-row"><input type="checkbox" name="ent:@d.Key" value="true" checked="@(value == "true")" /> @d.Label</label>
+                    <label class="form-row check-row"><input type="checkbox" name="ent:@d.Key" value="true" checked="@(value == "true")" /> @d.Label</label>
                 }
                 else
                 {
@@ -87,7 +93,8 @@
                 }
             }
         </div>
-        <button class="btn primary" type="submit">@(e is null ? "Create plan" : "Save plan")</button>
-        @if (e is not null) { <a class="btn" href="/Billing/Plans">Cancel</a> }
-    </form>
+            </div>
+            <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">@(e is null ? "Create plan" : "Save plan")</button></div>
+        </form>
+    </dialog>
 }

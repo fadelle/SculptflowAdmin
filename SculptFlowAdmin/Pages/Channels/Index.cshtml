@@ -23,9 +23,9 @@
                 @foreach (var c in ChannelType.All) { <option value="@c" selected="@(c == Model.Channel)">@c</option> }
             </select>
         </label>
-        <label>&nbsp;<span><input type="checkbox" name="problems" value="true" checked="@Model.Problems" /> Problems only</span></label>
+        <label class="check"><input type="checkbox" name="problems" value="true" checked="@Model.Problems" /> Problems only</label>
     }
-    <button class="btn" type="submit">Filter</button>
+    <partial name="_FilterActions" />
 </form>
 
 @if (Model.Tab == "messaging")
@@ -73,7 +73,7 @@ else if (Model.Tab == "calendars")
                 <td>@Ui.YesNo(c.SyncEnabled, "on", "off")</td>
                 <td class="num">@c.FailedSyncs</td>
                 <td class="small">@Ui.Time(c.LastSyncedAt)</td>
-                <td class="actions">
+                <td><div class="actions">
                     @if (c.Status == "connected")
                     {
                         <form method="post" asp-page-handler="CalendarSync" asp-route-tab="calendars">
@@ -85,7 +85,7 @@ else if (Model.Tab == "calendars")
                             <button class="btn sm danger" type="submit" data-confirm="Disconnect this calendar? The clinic will have to reconnect it.">Disconnect</button>
                         </form>
                     }
-                </td>
+                </div></td>
             </tr>
         }
     </table>

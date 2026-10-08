@@ -6,6 +6,7 @@
 }
 <div class="page-head">
     <div>
+        <div class="crumbs"><a href="/Knowledge">Knowledge base</a> /</div>
         <h1>@d.Title @Ui.Badge(d.IsActive ? "active" : "inactive")</h1>
         <div class="muted small"><a href="/Clinics/Details?id=@d.ClinicId">@d.Clinic?.Name</a> · @KnowledgeCategory.Label(d.Category) · @d.SourceType · updated @Ui.Time(d.UpdatedAt)</div>
     </div>
@@ -20,5 +21,5 @@
         @if (d.SourceUrl is not null) { <dt>Source URL</dt><dd>@d.SourceUrl</dd> }
     </dl>
     <p class="small muted">Read-only here. Editing text means re-embedding, which only the main app can do.</p>
-    <div style="white-space:pre-wrap">@d.Content</div>
+    <div class="doc-text">@d.Content</div>
 </div>

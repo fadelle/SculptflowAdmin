@@ -8,8 +8,16 @@
             .Select(kv => Uri.EscapeDataString(kv.Key) + "=" + Uri.EscapeDataString(kv.Value)));
     }
 }
+@if (Model.Total > 0)
+{
 <div class="pager">
-    <span class="muted small">@Model.Total.ToString("N0") total · page @Model.Page of @Model.Pages</span>
-    @if (Model.HasPrevious) { <a class="btn sm" href="@Url(Model.Page - 1)">Previous</a> }
-    @if (Model.HasNext) { <a class="btn sm" href="@Url(Model.Page + 1)">Next</a> }
+    <span class="muted small">@Model.Total.ToString("N0") total@(Model.Pages > 1 ? $" · page {Model.Page} of {Model.Pages}" : "")</span>
+    @if (Model.Pages > 1)
+    {
+        <div class="actions">
+            @if (Model.HasPrevious) { <a class="btn sm" href="@Url(Model.Page - 1)">← Previous</a> }
+            @if (Model.HasNext) { <a class="btn sm" href="@Url(Model.Page + 1)">Next →</a> }
+        </div>
+    }
 </div>
+}

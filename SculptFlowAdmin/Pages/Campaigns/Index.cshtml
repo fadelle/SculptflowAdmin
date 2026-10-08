@@ -9,7 +9,7 @@
             @foreach (var s in CampaignStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
         </select>
     </label>
-    <button class="btn" type="submit">Filter</button>
+    <partial name="_FilterActions" />
 </form>
 @if (Model.Result.Items.Count == 0)
 {

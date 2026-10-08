@@ -8,14 +8,14 @@
 }
 <div class="page-head">
     <div>
+        <div class="crumbs"><a href="/Leads">Leads</a> /</div>
         <h1>@name @Ui.Badge(l.Status)</h1>
         <div class="muted small"><a href="/Clinics/Details?id=@l.ClinicId">@l.Clinic?.Name</a> · <span class="mono">@l.Id</span> · created @Ui.Time(l.CreatedAt)</div>
     </div>
 </div>
 
-<div class="grid grid-2">
-    <div class="card">
-        <h2>Lead</h2>
+<div class="card">
+        <div class="card-head"><h2>Lead</h2><button class="btn sm" type="button" data-open="edit-lead">Edit</button></div>
         <dl class="kv">
             <dt>Phone</dt><dd>@l.Phone</dd>
             <dt>Email</dt><dd>@l.Email</dd>
@@ -28,24 +28,12 @@
             <dt>Last contact</dt><dd>@Ui.Time(l.LastContactAt)</dd>
             <dt>Next follow-up</dt><dd>@Ui.Time(l.NextFollowupAt)</dd>
             <dt>Opted out at</dt><dd>@Ui.Time(l.OptedOutAt)</dd>
+            <dt>Qualification</dt><dd>@Ui.Badge(l.QualificationStatus)</dd>
+            <dt>Marketing</dt><dd>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</dd>
+            <dt>Notes</dt><dd style="white-space:pre-line">@(string.IsNullOrWhiteSpace(l.Notes) ? "—" : l.Notes)</dd>
         </dl>
-    </div>
-
-    <form class="card" method="post" asp-page-handler="Update" asp-route-id="@l.Id">
-        <h2>Edit</h2>
-        <div class="form-row"><label>Status</label>
-            <select name="status">@foreach (var s in LeadStatus.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.Status)">@s.Replace('_', ' ')</option> }</select></div>
-        <div class="form-row"><label>Qualification</label>
-            <select name="qualificationStatus">@foreach (var s in LeadQualificationStatus.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.QualificationStatus)">@s.Replace('_', ' ')</option> }</select></div>
-        <div class="form-row"><label>Marketing</label>
-            <select name="marketingOptIn">
-                <option value="true" selected="@l.MarketingOptIn">Opted in (campaigns can reach them)</option>
-                <option value="false" selected="@(!l.MarketingOptIn)">Opted out</option>
-            </select></div>
-        <div class="form-row"><label>Notes</label><textarea name="notes">@l.Notes</textarea></div>
-        <button class="btn primary" type="submit">Save lead</button>
-    </form>
 </div>
+
 
 <div class="card">
     <h2>Conversations</h2>
@@ -61,3 +49,22 @@
     <h2>Events (latest 100)</h2>
     <partial name="_EventTable" model="Model.Events.Select(e => new EventRow(e.Id, l.ClinicId, l.Clinic?.Name ?? string.Empty, e.EventType, e.Source, e.LeadId, e.ConversationId, e.AppointmentId, e.Metadata, e.CreatedAt)).ToList()" />
 </div>
+
+<dialog class="modal" id="edit-lead">
+    <form method="post" asp-page-handler="Update" asp-route-id="@l.Id">
+        <div class="modal-head"><h2>Edit lead</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+        <div class="modal-body">
+        <div class="form-row"><label>Status</label>
+            <select name="status">@foreach (var s in LeadStatus.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.Status)">@s.Replace('_', ' ')</option> }</select></div>
+        <div class="form-row"><label>Qualification</label>
+            <select name="qualificationStatus">@foreach (var s in LeadQualificationStatus.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.QualificationStatus)">@s.Replace('_', ' ')</option> }</select></div>
+        <div class="form-row"><label>Marketing</label>
+            <select name="marketingOptIn">
+                <option value="true" selected="@l.MarketingOptIn">Opted in (campaigns can reach them)</option>
+                <option value="false" selected="@(!l.MarketingOptIn)">Opted out</option>
+            </select></div>
+        <div class="form-row"><label>Notes</label><textarea name="notes">@l.Notes</textarea></div>
+        </div>
+        <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Save lead</button></div>
+    </form>
+</dialog>

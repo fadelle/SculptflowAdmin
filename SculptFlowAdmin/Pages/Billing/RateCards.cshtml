@@ -16,7 +16,7 @@
     }
     @if (Model.Cards.Count > 0)
     {
-        <div class="table-wrap" style="margin-bottom:16px">
+        <div class="table-wrap">
             <table>
                 <tr><th>Card</th><th>Used for</th><th class="num">Current rates</th><th>Status</th></tr>
                 @foreach (var c in Model.Cards.OrderByDescending(c => c.IsDefault).ThenBy(c => c.ClinicId is not null).ThenBy(c => c.Name))
@@ -38,23 +38,25 @@
         </div>
     }
 
-    <form class="card" method="post" asp-page-handler="Create">
-        <h2>New rate card</h2>
-        <div class="grid grid-2" style="gap:0 24px">
+    <dialog class="modal" id="new-card">
+        <form method="post" asp-page-handler="Create">
+            <div class="modal-head"><h2>New rate card</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+            <div class="modal-body">
+        <div>
             <div>
                 <div class="form-row"><label>Code (lowercase, e.g. default or pro-prices)</label><input name="code" required pattern="[a-z0-9_\-]+" /></div>
                 <div class="form-row"><label>Name</label><input name="name" required maxlength="100" /></div>
                 <div class="form-row"><label>Description (optional)</label><input name="description" maxlength="500" /></div>
-            </div>
-            <div>
                 <div class="form-row"><label>Custom prices for one clinic (optional)</label>
                     <select name="clinicId"><option value="">No: a default or plan card</option>
                         @foreach (var c in Model.Clinics) { <option value="@c.Id">@c.Name</option> }
                     </select></div>
-                <div class="form-row"><label><input type="checkbox" name="isDefault" value="true" /> Make this the default card (replaces the current default)</label></div>
+                <div class="form-row check"><label><input type="checkbox" name="isDefault" value="true" /> Make this the default card (replaces the current default)</label></div>
                 <p class="small muted">To use a card for a plan, pick it on the plan.</p>
             </div>
         </div>
-        <button class="btn primary" type="submit">Create card</button>
-    </form>
+            </div>
+            <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Create card</button></div>
+        </form>
+    </dialog>
 }

@@ -7,7 +7,7 @@
 }
 <div class="page-head"><div><h1>Dashboard</h1><div class="muted">Everything across all clinics.</div></div></div>
 
-<div class="grid grid-stats" style="margin-bottom:16px">
+<div class="grid grid-stats">
     <a class="stat" href="/Clinics"><div class="label">Clinics (active / all)</div><div class="value">@t.ActiveClinics <span class="muted small">/ @t.Clinics</span></div></a>
     <a class="stat" href="/Staff"><div class="label">Active staff accounts</div><div class="value">@t.StaffUsers</div></a>
     <a class="stat" href="/Leads"><div class="label">Leads (new in 7 days)</div><div class="value">@t.Leads.ToString("N0") <span class="muted small">+@t.LeadsLast7Days</span></div></a>
@@ -36,7 +36,7 @@
                 </div>
             }
         </div>
-        <div class="small muted" style="margin-top:6px"><span class="badge purple">AI</span> <span class="badge green">customers + staff</span></div>
+        <div class="legend"><span><i class="ai"></i>AI replies</span><span><i></i>Customers + staff</span></div>
     </div>
 
     <div class="card">

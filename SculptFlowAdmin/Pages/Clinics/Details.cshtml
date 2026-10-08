@@ -8,21 +8,25 @@
 }
 <div class="page-head">
     <div>
+        <div class="crumbs"><a href="/Clinics">Clinics</a> /</div>
         <h1>@c.Name @Ui.Badge(c.IsActive ? "active" : "inactive")</h1>
-        <div class="muted small">@c.Slug · <span class="mono">@c.Id</span> · signed up @Ui.Time(c.CreatedAt) · <a href="/Billing/Clinic?id=@c.Id">Billing: plan, wallet, who pays per channel</a></div>
+        <div class="muted small">@c.Slug · <span class="mono">@c.Id</span> · signed up @Ui.Time(c.CreatedAt)</div>
     </div>
-    <form method="post" asp-page-handler="SetActive" asp-route-id="@c.Id">
-        @if (c.IsActive)
-        {
-            <input type="hidden" name="active" value="false" />
-            <button class="btn danger" type="submit" data-confirm="Deactivate @c.Name? It is marked inactive here; see the note below about what the main app does with it.">Deactivate clinic</button>
-        }
-        else
-        {
-            <input type="hidden" name="active" value="true" />
-            <button class="btn primary" type="submit">Activate clinic</button>
-        }
-    </form>
+    <div class="actions">
+        <a class="btn" href="/Billing/Clinic?id=@c.Id">Billing</a>
+        <form method="post" asp-page-handler="SetActive" asp-route-id="@c.Id">
+            @if (c.IsActive)
+            {
+                <input type="hidden" name="active" value="false" />
+                <button class="btn danger" type="submit" data-confirm="Deactivate @c.Name? It is marked inactive here; see the note on this page about what the main app does with it.">Deactivate</button>
+            }
+            else
+            {
+                <input type="hidden" name="active" value="true" />
+                <button class="btn primary" type="submit">Activate</button>
+            }
+        </form>
+    </div>
 </div>
 
 @if (!c.IsActive)
@@ -30,7 +34,7 @@
     <div class="alert info">This clinic is marked inactive. The main app does not check this flag yet, so its staff can still sign in and its AI still replies. To cut access now, lock its staff accounts below and disconnect its channels.</div>
 }
 
-<div class="grid grid-stats" style="margin-bottom:16px">
+<div class="grid grid-stats">
     <a class="stat" href="/Staff?@q"><div class="label">Active staff</div><div class="value">@n.Staff</div></a>
     <a class="stat" href="/Leads?@q"><div class="label">Leads</div><div class="value">@n.Leads</div></a>
     <a class="stat" href="/Conversations?@q"><div class="label">Conversations</div><div class="value">@n.Conversations</div></a>
@@ -46,19 +50,22 @@
 </div>
 
 <div class="grid grid-2">
-    <form class="card" method="post" asp-page-handler="Update" asp-route-id="@c.Id">
-        <h2>Clinic details</h2>
-        <div class="form-row"><label>Name</label><input name="Edit.Name" value="@Model.Edit.Name" required /></div>
-        <div class="form-row"><label>Email</label><input name="Edit.Email" value="@Model.Edit.Email" /></div>
-        <div class="form-row"><label>Phone</label><input name="Edit.Phone" value="@Model.Edit.Phone" /></div>
-        <div class="form-row"><label>Website</label><input name="Edit.Website" value="@Model.Edit.Website" /></div>
-        <div class="form-row"><label>Country code</label><input name="Edit.CountryCode" value="@Model.Edit.CountryCode" maxlength="2" /></div>
-        <div class="form-row"><label>Time zone (IANA, e.g. Asia/Beirut)</label><input name="Edit.Timezone" value="@Model.Edit.Timezone" required /></div>
-        <div class="form-row"><label>Address</label><textarea name="Edit.Address">@Model.Edit.Address</textarea></div>
-        <div class="form-row"><label>Operating hours (free text the AI reads)</label><textarea name="Edit.OperatingHours">@Model.Edit.OperatingHours</textarea></div>
-        <div class="form-row"><label>Consultation info</label><textarea name="Edit.ConsultationInfo">@Model.Edit.ConsultationInfo</textarea></div>
-        <button class="btn primary" type="submit">Save details</button>
-    </form>
+    <div>
+        <div class="card">
+            <div class="card-head"><h2>Clinic details</h2><button class="btn sm" type="button" data-open="edit-clinic">Edit</button></div>
+            <dl class="kv">
+                <dt>Email</dt><dd>@(c.Email ?? "—")</dd>
+                <dt>Phone</dt><dd>@(Model.Edit.Phone ?? "—")</dd>
+                <dt>Website</dt><dd>@(Model.Edit.Website ?? "—")</dd>
+                <dt>Country</dt><dd>@(Model.Edit.CountryCode ?? "—")</dd>
+                <dt>Time zone</dt><dd>@Model.Edit.Timezone</dd>
+                <dt>Address</dt><dd>@(Model.Edit.Address ?? "—")</dd>
+                <dt>Operating hours</dt><dd style="white-space:pre-line">@(Model.Edit.OperatingHours ?? "—")</dd>
+                <dt>Consultation info</dt><dd style="white-space:pre-line">@(Model.Edit.ConsultationInfo ?? "—")</dd>
+            </dl>
+        </div>
+
+    </div>
 
     <div>
         <div class="card">
@@ -84,11 +91,13 @@
         </div>
 
         <div class="card">
-            <h2>Channels</h2>
+            <div class="card-head"><h2>Channels</h2><button class="btn sm" type="button" data-open="connect-wa">Connect WhatsApp</button></div>
             @if (Model.Channels.Count + Model.Calendars.Count + Model.TikTok.Count == 0)
             {
                 <div class="empty">Nothing connected.</div>
             }
+            else
+            {
             <table>
                 @foreach (var ch in Model.Channels)
                 {
@@ -107,14 +116,8 @@
                     <tr><td>TikTok</td><td>@tt.DisplayName</td><td>@Ui.Badge(tt.Status)</td></tr>
                 }
             </table>
+            }
         </div>
-
-        <form class="card" method="post" asp-page-handler="ConnectWhatsApp" asp-route-id="@c.Id">
-            <h2>Connect a WhatsApp sender (Infobip)</h2>
-            <p class="small muted">Register the number as a WhatsApp sender in the Infobip portal first. This sets the clinic's WhatsApp to that sender, replacing whatever was connected before. The main app checks the number with Infobip first and applies the clinic's plan limits.</p>
-            <div class="form-row"><label>Sender number (international)</label><input name="sender" placeholder="+44 7860 099299" required /></div>
-            <button class="btn" type="submit" data-confirm="Connect this number as the clinic's WhatsApp?">Connect sender</button>
-        </form>
 
         <form class="card" method="post" asp-page-handler="SearchSettings" asp-route-id="@c.Id">
             <h2>Knowledge search (AI retrieval)</h2>
@@ -141,5 +144,34 @@
 <div class="card">
     <h2>Recent admin changes to this clinic</h2>
     <partial name="_AuditTable" model="Model.Audit" />
-    <div class="small" style="margin-top:6px"><a href="/Audit?@q">All admin changes for this clinic</a></div>
+    <div class="small" style="margin-top:12px"><a href="/Audit?@q">All admin changes for this clinic →</a></div>
 </div>
+
+<dialog class="modal" id="edit-clinic">
+    <form method="post" asp-page-handler="Update" asp-route-id="@c.Id">
+        <div class="modal-head"><h2>Edit clinic details</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+        <div class="modal-body">
+            <div class="form-row"><label>Name</label><input name="Edit.Name" value="@Model.Edit.Name" required /></div>
+            <div class="form-row"><label>Email</label><input name="Edit.Email" value="@Model.Edit.Email" /></div>
+            <div class="form-row"><label>Phone</label><input name="Edit.Phone" value="@Model.Edit.Phone" /></div>
+            <div class="form-row"><label>Website</label><input name="Edit.Website" value="@Model.Edit.Website" /></div>
+            <div class="form-row"><label>Country code</label><input name="Edit.CountryCode" value="@Model.Edit.CountryCode" maxlength="2" /></div>
+            <div class="form-row"><label>Time zone</label><input name="Edit.Timezone" value="@Model.Edit.Timezone" required /><div class="hint">IANA name, e.g. Asia/Beirut</div></div>
+            <div class="form-row"><label>Address</label><textarea name="Edit.Address">@Model.Edit.Address</textarea></div>
+            <div class="form-row"><label>Operating hours</label><textarea name="Edit.OperatingHours">@Model.Edit.OperatingHours</textarea><div class="hint">Free text the AI reads</div></div>
+            <div class="form-row"><label>Consultation info</label><textarea name="Edit.ConsultationInfo">@Model.Edit.ConsultationInfo</textarea></div>
+        </div>
+        <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Save details</button></div>
+    </form>
+</dialog>
+
+<dialog class="modal" id="connect-wa">
+    <form method="post" asp-page-handler="ConnectWhatsApp" asp-route-id="@c.Id">
+        <div class="modal-head"><h2>Connect a WhatsApp sender (Infobip)</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+        <div class="modal-body">
+            <p class="small muted">Register the number as a WhatsApp sender in the Infobip portal first. This sets the clinic's WhatsApp to that sender, replacing whatever was connected before. The main app checks the number with Infobip first and applies the clinic's plan limits.</p>
+            <div class="form-row"><label>Sender number (international)</label><input name="sender" placeholder="+44 7860 099299" required /></div>
+        </div>
+        <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit" data-confirm="Connect this number as the clinic's WhatsApp?">Connect sender</button></div>
+    </form>
+</dialog>

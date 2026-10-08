@@ -1,11 +1,11 @@
 @page
 @model SculptFlowAdmin.Pages.Admins.IndexModel
 @{ ViewData["Title"] = "Admin users"; }
-<div class="page-head"><div><h1>Admin users</h1><div class="muted">People who can sign in to this portal. Separate from clinic staff accounts.</div></div></div>
+<div class="page-head"><div><h1>Admin users</h1><div class="muted">People who can sign in to this portal. Separate from clinic staff accounts.</div></div><button class="btn primary" type="button" data-open="add-admin">+ Add admin</button></div>
 
-<div class="table-wrap" style="margin-bottom:16px">
+<div class="table-wrap">
 <table>
-    <tr><th>Name</th><th>Email</th><th>Status</th><th>Last sign-in</th><th>Set password</th><th></th></tr>
+    <tr><th>Name</th><th>Email</th><th>Status</th><th>Last sign-in</th><th></th></tr>
     @foreach (var a in Model.Admins)
     {
         <tr>
@@ -13,14 +13,9 @@
             <td>@a.Email</td>
             <td>@Ui.Badge(a.IsActive ? "active" : "inactive") @if (a.LockedUntil > DateTimeOffset.UtcNow) { @Ui.Badge("locked", "locked out") }</td>
             <td class="small">@Ui.Time(a.LastLoginAt)</td>
-            <td>
-                <form class="actions" method="post" asp-page-handler="Password">
-                    <input type="hidden" name="id" value="@a.Id" />
-                    <input type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" placeholder="New password" autocomplete="new-password" required />
-                    <button class="btn sm" type="submit">Set</button>
-                </form>
-            </td>
-            <td>
+
+            <td><div class="actions" style="justify-content:flex-end">
+                <button class="btn sm" type="button" data-open="pw-@a.Id">Set password</button>
                 @if (a.Id != Model.Me)
                 {
                     <form method="post" asp-page-handler="SetActive">
@@ -28,16 +23,29 @@
                         <button class="btn sm @(a.IsActive ? "danger" : "")" type="submit" data-confirm="@(a.IsActive ? "Remove portal access for " + a.Email + "?" : "Restore access?")">@(a.IsActive ? "Deactivate" : "Activate")</button>
                     </form>
                 }
+            </div>
+            <dialog class="modal modal-sm" id="pw-@a.Id">
+                <form method="post" asp-page-handler="Password">
+                    <input type="hidden" name="id" value="@a.Id" />
+                    <div class="modal-head"><h2>Set password for @a.Email</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+                    <div class="modal-body"><div class="form-row"><label>New password</label><input type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /><div class="hint">At least @AdminAuthService.MinPasswordLength characters.</div></div></div>
+                    <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Set password</button></div>
+                </form>
+            </dialog>
             </td>
         </tr>
     }
 </table>
 </div>
 
-<form class="card" method="post" asp-page-handler="Create" style="max-width:520px">
-    <h2>Add an admin</h2>
-    <div class="form-row"><label>Full name</label><input name="fullName" required /></div>
-    <div class="form-row"><label>Email</label><input type="email" name="email" required /></div>
-    <div class="form-row"><label>Password (min @AdminAuthService.MinPasswordLength characters)</label><input type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /></div>
-    <button class="btn primary" type="submit">Add admin</button>
-</form>
+<dialog class="modal" id="add-admin">
+    <form method="post" asp-page-handler="Create">
+        <div class="modal-head"><h2>Add an admin</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
+        <div class="modal-body">
+            <div class="form-row"><label>Full name</label><input name="fullName" required /></div>
+            <div class="form-row"><label>Email</label><input type="email" name="email" required /></div>
+            <div class="form-row"><label>Password</label><input type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /><div class="hint">At least @AdminAuthService.MinPasswordLength characters.</div></div>
+        </div>
+        <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Add admin</button></div>
+    </form>
+</dialog>

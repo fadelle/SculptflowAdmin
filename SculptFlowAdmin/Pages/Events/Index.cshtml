@@ -9,7 +9,7 @@
             @foreach (var t in Model.Types) { <option value="@t" selected="@(t == Model.Type)">@t.Replace('_', ' ')</option> }
         </select>
     </label>
-    <button class="btn" type="submit">Filter</button>
+    <partial name="_FilterActions" />
 </form>
 <partial name="_EventTable" model="Model.Result.Items" />
 <partial name="_Pager" model="PagerModel.From(Model.Result)" />

@@ -15,13 +15,13 @@
     <label>From<input type="date" name="from" value="@Model.From" /></label>
     <label>To (inclusive)<input type="date" name="to" value="@Model.To" /></label>
     <input type="hidden" name="groupBy" value="@Model.GroupBy" />
-    <button class="btn" type="submit">Show</button>
+    <button class="btn primary" type="submit">Show</button>
 </form>
 
 @if (r is not null)
 {
     var totalRevenue = r.UsageRevenue + r.SubscriptionRevenue;
-    <div class="grid grid-stats" style="margin-bottom:16px">
+    <div class="grid grid-stats">
         <div class="stat"><div class="label">Subscription revenue</div><div class="value">@BillingUi.Money(r.SubscriptionRevenue)</div><div class="small muted">@cur</div></div>
         <div class="stat"><div class="label">Usage revenue</div><div class="value">@BillingUi.Money(r.UsageRevenue)</div><div class="small muted">@cur, after refunds</div></div>
         <div class="stat"><div class="label">Provider cost paid by SculptFlow</div><div class="value">@BillingUi.Money(r.ProviderCostPaidBySculptFlow)</div><div class="small muted">@cur</div></div>
@@ -64,6 +64,6 @@
                     <th class="num">@BillingUi.Money(groups.Sum(g => g.Revenue))</th><th class="num">@BillingUi.Money(groups.Sum(g => g.ProviderCost))</th><th class="num">@BillingUi.Money(groups.Sum(g => g.Margin))</th></tr>
             </table>
         </div>
-        <div class="small muted" style="margin-top:6px">Provider cost includes cost clinics paid directly (where known); margin only subtracts cost SculptFlow paid.</div>
+        <div class="small muted" style="margin-top:10px">Provider cost includes cost clinics paid directly (where known); margin only subtracts cost SculptFlow paid.</div>
     }
 }

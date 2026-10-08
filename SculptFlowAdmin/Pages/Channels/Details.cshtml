@@ -7,6 +7,7 @@
 }
 <div class="page-head">
     <div>
+        <div class="crumbs"><a href="/Channels">Channels &amp; integrations</a> /</div>
         <h1>@r.Channel @Ui.Badge(r.Status)</h1>
         <div class="muted small"><a href="/Clinics/Details?id=@r.ClinicId">@r.Clinic?.Name</a> · <span class="mono">@r.Id</span></div>
     </div>
@@ -25,7 +26,7 @@
         @if (Model.InfobipWebhookUrl is not null)
         {
             <p class="small muted">Paste this as the inbound message and delivery report URL of sender +@r.ProviderSenderId in the Infobip portal. It contains this connection's secret.</p>
-            <div class="mono" style="padding:8px;background:var(--surface-subtle);border-radius:6px">@Model.InfobipWebhookUrl</div>
+            <div class="copy-box"><span class="mono" id="webhook-url">@Model.InfobipWebhookUrl</span><button class="btn sm" type="button" data-copy="#webhook-url">Copy</button></div>
         }
         else
         {

@@ -4,8 +4,8 @@
 <div class="page-head"><div><h1>Staff accounts</h1><div class="muted">Clinic users of the main app. Admin users are separate (see Admin users).</div></div></div>
 <form class="filters" method="get">
     <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <label>Search<input name="q" value="@Model.Q" placeholder="Name or email" /></label>
-    <button class="btn" type="submit">Filter</button>
+    <label class="search">Search<input type="search" name="q" value="@Model.Q" placeholder="Name or email" /></label>
+    <partial name="_FilterActions" />
 </form>
 @if (Model.Result.Items.Count == 0)
 {

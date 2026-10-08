@@ -1,0 +1,6 @@
+@* The end of every filter bar: a Search button, and Clear once anything is filtered. Selects submit on change (site.js). *@
+<button class="btn" type="submit">Search</button>
+@if (Context.Request.Query.Any(kv => kv.Key is not ("p" or "handler" or "tab" or "id") && !string.IsNullOrEmpty(kv.Value)))
+{
+    <a class="btn ghost" href="@Context.Request.Path">Clear</a>
+}
