@@ -5,6 +5,10 @@
 }
 <div class="au-page-head">
     <p class="au-page-head__sub">Prices for usage SculptFlow charges, with the provider's cost beside each. A clinic is priced by its own custom card first, then its plan's card, then the default card.</p>
+    @if (Model.LoadError is null)
+    {
+        <div class="au-page-head__actions"><button class="au-btn au-btn--primary" type="button" data-open="new-card"><span class="au-icon" aria-hidden="true">add</span>New rate card</button></div>
+    }
 </div>
 
 @if (Model.LoadError is null)
@@ -20,7 +24,7 @@
         <div class="au-table-card">
             @if (Model.Cards.Count == 0)
             {
-                var empty = new EmptyStateModel("No rate cards yet.", "request_quote");
+                var empty = new EmptyStateModel("No rate cards yet. Use “New rate card” to create the default card first.", "request_quote");
                 <partial name="_EmptyState" model="empty" />
             }
             else
@@ -51,7 +55,6 @@
         </div>
     </div>
 
-    @* Nothing on this page opens this popup today (no data-open="new-card"); kept as it was. *@
     <dialog class="au-dialog au-dialog--sm" id="new-card" aria-labelledby="new-card-title">
         <form method="post" asp-page-handler="Create">
             <h2 class="au-dialog__title" id="new-card-title">New rate card<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>

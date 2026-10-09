@@ -12,7 +12,6 @@
 <form class="filters au-toolbar" method="get">
     <input type="hidden" name="tab" value="@Model.Tab" />
     <div class="au-toolbar__filters">
-        <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
         @if (Model.Tab == "documents")
         {
             <div class="au-field" style="width:240px">

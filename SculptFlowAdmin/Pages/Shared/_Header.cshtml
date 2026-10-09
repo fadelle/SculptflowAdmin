@@ -1,8 +1,12 @@
-@* The glass header: sidebar toggle, breadcrumb (ancestors are sibling switchers), page title, search, theme, user menu. *@
+@inject ScopeContext Scope
+@inject Microsoft.Extensions.Options.IOptions<ScopeOptions> ScopeOptions
+@* The glass header: sidebar toggle, breadcrumb (ancestors are sibling switchers), page title, scope chip, search, clinic
+   selector, theme, user menu. *@
 @{
     var path = Context.Request.Path.Value ?? "/";
     var steps = NavTree.Resolve(path);
     var title = (steps.Count > 0 ? steps[^1].Node.Label : null) ?? ViewData["Title"] as string ?? "SculptFlow Admin";
+    var so = ScopeOptions.Value;
 }
 <div class="au-header__bar">
     <button type="button" class="au-icon-btn au-icon-btn--primary" data-au-sidebar-toggle aria-label="Toggle sidebar">
@@ -44,12 +48,23 @@
         <h1 class="au-header__title">@title</h1>
     </div>
     <div class="au-header__tools">
+        @if (!Scope.IsGlobal)
+        {
+            @* On every page while a clinic is selected; ✕ goes back to all clinics (and the first page). *@
+            <span class="au-chip au-chip--outlined au-scope-chip au-hide-md" title="Every @so.EntityLabel.ToLowerInvariant()-aware page is filtered to this @so.EntityLabel.ToLowerInvariant()">
+                <span>@so.EntityLabel: @(Scope.EntityName ?? "selected")</span>
+                <a class="au-chip__delete" href="@Context.Request.WithQuery((so.QueryKey, ""), ("p", null))" aria-label="Clear @so.EntityLabel.ToLowerInvariant()">
+                    <span class="au-icon au-icon--sm" aria-hidden="true">close</span>
+                </a>
+            </span>
+        }
         <button type="button" class="au-search-btn au-hide-mobile" data-au-palette-open aria-label="Search pages (Ctrl+K)">
             <span class="au-icon" aria-hidden="true">search</span>Search<span class="au-kbd">Ctrl K</span>
         </button>
         <button type="button" class="au-icon-btn au-icon-btn--bordered au-show-mobile" data-au-palette-open aria-label="Search pages">
             <span class="au-icon" aria-hidden="true">search</span>
         </button>
+        <partial name="_ScopeSelector" />
         <button type="button" class="au-icon-btn au-icon-btn--bordered" data-au-theme-toggle aria-label="Toggle color mode">
             <span class="au-icon" aria-hidden="true">dark_mode</span>
         </button>

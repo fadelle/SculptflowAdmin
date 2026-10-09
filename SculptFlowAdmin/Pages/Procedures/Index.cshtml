@@ -8,7 +8,6 @@
             <label class="au-label" for="f-find">Find on this page</label>
             <span class="au-input-icon"><span class="au-icon" aria-hidden="true">filter_list</span><input class="au-input" type="search" id="f-find" data-filter="#rows" placeholder="Name, code or clinic" /></span>
         </div>
-        <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
     </div>
     <div class="au-toolbar__actions">
         <span class="au-toolbar__meta">@Ui.Count(Model.Rows.Count, "procedure", "procedures")</span>

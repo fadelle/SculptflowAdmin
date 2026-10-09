@@ -79,7 +79,8 @@ This portal had its own hand-rolled CSS/JS before Aurora. Where the rest of this
   | `Ui/Ui.cs` | `Common/Helpers/UiExtensions.cs` (`WithQuery`), `Common/Helpers/Ui.cs` (`Badge`, `Time`, `Initials`…), `Entities/Dtos/Ui/{ErrorPanelModel,EmptyStateModel}.cs` |
   | `PagerModel` + `_Pager` | the existing `Entities/Dtos/Paging/PagerModel` + `Pages/Shared/_Pager.cshtml`: page key **`p`**, fixed 50 rows, **no page-size select** (there is no size parameter) |
   | `fonts.css` (self-hosted) | Google Fonts links in `_Layout` / `_AuthLayout` (the users' browsers reach Google) |
-  | `Scoping/Scope.cs` | not added yet (§7 is a later, approval-gated step) |
+  | `Scoping/Scope.cs` | `Common/Enums/ScopeCapability.cs`, `Common/Configs/ScopeOptions.cs`, `Pages/Shared/{ScopeCapabilityAttribute,ScopeContext,ScopePageFilter}.cs`, `Business/Managers/ClinicScopeLookup.cs` (+ `Contracts/Managers/IScopeLookup.cs`), `Entities/Dtos/Scoping/{ScopeOption,ScopeOptionPage}.cs` |
+  | `/scope/options` (MapGet) | `Controllers/Admin/ScopeApiController.cs` → **`/api/admin/scope/options`** (signed-in only; 401, not a login redirect) |
 
 - **`NavItem.Aliases`** (§6): extra path prefixes that count as a leaf — `/Billing/Clinic` is *Billing accounts*,
   `/Billing/Rates` is *Rate cards*; `/Billing` itself is `Exact` so it doesn't light up on every billing page.
@@ -120,6 +121,22 @@ This portal had its own hand-rolled CSS/JS before Aurora. Where the rest of this
     `.au-dialog__content` (`.au-form-grid` / `.au-form-field` + `.au-form-label`, `.au-help`) › `.au-dialog__actions`.
     A dialog that sits inside a table cell needs `style="white-space:normal"` (cells are `nowrap`).
   - *Signed-out pages*: `_AuthLayout` (Login; Error when signed out). In an `@page` view use `HttpContext`, not `Context`.
+- **Clinic scope (§7) as built here:**
+  - The query key is the pages' existing **`clinicId`** (`ScopeOptions.QueryKey`), so the header selector, old links
+    (dashboard tiles, clinic page tiles, tab links, `asp-route-clinicId`) and the pages share one parameter. Cookie:
+    `admin.scope`. The selector resets the page number with `data-reset-params="p"`; the chip's ✕ links to `?clinicId=`.
+  - Scoped pages (all 12 whose queries already took `clinicId`): Leads, Conversations, Messages, Appointments, Staff,
+    Campaigns, Events, Audit, Knowledge, Channels, Procedures, Templates. Each has `[ScopeCapability(ScopeCapability.Clinic)]`,
+    takes `ScopeContext`, and does `ClinicId ??= _scope.FilterGuid` before its query. Their old per-page clinic
+    dropdown (`_ClinicFilter`) is gone: the header selector is the one place to pick a clinic (R10).
+  - Adding a scoped page = the attribute + those two lines; a page whose query has no clinic filter stays unscoped
+    (the selector hides, the chip and the selection stay).
+  - `ClinicScopeLookup` reads the existing clinic options list (cached 2 minutes) for the chip's name and the
+    selector's search. If the main app is down the selection is kept without a name. Signed-out requests skip the filter.
+  - `Request.HasFilters()` ignores the scope key: the scope is global, not a page filter, so it doesn't show Clear or
+    turn empty states into "match your filters".
+- **Status pages (§8.6):** `UseStatusCodePagesWithReExecute("/Status", "?code={0}")` (not for `/api`) renders
+  `Pages/Status.cshtml` for a 404 / 400 / … with no body, in the shell when signed in and on `_AuthLayout` otherwise.
 - **`site.css`** now holds only project glue (site.js hooks inside kit tables, linked stat tiles, back-header actions,
   titled table cards) and page bits (conversation timeline, message chart, plan entitlements, knowledge text, sign-in
   password box), all on `--au-*` tokens. The pre-Aurora component classes are gone.

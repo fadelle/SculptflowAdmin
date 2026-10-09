@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using SculptFlowAdmin.Common.Configs;
 
 namespace SculptFlowAdmin.Common.Helpers;
 
@@ -20,10 +22,14 @@ public static class UiExtensions
         return request.PathBase + request.Path + new QueryBuilder(pairs).ToQueryString();
     }
 
-    /// <summary>True when the URL narrows the list (any query value other than paging, handler, tab or id): picks
-    /// "No leads match your filters" over "No leads yet", and shows the toolbar's Clear.</summary>
-    public static bool HasFilters(this HttpRequest request) =>
-        request.Query.Any(kv => kv.Key is not ("p" or "handler" or "tab" or "id") && !string.IsNullOrEmpty(kv.Value));
+    /// <summary>True when the URL narrows the list (any query value other than paging, handler, tab, id or the global
+    /// clinic scope): picks "No leads match your filters" over "No leads yet", and shows the toolbar's Clear.</summary>
+    public static bool HasFilters(this HttpRequest request)
+    {
+        var scopeKey = request.HttpContext.RequestServices.GetService<IOptions<ScopeOptions>>()?.Value.QueryKey ?? "clinicId";
+        return request.Query.Any(kv => kv.Key is not ("p" or "handler" or "tab" or "id")
+            && !kv.Key.Equals(scopeKey, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(kv.Value));
+    }
 
     /// <summary>The empty-list message for a list of <paramref name="things"/> ("leads"), filtered or not.</summary>
     public static string EmptyMessage(this HttpRequest request, string things) =>

@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
-using SculptFlowAdmin.Business.Contracts.Services.Clinics;
 using SculptFlowAdmin.Business.Contracts.Services.Leads;
-using SculptFlowAdmin.Entities.Dtos.Clinics;
+using SculptFlowAdmin.Common.Enums;
 using SculptFlowAdmin.Entities.Dtos.Leads;
 using SculptFlowAdmin.Entities.Responses.Paging;
 using SculptFlowAdmin.Pages.Shared;
 
 namespace SculptFlowAdmin.Pages.Leads;
 
+[ScopeCapability(ScopeCapability.Clinic)]
 public class IndexModel : AdminPageModel
 {
     private readonly ILeadAdminService _leads;
-    private readonly IClinicAdminService _clinics;
+    private readonly ScopeContext _scope;
 
-    public IndexModel(ILeadAdminService leads, IClinicAdminService clinics)
+    public IndexModel(ILeadAdminService leads, ScopeContext scope)
     {
         _leads = leads;
-        _clinics = clinics;
+        _scope = scope;
     }
 
     [BindProperty(SupportsGet = true)] public Guid? ClinicId { get; set; }
@@ -24,11 +24,10 @@ public class IndexModel : AdminPageModel
     [BindProperty(SupportsGet = true)] public string? Q { get; set; }
     [BindProperty(SupportsGet = true, Name = "p")] public int PageNumber { get; set; } = 1;
     public PagedResult<LeadRow> Result { get; private set; } = null!;
-    public List<ClinicOption> Clinics { get; private set; } = new();
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        Clinics = await _clinics.OptionsAsync(ct);
+        ClinicId ??= _scope.FilterGuid; // the header's clinic scope when the URL names none
         Result = await _leads.ListLeadsAsync(ClinicId, Status, Q, PageNumber, ct);
     }
 }
