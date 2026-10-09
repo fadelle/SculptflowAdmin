@@ -1,33 +1,48 @@
 @page
 @model SculptFlowAdmin.Pages.Staff.IndexModel
 @{ ViewData["Title"] = "Staff accounts"; }
-<div class="page-head"><div><h1>Staff accounts</h1><div class="muted">Clinic users of the main app. Admin users are separate (see Admin users).</div></div></div>
-<form class="filters" method="get">
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <label class="search">Search<input type="search" name="q" value="@Model.Q" placeholder="Name or email" /></label>
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">Clinic users of the main app. Admin users are separate (see Admin users).</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:260px">
+            <label class="au-label" for="f-q">Search</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" placeholder="Name or email" /></span>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "account", "accounts")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-@if (Model.Result.Items.Count == 0)
-{
-    <div class="card empty">No staff accounts.</div>
-}
-else
-{
-<div class="table-wrap">
-<table>
-    <tr><th>Name</th><th>Clinic</th><th>Membership</th><th>Login</th><th>Sign-in methods</th><th>Joined</th></tr>
-    @foreach (var s in Model.Result.Items)
+<div class="au-table-card">
+    @if (Model.Result.Items.Count == 0)
     {
-        <tr>
-            <td><a href="/Staff/Details?id=@s.UserId">@(s.FullName ?? "(no name)")</a><div class="small muted">@s.Email</div></td>
-            <td>@if (s.ClinicId.HasValue) { <a href="/Clinics/Details?id=@s.ClinicId">@s.ClinicName</a> } else { <span class="muted">no clinic</span> }</td>
-            <td>@Ui.Badge(s.MembershipActive ? "active" : "inactive")</td>
-            <td>@Ui.Badge(s.LoginLocked ? "locked" : "active", s.LoginLocked ? "locked" : "can sign in")</td>
-            <td class="small">@(s.HasPassword ? "password" : "") @(s.HasGoogleLogin ? "Google" : "")</td>
-            <td class="small">@Ui.Time(s.JoinedAt)</td>
-        </tr>
+        var empty = new EmptyStateModel(Request.EmptyMessage("staff accounts"), "badge");
+        <partial name="_EmptyState" model="empty" />
     }
-</table>
+    else
+    {
+        <div class="au-table-scroll">
+            <table class="au-table">
+                <thead>
+                    <tr><th>Name</th><th>Clinic</th><th>Membership</th><th>Login</th><th>Sign-in methods</th><th>Joined</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.Result.Items)
+                    {
+                        var methods = string.Join(" · ", new[] { s.HasPassword ? "password" : null, s.HasGoogleLogin ? "Google" : null }.Where(m => m is not null));
+                        <tr data-au-href="/Staff/Details?id=@s.UserId">
+                            <td><a href="/Staff/Details?id=@s.UserId">@(s.FullName ?? "(no name)")</a><div class="au-caption">@s.Email</div></td>
+                            <td>@if (s.ClinicId.HasValue) { <a href="/Clinics/Details?id=@s.ClinicId">@s.ClinicName</a> } else { <span class="au-muted">no clinic</span> }</td>
+                            <td>@Ui.Badge(s.MembershipActive ? "active" : "inactive")</td>
+                            <td>@Ui.Badge(s.LoginLocked ? "locked" : "active", s.LoginLocked ? "locked" : "can sign in")</td>
+                            <td>@Ui.OrDash(methods)</td>
+                            <td>@Ui.Time(s.JoinedAt)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
 </div>
-}
-<partial name="_Pager" model="PagerModel.From(Model.Result)" />

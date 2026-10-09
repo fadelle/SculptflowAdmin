@@ -1,0 +1,10 @@
+@model EmptyStateModel
+@* An empty list: what's empty and why, never a blank area (R6). *@
+<div class="au-empty">
+    <span class="au-empty__icon"><span class="au-icon" aria-hidden="true">@Model.Icon</span></span>
+    <span>@Model.Message</span>
+    @if (Model.ActionHref is not null)
+    {
+        <a class="au-btn au-btn--outlined au-btn--sm" href="@Model.ActionHref">@Model.ActionLabel</a>
+    }
+</div>

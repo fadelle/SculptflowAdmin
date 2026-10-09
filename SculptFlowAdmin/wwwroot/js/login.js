@@ -6,7 +6,9 @@
       var input = toggle.parentElement.querySelector('input');
       var show = input.type === 'password';
       input.type = show ? 'text' : 'password';
-      toggle.textContent = show ? '🙈' : '👁';
+      var glyph = toggle.querySelector('.au-icon');
+      if (glyph) glyph.textContent = show ? 'visibility_off' : 'visibility';
+      else toggle.textContent = show ? '🙈' : '👁';
       toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
       toggle.title = toggle.getAttribute('aria-label');
       input.focus();

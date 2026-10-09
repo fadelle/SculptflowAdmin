@@ -1,6 +1,10 @@
-@* The end of every filter bar: a Search button, and Clear once anything is filtered. Selects submit on change (site.js). *@
-<button class="btn" type="submit">Search</button>
-@if (Context.Request.Query.Any(kv => kv.Key is not ("p" or "handler" or "tab" or "id") && !string.IsNullOrEmpty(kv.Value)))
+@* The end of every filter toolbar: Search, Clear once anything is filtered, and ⟳ Refresh. Selects and checkboxes submit
+   on change (site.js, form.filters); text submits with Enter or Search. *@
+<button class="au-btn au-btn--outlined" type="submit"><span class="au-icon" aria-hidden="true">search</span>Search</button>
+@if (Context.Request.HasFilters())
 {
-    <a class="btn ghost" href="@Context.Request.Path">Clear</a>
+    <a class="au-btn au-btn--text" href="@Context.Request.Path">Clear</a>
 }
+<button type="button" class="au-icon-btn au-icon-btn--bordered" data-au-refresh data-au-tip="Refresh" aria-label="Refresh">
+    <span class="au-icon" aria-hidden="true">refresh</span>
+</button>

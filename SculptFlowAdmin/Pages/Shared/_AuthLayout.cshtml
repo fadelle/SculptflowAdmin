@@ -1,0 +1,45 @@
+@* Pages without the shell (sign-in; error pages for signed-out visitors): same <head> as _Layout, a centred card on the
+   aurora backdrop (docs/UI_GUIDE.md §3.2, §8.6). *@
+@{
+    var pageTitle = ViewData["Title"] as string;
+}
+<!DOCTYPE html>
+<html lang="en" data-au-app="admin">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@(string.IsNullOrEmpty(pageTitle) ? "SculptFlow Admin" : $"{pageTitle} · SculptFlow Admin")</title>
+    <script>
+        (function () {
+            try {
+                var ls = localStorage, r = document.documentElement;
+                var saved = ls.getItem('admin.themeMode') || ls.getItem('sf-theme');
+                var mode = saved === 'light' || saved === 'dark' ? saved
+                    : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                r.setAttribute('data-theme', mode);
+                r.style.backgroundColor = mode === 'dark' ? '#070b15' : '#f2f5fa';
+            } catch (e) { }
+        })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="~/logo.svg" />
+    <link rel="icon" href="~/favicon.ico" sizes="32x32" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@@400..800&family=JetBrains+Mono:wght@@400..700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@@20..24,400,0..1,0&display=block" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/aurora.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <button type="button" class="au-icon-btn au-icon-btn--bordered au-auth-theme" data-au-theme-toggle aria-label="Toggle color mode">
+        <span class="au-icon" aria-hidden="true">dark_mode</span>
+    </button>
+    <main class="au-auth" id="main">
+        @RenderBody()
+    </main>
+    <script src="~/js/aurora.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

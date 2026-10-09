@@ -1,27 +1,36 @@
 @page
 @model SculptFlowAdmin.Pages.Conversations.IndexModel
 @{ ViewData["Title"] = "Conversations"; }
-<div class="page-head"><div><h1>Conversations</h1><div class="muted">Every inbox thread across clinics, newest activity first.</div></div></div>
-<form class="filters" method="get">
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <label>Channel
-        <select name="channel"><option value="">All</option>
-            @foreach (var c in ConversationChannel.All.OrderBy(x => x)) { <option value="@c" selected="@(c == Model.Channel)">@c</option> }
-        </select>
-    </label>
-    <label>Handled by
-        <select name="mode"><option value="">All</option>
-            <option value="ai" selected="@(Model.Mode == "ai")">AI</option>
-            <option value="human" selected="@(Model.Mode == "human")">Staff</option>
-            <option value="approval" selected="@(Model.Mode == "approval")">Approval</option>
-        </select>
-    </label>
-    <label>Status
-        <select name="status"><option value="">All</option>
-            @foreach (var s in new[] { "active", "closed", "archived" }) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
-        </select>
-    </label>
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">Every inbox thread across clinics, newest activity first.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:150px">
+            <label class="au-label" for="f-channel">Channel</label>
+            <select class="au-select" id="f-channel" name="channel"><option value="">All</option>
+                @foreach (var c in ConversationChannel.All.OrderBy(x => x)) { <option value="@c" selected="@(c == Model.Channel)">@c</option> }
+            </select>
+        </div>
+        <div class="au-field" style="width:150px">
+            <label class="au-label" for="f-mode">Handled by</label>
+            <select class="au-select" id="f-mode" name="mode"><option value="">All</option>
+                <option value="ai" selected="@(Model.Mode == "ai")">AI</option>
+                <option value="human" selected="@(Model.Mode == "human")">Staff</option>
+                <option value="approval" selected="@(Model.Mode == "approval")">Approval</option>
+            </select>
+        </div>
+        <div class="au-field" style="width:150px">
+            <label class="au-label" for="f-status">Status</label>
+            <select class="au-select" id="f-status" name="status"><option value="">All</option>
+                @foreach (var s in new[] { "active", "closed", "archived" }) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
+            </select>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "conversation", "conversations")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-<partial name="_ConversationTable" model="Model.Result.Items" />
-<partial name="_Pager" model="PagerModel.From(Model.Result)" />
+<div class="au-table-card">
+    <partial name="_ConversationTable" model="Model.Result.Items" />
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
+</div>

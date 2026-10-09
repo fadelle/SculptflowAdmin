@@ -1,0 +1,20 @@
+@* The current page's sibling views (from NavTree), shown only inside a group with 2+ pages. *@
+@{
+    var steps = NavTree.Resolve(Context.Request.Path.Value ?? "/");
+    var last = steps.Count >= 2 ? steps[^1] : null;
+    var tabs = last?.Siblings.Where(s => s.IsLeaf).ToArray() ?? Array.Empty<NavItem>();
+}
+@if (last is not null && tabs.Length >= 2)
+{
+    <nav class="au-section-tabs" aria-label="Views in this section">
+        <div class="au-tabs">
+            @foreach (var t in tabs)
+            {
+                var on = ReferenceEquals(t, last.Node);
+                <a class="au-tab @(on ? "is-active" : null)" href="@Url.Content("~" + t.Path)" aria-current="@(on ? "page" : null)">
+                    <span class="au-icon" aria-hidden="true">@t.Icon</span>@t.Label
+                </a>
+            }
+        </div>
+    </nav>
+}

@@ -4,96 +4,114 @@
     var r = Model.Row;
     ViewData["Title"] = r.Channel + " · " + r.Clinic?.Name;
     var provider = ChannelProvider.Of(r);
+    var problem = string.Join(" ", new[] { r.LastProblemCode, r.LastProblemMessage }.Where(x => !string.IsNullOrWhiteSpace(x)));
 }
-<div class="page-head">
-    <div>
-        <div class="crumbs"><a href="/Channels">Channels &amp; integrations</a> /</div>
-        <h1>@r.Channel @Ui.Badge(r.Status)</h1>
-        <div class="muted small"><a href="/Clinics/Details?id=@r.ClinicId">@r.Clinic?.Name</a> · <span class="mono">@r.Id</span></div>
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Channels" aria-label="Back to channels"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@r.Channel</h2>
+        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@r.ClinicId">@r.Clinic?.Name</a></span>
     </div>
     @if (r.Status != ChannelIntegrationStatus.Disconnected)
     {
-        <form method="post" asp-page-handler="Disconnect" asp-route-id="@r.Id">
-            <button class="btn danger" type="submit" data-confirm="Disconnect @r.Channel for @r.Clinic?.Name? Messages stop flowing until it's reconnected.">Disconnect</button>
-        </form>
+        <div class="au-row au-row--wrap">
+            <form method="post" asp-page-handler="Disconnect" asp-route-id="@r.Id">
+                <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Disconnect @r.Channel for @r.Clinic?.Name? Messages stop flowing until it's reconnected.">Disconnect</button>
+            </form>
+        </div>
     }
 </div>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">
+    @Ui.Badge(r.Status) @Ui.Badge(r.Channel == ChannelType.Telegram ? "telegram" : provider)
+    <span class="au-copy"><span class="au-mono">@r.Id</span><button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@r.Id" data-au-copy-message="Connection id copied" aria-label="Copy connection id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span>
+</div>
 
-@if (r.Channel == ChannelType.WhatsApp && provider == ChannelProvider.Infobip)
-{
-    <div class="card">
-        <h2>Infobip webhook URL</h2>
-        @if (Model.InfobipWebhookUrl is not null)
+<div class="au-stack">
+    @if (r.Channel == ChannelType.WhatsApp && provider == ChannelProvider.Infobip)
+    {
+        <section class="au-panel au-panel--round au-panel--pad">
+            <div class="au-panel__head"><h3 class="au-panel__title">Infobip webhook URL</h3></div>
+            @if (Model.InfobipWebhookUrl is not null)
+            {
+                <p class="au-muted" style="font-size:0.8125rem">Paste this as the inbound message and delivery report URL of sender +@r.ProviderSenderId in the Infobip portal. It contains this connection's secret.</p>
+                <div class="au-row" style="align-items:flex-start">
+                    <div class="au-code" id="webhook-url" style="flex:1;word-break:break-all">@Model.InfobipWebhookUrl</div>
+                    @* site.js data-copy swaps this button's text for "Copied", so it stays text-only *@
+                    <button class="au-btn au-btn--outlined au-btn--sm" type="button" data-copy="#webhook-url">Copy</button>
+                </div>
+            }
+            else
+            {
+                <p class="au-muted">Not available. The connection must be connected, and MainApp:PublicBaseUrl must be set in the admin portal's config.</p>
+            }
+        </section>
+    }
+
+    <div class="au-grid au-grid--2" style="align-items:start">
+        <section class="au-panel au-panel--round au-panel--pad">
+            <div class="au-panel__head"><h3 class="au-panel__title">Connection</h3></div>
+            <dl class="au-detail-rows">
+                <div class="au-detail-row"><dt>Provider</dt><dd>@Ui.Badge(r.Channel == ChannelType.Telegram ? "telegram" : provider)</dd></div>
+                <div class="au-detail-row"><dt>Display name</dt><dd>@Ui.OrDash(r.DisplayName)</dd></div>
+                <div class="au-detail-row"><dt>Verified name</dt><dd>@Ui.OrDash(r.VerifiedName)</dd></div>
+                @if (r.ProviderSenderId is not null) { <div class="au-detail-row"><dt>Sender number</dt><dd>+@r.ProviderSenderId</dd></div> }
+                @if (r.PhoneNumberId is not null) { <div class="au-detail-row"><dt>Meta phone number id</dt><dd class="au-mono">@r.PhoneNumberId</dd></div> }
+                @if (r.WhatsAppBusinessId is not null) { <div class="au-detail-row"><dt>WABA id</dt><dd class="au-mono">@r.WhatsAppBusinessId</dd></div> }
+                @if (r.MetaBusinessId is not null) { <div class="au-detail-row"><dt>Meta business id</dt><dd class="au-mono">@r.MetaBusinessId</dd></div> }
+                @if (r.PageId is not null) { <div class="au-detail-row"><dt>Page id</dt><dd class="au-mono">@r.PageId</dd></div> }
+                @if (r.InstagramBusinessId is not null) { <div class="au-detail-row"><dt>Instagram business id</dt><dd class="au-mono">@r.InstagramBusinessId</dd></div> }
+                @if (r.TelegramBotUsername is not null) { <div class="au-detail-row"><dt>Telegram bot</dt><dd>@@@r.TelegramBotUsername <span class="au-mono">@r.TelegramBotId</span></dd></div> }
+                @if (r.WebhookStatus is not null) { <div class="au-detail-row"><dt>Webhook</dt><dd>@Ui.Badge(r.WebhookStatus) @Ui.Time(r.WebhookRegisteredAt)</dd></div> }
+                <div class="au-detail-row"><dt>Has access token</dt><dd>@Ui.YesNo(r.HasAccessToken)</dd></div>
+                <div class="au-detail-row"><dt>Last verified</dt><dd>@Ui.Time(r.LastVerifiedAt)</dd></div>
+                <div class="au-detail-row"><dt>Last error</dt><dd>@Ui.OrDash(r.LastError)</dd></div>
+                <div class="au-detail-row"><dt>Connected since</dt><dd>@Ui.Time(r.CreatedAt)</dd></div>
+                <div class="au-detail-row"><dt>Updated</dt><dd>@Ui.Time(r.UpdatedAt)</dd></div>
+            </dl>
+        </section>
+        <section class="au-panel au-panel--round au-panel--pad">
+            <div class="au-panel__head"><h3 class="au-panel__title">Health</h3></div>
+            <dl class="au-detail-rows">
+                <div class="au-detail-row"><dt>Healthy</dt><dd>@Ui.YesNo(r.IsHealthy)</dd></div>
+                <div class="au-detail-row"><dt>Health level</dt><dd>@Ui.Badge(r.HealthLevel)</dd></div>
+                <div class="au-detail-row"><dt>Account status</dt><dd>@Ui.OrDash(r.AccountStatus)</dd></div>
+                <div class="au-detail-row"><dt>Account review</dt><dd>@Ui.OrDash(r.AccountReviewStatus)</dd></div>
+                <div class="au-detail-row"><dt>Phone quality</dt><dd>@Ui.OrDash(r.PhoneQualityRating)</dd></div>
+                <div class="au-detail-row"><dt>Phone status</dt><dd>@Ui.OrDash(r.PhoneStatus)</dd></div>
+                <div class="au-detail-row"><dt>Name status</dt><dd>@Ui.OrDash(r.NameStatus)</dd></div>
+                <div class="au-detail-row"><dt>Last problem</dt><dd>@Ui.OrDash(problem)</dd></div>
+                <div class="au-detail-row"><dt>Last webhook</dt><dd>@Ui.Time(r.LastWebhookAt)</dd></div>
+                <div class="au-detail-row"><dt>Last health event</dt><dd>@Ui.Time(r.LastHealthEventAt)</dd></div>
+            </dl>
+        </section>
+    </div>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Health events (latest 100)</h3></div>
+        @if (Model.Events.Count == 0)
         {
-            <p class="small muted">Paste this as the inbound message and delivery report URL of sender +@r.ProviderSenderId in the Infobip portal. It contains this connection's secret.</p>
-            <div class="copy-box"><span class="mono" id="webhook-url">@Model.InfobipWebhookUrl</span><button class="btn sm" type="button" data-copy="#webhook-url">Copy</button></div>
+            var empty = new EmptyStateModel("No health events yet.", "monitor_heart");
+            <partial name="_EmptyState" model="empty" />
         }
         else
         {
-            <p class="muted">Not available. The connection must be connected, and MainApp:PublicBaseUrl must be set in the admin portal's config.</p>
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead><tr><th>When</th><th>Type</th><th>Severity</th><th>Status</th><th>Message</th></tr></thead>
+                    <tbody>
+                        @foreach (var e in Model.Events)
+                        {
+                            <tr>
+                                <td>@Ui.Time(e.OccurredAt)</td>
+                                <td>@e.EventType.Replace('_', ' ')</td>
+                                <td>@Ui.Badge(e.Severity)</td>
+                                <td>@Ui.OrDash(e.Status)</td>
+                                <td class="au-wrap">@e.Code @e.Message</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-    </div>
-}
-
-<div class="grid grid-2">
-    <div class="card">
-        <h2>Connection</h2>
-        <dl class="kv">
-            <dt>Provider</dt><dd>@Ui.Badge(r.Channel == ChannelType.Telegram ? "telegram" : provider)</dd>
-            <dt>Display name</dt><dd>@r.DisplayName</dd>
-            <dt>Verified name</dt><dd>@r.VerifiedName</dd>
-            @if (r.ProviderSenderId is not null) { <dt>Sender number</dt><dd>+@r.ProviderSenderId</dd> }
-            @if (r.PhoneNumberId is not null) { <dt>Meta phone number id</dt><dd class="mono">@r.PhoneNumberId</dd> }
-            @if (r.WhatsAppBusinessId is not null) { <dt>WABA id</dt><dd class="mono">@r.WhatsAppBusinessId</dd> }
-            @if (r.MetaBusinessId is not null) { <dt>Meta business id</dt><dd class="mono">@r.MetaBusinessId</dd> }
-            @if (r.PageId is not null) { <dt>Page id</dt><dd class="mono">@r.PageId</dd> }
-            @if (r.InstagramBusinessId is not null) { <dt>Instagram business id</dt><dd class="mono">@r.InstagramBusinessId</dd> }
-            @if (r.TelegramBotUsername is not null) { <dt>Telegram bot</dt><dd>@@@r.TelegramBotUsername <span class="mono">@r.TelegramBotId</span></dd> }
-            @if (r.WebhookStatus is not null) { <dt>Webhook</dt><dd>@Ui.Badge(r.WebhookStatus) @Ui.Time(r.WebhookRegisteredAt)</dd> }
-            <dt>Has access token</dt><dd>@Ui.YesNo(r.HasAccessToken)</dd>
-            <dt>Last verified</dt><dd>@Ui.Time(r.LastVerifiedAt)</dd>
-            <dt>Last error</dt><dd>@r.LastError</dd>
-            <dt>Connected since</dt><dd>@Ui.Time(r.CreatedAt)</dd>
-            <dt>Updated</dt><dd>@Ui.Time(r.UpdatedAt)</dd>
-        </dl>
-    </div>
-    <div class="card">
-        <h2>Health</h2>
-        <dl class="kv">
-            <dt>Healthy</dt><dd>@Ui.YesNo(r.IsHealthy)</dd>
-            <dt>Health level</dt><dd>@Ui.Badge(r.HealthLevel)</dd>
-            <dt>Account status</dt><dd>@r.AccountStatus</dd>
-            <dt>Account review</dt><dd>@r.AccountReviewStatus</dd>
-            <dt>Phone quality</dt><dd>@r.PhoneQualityRating</dd>
-            <dt>Phone status</dt><dd>@r.PhoneStatus</dd>
-            <dt>Name status</dt><dd>@r.NameStatus</dd>
-            <dt>Last problem</dt><dd>@r.LastProblemCode @r.LastProblemMessage</dd>
-            <dt>Last webhook</dt><dd>@Ui.Time(r.LastWebhookAt)</dd>
-            <dt>Last health event</dt><dd>@Ui.Time(r.LastHealthEventAt)</dd>
-        </dl>
-    </div>
-</div>
-
-<div class="card">
-    <h2>Health events (latest 100)</h2>
-    @if (Model.Events.Count == 0)
-    {
-        <div class="empty">No health events.</div>
-    }
-    else
-    {
-        <table>
-            <tr><th>When</th><th>Type</th><th>Severity</th><th>Status</th><th>Message</th></tr>
-            @foreach (var e in Model.Events)
-            {
-                <tr>
-                    <td class="small">@Ui.Time(e.OccurredAt)</td>
-                    <td>@e.EventType.Replace('_', ' ')</td>
-                    <td>@Ui.Badge(e.Severity)</td>
-                    <td>@e.Status</td>
-                    <td class="small">@e.Code @e.Message</td>
-                </tr>
-            }
-        </table>
-    }
+    </section>
 </div>

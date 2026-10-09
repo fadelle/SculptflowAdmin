@@ -4,97 +4,103 @@
     ViewData["Title"] = "Plans";
     var e = Model.Editing;
 }
-<div class="page-head">
-    <div><h1>Plans</h1>
-        <div class="muted">What a clinic pays SculptFlow for access, the usage credit it includes each period, and which features and limits it unlocks.</div></div>
+<div class="au-page-head">
+    <p class="au-page-head__sub">What a clinic pays SculptFlow for access, the usage credit it includes each period, and which features and limits it unlocks.</p>
     @if (Model.LoadError is null)
     {
-        if (e is null) { <button class="btn primary" type="button" data-open="plan-form">+ New plan</button> }
-        else { <a class="btn primary" href="/Billing/Plans?new=1">+ New plan</a> }
+        <div class="au-page-head__actions">
+            @if (e is null) { <button class="au-btn au-btn--primary" type="button" data-open="plan-form"><span class="au-icon" aria-hidden="true">add</span>New plan</button> }
+            else { <a class="au-btn au-btn--primary" href="/Billing/Plans?new=1"><span class="au-icon" aria-hidden="true">add</span>New plan</a> }
+        </div>
     }
 </div>
 
 @if (Model.LoadError is null)
 {
-    @if (Model.Plans.Count == 0)
-    {
-        <div class="card empty">No plans yet. Use “New plan” to create the first one.</div>
-    }
-    else
-    {
-        <div class="table-wrap">
-            <table>
-                <tr><th>Plan</th><th class="num">Price</th><th class="num">Included credit</th><th>Rate card</th><th>Features &amp; limits</th><th class="num">Subscribers</th><th>Status</th><th></th></tr>
-                @foreach (var p in Model.Plans.OrderBy(p => p.SortOrder).ThenBy(p => p.Name))
-                {
-                    <tr>
-                        <td><strong>@p.Name</strong> <div class="small muted mono">@p.Code</div>@if (p.Description is not null) { <div class="small muted">@p.Description</div> }</td>
-                        <td class="num nowrap">@BillingUi.Money(p.Price, p.Currency) <div class="small muted">per @p.BillingPeriod</div></td>
-                        <td class="num">@BillingUi.Money(p.IncludedUsageCredit)</td>
-                        <td>@if (p.RateCardCode is null) { <span class="muted">default</span> } else { <a href="/Billing/Rates?code=@p.RateCardCode">@p.RateCardCode</a> }</td>
-                        <td class="small">
-                            @foreach (var d in Model.Catalog)
-                            {
-                                var has = p.Entitlements.TryGetValue(d.Key, out var v);
-                                if (d.Kind == "feature") { if (has && v == "true") { <span class="badge green">@d.Label</span> } }
-                                else { <span class="badge">@d.Label: @(has ? v : "0")</span> }
-                            }
-                        </td>
-                        <td class="num">@p.Subscribers</td>
-                        <td>@Ui.Badge(p.IsActive ? "active" : "inactive")</td>
-                        <td><a class="btn sm" href="/Billing/Plans?edit=@p.Code">Edit</a></td>
-                    </tr>
-                }
-            </table>
-        </div>
-    }
-
-    <dialog class="modal modal-lg" id="plan-form" @(e is not null || Request.Query["new"] == "1" ? "data-autoopen" : "")>
-        <form method="post" asp-page-handler="Save">
-            <div class="modal-head"><h2>@(e is null ? "New plan" : $"Edit {e.Name}")</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
-            <div class="modal-body">
-        @if (e is not null)
+    <div class="au-table-card">
+        @if (Model.Plans.Count == 0)
         {
-            <input type="hidden" name="originalCode" value="@e.Code" />
-            <p class="small muted">Changes to price and included credit apply from each subscriber's next renewal. The code can't change.</p>
+            var empty = new EmptyStateModel("No plans yet. Use “New plan” to create the first one.", "layers");
+            <partial name="_EmptyState" model="empty" />
         }
-        <div class="grid grid-2" style="gap:0 24px">
-            <div>
-                <div class="form-row"><label>Code (lowercase, e.g. starter)</label><input name="code" value="@e?.Code" required pattern="[a-z0-9_\-]+" disabled="@(e is not null)" /></div>
-                <div class="form-row"><label>Name</label><input name="name" value="@e?.Name" required maxlength="100" /></div>
-                <div class="form-row"><label>Description (optional)</label><input name="description" value="@e?.Description" maxlength="500" /></div>
-                <div class="form-row"><label>Sort order</label><input type="number" name="sortOrder" value="@(e?.SortOrder ?? 0)" /></div>
-                <div class="form-row check"><label><input type="checkbox" name="isActive" value="true" checked="@(e?.IsActive ?? true)" /> Active (offered for new subscriptions)</label></div>
+        else
+        {
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead>
+                        <tr><th>Plan</th><th class="au-right">Price</th><th class="au-right">Included credit</th><th>Rate card</th><th>Features &amp; limits</th><th class="au-right">Subscribers</th><th>Status</th><th class="au-shrink"></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model.Plans.OrderBy(p => p.SortOrder).ThenBy(p => p.Name))
+                        {
+                            <tr>
+                                <td><span class="au-strong">@p.Name</span> <div class="au-caption"><span class="au-mono">@p.Code</span>@if (p.Description is not null) { <text> · @p.Description</text> }</div></td>
+                                <td class="au-right">@BillingUi.Money(p.Price, p.Currency) <div class="au-caption">per @p.BillingPeriod</div></td>
+                                <td class="au-right">@BillingUi.Money(p.IncludedUsageCredit)</td>
+                                <td>@if (p.RateCardCode is null) { <span class="au-muted">default</span> } else { <a href="/Billing/Rates?code=@p.RateCardCode">@p.RateCardCode</a> }</td>
+                                <td class="au-wrap" style="min-width:260px">
+                                    <span class="au-row au-row--wrap" style="--au-gap:4px">
+                                        @foreach (var d in Model.Catalog)
+                                        {
+                                            var has = p.Entitlements.TryGetValue(d.Key, out var v);
+                                            if (d.Kind == "feature") { if (has && v == "true") { <span class="au-chip au-chip--soft au-chip--success">@d.Label</span> } }
+                                            else { <span class="au-chip au-chip--outlined">@d.Label: @(has ? v : "0")</span> }
+                                        }
+                                    </span>
+                                </td>
+                                <td class="au-right">@p.Subscribers</td>
+                                <td>@Ui.Badge(p.IsActive ? "active" : "inactive")</td>
+                                <td><a class="au-btn au-btn--outlined au-btn--sm" href="/Billing/Plans?edit=@p.Code"><span class="au-icon" aria-hidden="true">edit</span>Edit</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-            <div>
-                <div class="form-row"><label>Price per period</label><input type="number" name="price" min="0" step="0.01" value="@(e is null ? "0" : BillingUi.Input(e.Price))" required /></div>
-                <div class="form-row"><label>Billing period</label>
-                    <select name="billingPeriod">@foreach (var bp in BillingVocab.BillingPeriods) { <option value="@bp" selected="@(bp == (e?.BillingPeriod ?? "month"))">@bp</option> }</select></div>
-                <div class="form-row"><label>Included usage credit per period (money, spent before the wallet)</label><input type="number" name="includedUsageCredit" min="0" step="0.01" value="@(e is null ? "0" : BillingUi.Input(e.IncludedUsageCredit))" required /></div>
-                <div class="form-row"><label>Rate card (blank = the default card)</label>
-                    <select name="rateCardCode"><option value="">Default card</option>
-                        @foreach (var rc in Model.RateCards.Where(c => c.ClinicId is null && !c.IsDefault)) { <option value="@rc.Code" selected="@(rc.Code == e?.RateCardCode)">@rc.Name (@rc.Code)</option> }
-                    </select></div>
-            </div>
-        </div>
-        <h2 style="margin-top:4px">Features &amp; limits</h2>
-        <p class="small muted">A feature that isn't ticked is off. A limit is a whole number or "unlimited"; blank means 0.</p>
-        <div class="ent-grid" style="margin-bottom:12px">
-            @foreach (var d in Model.Catalog)
-            {
-                var value = e is not null && e.Entitlements.TryGetValue(d.Key, out var v2) ? v2 : null;
-                if (d.Kind == "feature")
+        }
+    </div>
+
+    <dialog class="au-dialog au-dialog--md" id="plan-form" aria-labelledby="plan-form-title" @(e is not null || Request.Query["new"] == "1" ? "data-autoopen" : "")>
+        <form method="post" asp-page-handler="Save">
+            <h2 class="au-dialog__title" id="plan-form-title">@(e is null ? "New plan" : $"Edit {e.Name}")<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+            <div class="au-dialog__content">
+                @if (e is not null)
                 {
-                    <label class="form-row check-row"><input type="checkbox" name="ent:@d.Key" value="true" checked="@(value == "true")" /> @d.Label</label>
+                    <input type="hidden" name="originalCode" value="@e.Code" />
+                    <p class="au-help" style="margin-bottom:16px">Changes to price and included credit apply from each subscriber's next renewal. The code can't change.</p>
                 }
-                else
-                {
-                    <div class="form-row"><label>@d.Label</label><input name="ent:@d.Key" value="@value" placeholder="0" pattern="[0-9]+|unlimited" /></div>
-                }
-            }
-        </div>
+                <div class="au-form-grid">
+                    <div class="au-form-field"><label class="au-form-label" for="pl-code">Code (lowercase, e.g. starter)<span class="au-required">*</span></label><input class="au-input" id="pl-code" name="code" value="@e?.Code" required pattern="[a-z0-9_\-]+" disabled="@(e is not null)" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="pl-price">Price per period<span class="au-required">*</span></label><input class="au-input" id="pl-price" type="number" name="price" min="0" step="0.01" value="@(e is null ? "0" : BillingUi.Input(e.Price))" required /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="pl-name">Name<span class="au-required">*</span></label><input class="au-input" id="pl-name" name="name" value="@e?.Name" required maxlength="100" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="pl-period">Billing period</label>
+                        <select class="au-select" id="pl-period" name="billingPeriod">@foreach (var bp in BillingVocab.BillingPeriods) { <option value="@bp" selected="@(bp == (e?.BillingPeriod ?? "month"))">@bp</option> }</select></div>
+                    <div class="au-form-field"><label class="au-form-label" for="pl-desc">Description (optional)</label><input class="au-input" id="pl-desc" name="description" value="@e?.Description" maxlength="500" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="pl-credit">Included usage credit per period<span class="au-required">*</span></label><input class="au-input" id="pl-credit" type="number" name="includedUsageCredit" min="0" step="0.01" value="@(e is null ? "0" : BillingUi.Input(e.IncludedUsageCredit))" required /><span class="au-help">Money, spent before the wallet.</span></div>
+                    <div class="au-form-field"><label class="au-form-label" for="pl-sort">Sort order</label><input class="au-input" id="pl-sort" type="number" name="sortOrder" value="@(e?.SortOrder ?? 0)" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="pl-card">Rate card</label>
+                        <select class="au-select" id="pl-card" name="rateCardCode"><option value="">Default card</option>
+                            @foreach (var rc in Model.RateCards.Where(c => c.ClinicId is null && !c.IsDefault)) { <option value="@rc.Code" selected="@(rc.Code == e?.RateCardCode)">@rc.Name (@rc.Code)</option> }
+                        </select><span class="au-help">Blank = the default card.</span></div>
+                    <label class="au-check au-span-2"><input type="checkbox" name="isActive" value="true" checked="@(e?.IsActive ?? true)" /> Active (offered for new subscriptions)</label>
+                </div>
+                <h3 class="au-h4" style="margin-top:24px">Features &amp; limits</h3>
+                <p class="au-help" style="margin-bottom:12px">A feature that isn't ticked is off. A limit is a whole number or "unlimited"; blank means 0.</p>
+                <div class="ent-grid">
+                    @foreach (var d in Model.Catalog)
+                    {
+                        var value = e is not null && e.Entitlements.TryGetValue(d.Key, out var v2) ? v2 : null;
+                        if (d.Kind == "feature")
+                        {
+                            <label class="au-check"><input type="checkbox" name="ent:@d.Key" value="true" checked="@(value == "true")" /> @d.Label</label>
+                        }
+                        else
+                        {
+                            <div class="au-form-field"><label class="au-form-label" for="ent-@d.Key">@d.Label</label><input class="au-input au-input--sm" id="ent-@d.Key" name="ent:@d.Key" value="@value" placeholder="0" pattern="[0-9]+|unlimited" /></div>
+                        }
+                    }
+                </div>
             </div>
-            <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">@(e is null ? "Create plan" : "Save plan")</button></div>
+            <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">@(e is null ? "Create plan" : "Save plan")</button></div>
         </form>
     </dialog>
 }

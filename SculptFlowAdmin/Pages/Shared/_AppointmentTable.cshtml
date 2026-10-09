@@ -1,32 +1,38 @@
 @model IReadOnlyList<AppointmentRow>
+@* Appointments as table rows (Appointments list, lead details). The caller wraps it in .au-table-card. *@
 @if (Model.Count == 0)
 {
-    <div class="empty">No appointments.</div>
+    var empty = new EmptyStateModel(Context.Request.EmptyMessage("appointments"), "event");
+    <partial name="_EmptyState" model="empty" />
 }
 else
 {
-<div class="table-wrap">
-<table>
-    <tr><th>When (clinic time)</th><th>Lead</th><th>Clinic</th><th>Procedure</th><th>Status</th><th>Change status</th></tr>
-    @foreach (var a in Model)
-    {
-        <tr>
-            <td class="small">@Ui.Time(a.ScheduledStart, a.ClinicTimezone)</td>
-            <td><a href="/Leads/Details?id=@a.LeadId">@(string.IsNullOrWhiteSpace(a.LeadName) ? "(no name)" : a.LeadName)</a></td>
-            <td><a href="/Clinics/Details?id=@a.ClinicId">@a.ClinicName</a></td>
-            <td>@a.ProcedureName</td>
-            <td>@Ui.Badge(a.Status)</td>
-            <td>
-                <form class="inline" method="post" action="/Appointments?handler=Status">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@a.Id" />
-                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-                    <select name="status">@foreach (var s in AppointmentStatus.All) { <option value="@s" selected="@(s == a.Status)">@s.Replace('_', ' ')</option> }</select>
-                    <button class="btn sm" type="submit">Set</button>
-                </form>
-            </td>
-        </tr>
-    }
-</table>
-</div>
+    <div class="au-table-scroll">
+        <table class="au-table">
+            <thead>
+                <tr><th>When (clinic time)</th><th>Lead</th><th>Clinic</th><th>Procedure</th><th>Status</th><th>Change status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>@Ui.Time(a.ScheduledStart, a.ClinicTimezone)</td>
+                        <td><a href="/Leads/Details?id=@a.LeadId">@(string.IsNullOrWhiteSpace(a.LeadName) ? "(no name)" : a.LeadName)</a></td>
+                        <td><a href="/Clinics/Details?id=@a.ClinicId">@a.ClinicName</a></td>
+                        <td>@(a.ProcedureName ?? "—")</td>
+                        <td>@Ui.Badge(a.Status)</td>
+                        <td>
+                            <form class="au-row" style="--au-gap:6px" method="post" action="/Appointments?handler=Status">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                <select class="au-select au-select--sm" style="width:170px" name="status" aria-label="New status">@foreach (var s in AppointmentStatus.All) { <option value="@s" selected="@(s == a.Status)">@s.Replace('_', ' ')</option> }</select>
+                                <button class="au-btn au-btn--outlined au-btn--sm" type="submit">Set</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }

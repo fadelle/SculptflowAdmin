@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
-using SculptFlowAdmin.Business.Contracts.Services.Clinics;
 using SculptFlowAdmin.Business.Contracts.Services.Content;
-using SculptFlowAdmin.Entities.Dtos.Clinics;
+using SculptFlowAdmin.Common.Enums;
 using SculptFlowAdmin.Entities.Dtos.Content;
 using SculptFlowAdmin.Entities.Responses.Paging;
 using SculptFlowAdmin.Pages.Shared;
 
 namespace SculptFlowAdmin.Pages.Knowledge;
 
+[ScopeCapability(ScopeCapability.Clinic)]
 public class IndexModel : AdminPageModel
 {
     private readonly IContentAdminService _content;
-    private readonly IClinicAdminService _clinics;
+    private readonly ScopeContext _scope;
 
-    public IndexModel(IContentAdminService content, IClinicAdminService clinics)
+    public IndexModel(IContentAdminService content, ScopeContext scope)
     {
         _content = content;
-        _clinics = clinics;
+        _scope = scope;
     }
 
     [BindProperty(SupportsGet = true)] public Guid? ClinicId { get; set; }
@@ -26,11 +26,10 @@ public class IndexModel : AdminPageModel
     [BindProperty(SupportsGet = true, Name = "p")] public int PageNumber { get; set; } = 1;
     public PagedResult<KnowledgeDocRow> Docs { get; private set; } = null!;
     public List<WebsiteSourceRow> Websites { get; private set; } = new();
-    public List<ClinicOption> Clinics { get; private set; } = new();
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        Clinics = await _clinics.OptionsAsync(ct);
+        ClinicId ??= _scope.FilterGuid; // the header's clinic scope when the URL names none
         bool? active = Active switch { "true" => true, "false" => false, _ => null };
         Docs = await _content.ListDocumentsAsync(ClinicId, Q, active, PageNumber, ct);
         Websites = await _content.ListWebsitesAsync(ClinicId, ct);

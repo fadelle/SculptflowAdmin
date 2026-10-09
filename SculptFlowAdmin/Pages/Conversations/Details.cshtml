@@ -7,71 +7,73 @@
     if (string.IsNullOrWhiteSpace(leadName)) leadName = "(no name)";
     ViewData["Title"] = "Conversation with " + leadName;
 }
-<div class="page-head">
-    <div>
-        <div class="crumbs"><a href="/Conversations">Conversations</a> /</div>
-        <h1>@leadName <span class="muted small">on @c.Channel</span></h1>
-        <div class="muted small">
-            <a href="/Clinics/Details?id=@c.ClinicId">@Model.Clinic?.Name</a> ·
-            <a href="/Leads/Details?id=@c.LeadId">lead</a> ·
-            @Ui.Badge(c.Mode, c.Mode == "ai" ? "AI" : c.Mode == "human" ? "staff" : c.Mode) @Ui.Badge(c.Status) ·
-            24h window @(c.IsServiceWindowOpen ? "open until " : "closed")
-            @if (c.IsServiceWindowOpen) { @Ui.Time(c.ServiceWindowExpiresAt) }
-        </div>
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Conversations" aria-label="Back to conversations"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@leadName <span class="au-muted" style="font-size:0.9rem;font-weight:500">on @c.Channel</span></h2>
+        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@c.ClinicId">@Model.Clinic?.Name</a> · <a href="/Leads/Details?id=@c.LeadId">lead</a></span>
     </div>
-    <div class="actions">
+    <div class="au-row au-row--wrap">
         <form method="post" asp-page-handler="Mode" asp-route-id="@c.Id">
             @if (c.Mode == ConversationMode.Ai)
             {
                 <input type="hidden" name="mode" value="human" />
-                <button class="btn" type="submit" data-confirm="Hand this conversation to the clinic's staff? The AI stops replying.">Hand to staff</button>
+                <button class="au-btn au-btn--outlined" type="submit" data-confirm="Hand this conversation to the clinic's staff? The AI stops replying.">Hand to staff</button>
             }
             else
             {
                 <input type="hidden" name="mode" value="ai" />
-                <button class="btn" type="submit" data-confirm="Return this conversation to the AI?">Return to AI</button>
+                <button class="au-btn au-btn--outlined" type="submit" data-confirm="Return this conversation to the AI?">Return to AI</button>
             }
         </form>
         <form method="post" asp-page-handler="Status" asp-route-id="@c.Id">
             @if (c.Status == ConversationStatus.Active)
             {
                 <input type="hidden" name="status" value="closed" />
-                <button class="btn" type="submit">Close</button>
+                <button class="au-btn au-btn--outlined" type="submit">Close</button>
             }
             else
             {
                 <input type="hidden" name="status" value="active" />
-                <button class="btn" type="submit">Reopen</button>
+                <button class="au-btn au-btn--outlined" type="submit">Reopen</button>
             }
         </form>
     </div>
 </div>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">
+    @Ui.Badge(c.Mode, c.Mode == "ai" ? "AI" : c.Mode == "human" ? "staff" : c.Mode) @Ui.Badge(c.Status)
+    <span class="au-chip au-chip--outlined @(c.IsServiceWindowOpen ? "au-chip--success" : null)"><span class="au-icon" aria-hidden="true">schedule</span>24h window @(c.IsServiceWindowOpen ? "open until" : "closed")</span>
+    @if (c.IsServiceWindowOpen) { @Ui.Time(c.ServiceWindowExpiresAt) }
+</div>
 
-<div class="card">
-    <h2>Messages (@Model.Messages.Count@(Model.Messages.Count >= 500 ? ", latest 500" : ""))</h2>
-    <p class="small muted">Read-only. Staff reply from the main app's Inbox.</p>
+<section class="au-panel au-panel--round au-panel--pad">
+    <div class="au-panel__head">
+        <h3 class="au-panel__title">Messages (@Model.Messages.Count@(Model.Messages.Count >= 500 ? ", latest 500" : ""))</h3>
+        <span class="au-caption">Read-only. Staff reply from the main app's Inbox.</span>
+    </div>
     @if (Model.Messages.Count == 0)
     {
-        <div class="empty">No messages.</div>
+        var empty = new EmptyStateModel("No messages in this conversation yet.", "forum");
+        <partial name="_EmptyState" model="empty" />
     }
     else
     {
-    <div class="timeline">
-        @foreach (var m in Model.Messages)
-        {
-            var cls = m.Origin == MessageOrigin.System ? "system" : m.Direction == MessageDirection.Outbound ? (m.SenderType == MessageSenderType.Ai ? "out ai" : "out") : "";
-            <div class="msg @cls">@(m.Content ?? $"[{m.MessageType}]")
-                @if (m.Origin != MessageOrigin.System)
-                {
-                    <div class="meta">
-                        @m.SenderType · @m.Origin · @Ui.Time(m.CreatedAt)
-                        @if (!string.IsNullOrEmpty(m.DeliveryStatus)) { <span>· @Ui.Badge(m.DeliveryStatus)</span> }
-                        @if (m.FailedAt.HasValue) { <div style="color:var(--red-text)">Failed: @m.FailureCode @m.FailureReason</div> }
-                        @if (m.CampaignId.HasValue) { <a href="/Campaigns/Details?id=@m.CampaignId">campaign</a> }
-                    </div>
-                }
-            </div>
-        }
-    </div>
+        <div class="timeline">
+            @foreach (var m in Model.Messages)
+            {
+                var cls = m.Origin == MessageOrigin.System ? "system" : m.Direction == MessageDirection.Outbound ? (m.SenderType == MessageSenderType.Ai ? "out ai" : "out") : "";
+                <div class="msg @cls"><span class="msg__text">@(m.Content ?? $"[{m.MessageType}]")</span>
+                    @if (m.Origin != MessageOrigin.System)
+                    {
+                        <div class="meta">
+                            @m.SenderType · @m.Origin · @Ui.Time(m.CreatedAt)
+                            @if (!string.IsNullOrEmpty(m.DeliveryStatus)) { <span>· @Ui.Badge(m.DeliveryStatus)</span> }
+                            @if (m.FailedAt.HasValue) { <div class="au-text-error">Failed: @m.FailureCode @m.FailureReason</div> }
+                            @if (m.CampaignId.HasValue) { <a href="/Campaigns/Details?id=@m.CampaignId">campaign</a> }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     }
-</div>
+</section>

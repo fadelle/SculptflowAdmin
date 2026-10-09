@@ -4,22 +4,29 @@
     var d = Model.Doc;
     ViewData["Title"] = d.Title;
 }
-<div class="page-head">
-    <div>
-        <div class="crumbs"><a href="/Knowledge">Knowledge base</a> /</div>
-        <h1>@d.Title @Ui.Badge(d.IsActive ? "active" : "inactive")</h1>
-        <div class="muted small"><a href="/Clinics/Details?id=@d.ClinicId">@d.Clinic?.Name</a> · @KnowledgeCategory.Label(d.Category) · @d.SourceType · updated @Ui.Time(d.UpdatedAt)</div>
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Knowledge" aria-label="Back to the knowledge base"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title" title="@d.Title">@d.Title</h2>
+        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@d.ClinicId">@d.Clinic?.Name</a> · @KnowledgeCategory.Label(d.Category) · @d.SourceType · updated @Ui.Time(d.UpdatedAt)</span>
     </div>
-    <form method="post" asp-page-handler="SetActive" asp-route-id="@d.Id">
-        <input type="hidden" name="active" value="@(!d.IsActive ? "true" : "false")" />
-        <button class="btn @(d.IsActive ? "danger" : "primary")" type="submit">@(d.IsActive ? "Deactivate" : "Activate")</button>
-    </form>
+    <div class="au-row au-row--wrap">
+        <form method="post" asp-page-handler="SetActive" asp-route-id="@d.Id">
+            <input type="hidden" name="active" value="@(!d.IsActive ? "true" : "false")" />
+            <button class="au-btn @(d.IsActive ? "au-btn--danger-outlined" : "au-btn--primary")" type="submit">@(d.IsActive ? "Deactivate" : "Activate")</button>
+        </form>
+    </div>
 </div>
-<div class="card">
-    <dl class="kv" style="margin-bottom:12px">
-        @if (d.OriginalFileName is not null) { <dt>File</dt><dd>@d.OriginalFileName (@d.MimeType, @((d.FileSizeBytes ?? 0) / 1024) KB)</dd> }
-        @if (d.SourceUrl is not null) { <dt>Source URL</dt><dd>@d.SourceUrl</dd> }
-    </dl>
-    <p class="small muted">Read-only here. Editing text means re-embedding, which only the main app can do.</p>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">@Ui.Badge(d.IsActive ? "active" : "inactive")</div>
+
+<section class="au-panel au-panel--round au-panel--pad">
+    @if (d.OriginalFileName is not null || d.SourceUrl is not null)
+    {
+        <dl class="au-detail-rows" style="margin-bottom:16px">
+            @if (d.OriginalFileName is not null) { <div class="au-detail-row"><dt>File</dt><dd>@d.OriginalFileName (@d.MimeType, @((d.FileSizeBytes ?? 0) / 1024) KB)</dd></div> }
+            @if (d.SourceUrl is not null) { <div class="au-detail-row"><dt>Source URL</dt><dd class="au-mono">@d.SourceUrl</dd></div> }
+        </dl>
+    }
+    <p class="au-caption">Read-only here. Editing text means re-embedding, which only the main app can do.</p>
     <div class="doc-text">@d.Content</div>
-</div>
+</section>

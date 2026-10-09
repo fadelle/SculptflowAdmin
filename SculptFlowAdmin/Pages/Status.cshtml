@@ -1,0 +1,29 @@
+@page
+@model SculptFlowAdmin.Pages.StatusModel
+@{
+    var (title, text) = Model.Code switch
+    {
+        404 => ("Page not found", "There's nothing at this address. It may have moved, or the record it pointed to no longer exists."),
+        400 => ("That request didn't work", "The page may have been open too long (the form expired). Reload it and try again."),
+        403 => ("Not allowed", "Your admin account can't open this."),
+        _ => ("Something went wrong", "The server couldn't answer this request.")
+    };
+    ViewData["Title"] = title;
+    // Inside the shell when signed in; the plain auth card otherwise (docs/UI_GUIDE.md §8.6).
+    Layout = User.Identity?.IsAuthenticated == true ? "_Layout" : "_AuthLayout";
+}
+<div class="au-fullpage-msg">
+    <div class="au-fullpage-msg__inner">
+        <div class="au-fullpage-msg__code">@Model.Code</div>
+        <h3 class="au-h3" style="margin:0">@title</h3>
+        <p class="au-muted" style="margin:0">@text</p>
+        @if (Model.OriginalPath is not null)
+        {
+            <span class="au-copy"><span class="au-mono">@Model.OriginalPath</span></span>
+        }
+        <div class="au-row au-row--wrap" style="justify-content:center">
+            <button type="button" class="au-btn au-btn--outlined" onclick="history.back()"><span class="au-icon" aria-hidden="true">arrow_back</span>Go back</button>
+            <a class="au-btn au-btn--primary" href="/"><span class="au-icon" aria-hidden="true">dashboard</span>Go to dashboard</a>
+        </div>
+    </div>
+</div>

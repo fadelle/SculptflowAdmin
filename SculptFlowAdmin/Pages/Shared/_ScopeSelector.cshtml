@@ -1,0 +1,18 @@
+@inject ScopeContext Scope
+@inject Microsoft.Extensions.Options.IOptions<ScopeOptions> ScopeOptions
+@* The header's clinic selector (aurora.js data-au-scope): searchable, "All clinics" first, infinite scroll, keyboard.
+   Only on pages with a scope capability; picking reloads with ?clinicId= and drops the page number (p). *@
+@{ var o = ScopeOptions.Value; var all = "All " + o.EntityLabelPlural.ToLowerInvariant(); }
+@if (Scope.Capability != ScopeCapability.None)
+{
+    <div class="au-scope" data-au-scope data-endpoint="@Url.Content("~/api/admin/scope/options")" data-param="@o.QueryKey"
+         data-reset-params="p" data-all-label="@all" data-current-id="@Scope.EntityId" data-current-name="@Scope.EntityName">
+        <div class="au-combobox">
+            <span class="au-icon" aria-hidden="true">@o.Icon</span>
+            <input class="au-combobox__input" type="text" role="combobox" aria-label="@o.EntityLabel" aria-expanded="false"
+                   aria-controls="au-scope-list" aria-autocomplete="list" autocomplete="off" placeholder="@all" value="@Scope.EntityName" />
+            <span class="au-icon au-combobox__caret" aria-hidden="true">arrow_drop_down</span>
+            <ul class="au-combobox__list" id="au-scope-list" role="listbox" hidden></ul>
+        </div>
+    </div>
+}

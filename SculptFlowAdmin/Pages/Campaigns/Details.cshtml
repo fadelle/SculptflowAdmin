@@ -4,70 +4,86 @@
     var c = Model.Campaign;
     ViewData["Title"] = c.Name;
 }
-<div class="page-head">
-    <div>
-        <div class="crumbs"><a href="/Campaigns">Campaigns</a> /</div>
-        <h1>@c.Name @Ui.Badge(c.Status)</h1>
-        <div class="muted small"><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a> · @c.CampaignType.Replace('_', ' ') on @c.Channel · template @c.TemplateName · created @Ui.Time(c.CreatedAt)</div>
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Campaigns" aria-label="Back to campaigns"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@c.Name</h2>
+        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a> · @c.CampaignType.Replace('_', ' ') on @c.Channel · template @c.TemplateName · created @Ui.Time(c.CreatedAt)</span>
     </div>
     @if (c.Status is not ("completed" or "cancelled"))
     {
-        <form method="post" asp-page-handler="Cancel" asp-route-id="@c.Id">
-            <button class="btn danger" type="submit" data-confirm="Cancel this campaign? Recipients not yet sent will be skipped.">Cancel campaign</button>
+        <div class="au-row au-row--wrap">
+            <form method="post" asp-page-handler="Cancel" asp-route-id="@c.Id">
+                <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Cancel this campaign? Recipients not yet sent will be skipped.">Cancel campaign</button>
+            </form>
+        </div>
+    }
+</div>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">
+    @Ui.Badge(c.Status)
+    <span class="au-caption">Scheduled @Ui.Time(c.ScheduledAt) · started @Ui.Time(c.StartedAt) · completed @Ui.Time(c.CompletedAt)</span>
+</div>
+
+<div class="au-stack">
+    <div class="au-grid au-grid--4" style="--au-gap:12px">
+        <div class="au-stat"><span class="au-eyebrow">Audience</span><div class="au-stat__value">@c.Recipients</div></div>
+        <div class="au-stat"><span class="au-eyebrow">Sent</span><div class="au-stat__value">@c.Sent</div></div>
+        <div class="au-stat"><span class="au-eyebrow">Delivered</span><div class="au-stat__value">@c.Delivered</div></div>
+        <div class="au-stat"><span class="au-eyebrow">Read</span><div class="au-stat__value">@c.Read</div></div>
+        <div class="au-stat"><span class="au-eyebrow">Replied</span><div class="au-stat__value">@c.Replied</div></div>
+        <div class="au-stat"><span class="au-eyebrow">Booked</span><div class="au-stat__value">@c.Booked</div></div>
+        <div class="au-stat"><span class="au-eyebrow">Failed</span><div class="au-stat__value @(c.Failed > 0 ? "au-text-error" : null)">@c.Failed</div></div>
+        <div class="au-stat"><span class="au-eyebrow">Skipped</span><div class="au-stat__value">@c.Skipped</div></div>
+    </div>
+
+    <div>
+        <h3 class="au-h3">Recipients</h3>
+        @* Its own actions (not _FilterActions): Clear would drop ?id= and lose the campaign. *@
+        <form class="filters au-toolbar" method="get">
+            <input type="hidden" name="id" value="@c.Id" />
+            <div class="au-toolbar__filters">
+                <div class="au-field" style="width:180px">
+                    <label class="au-label" for="f-status">Status</label>
+                    <select class="au-select" id="f-status" name="status"><option value="">All</option>
+                        @foreach (var s in CampaignRecipientStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
+                    </select>
+                </div>
+            </div>
+            <div class="au-toolbar__actions">
+                <span class="au-toolbar__meta">@Ui.Count(Model.Recipients.Total, "recipient", "recipients")</span>
+                <button class="au-btn au-btn--outlined" type="submit"><span class="au-icon" aria-hidden="true">search</span>Search</button>
+                <button type="button" class="au-icon-btn au-icon-btn--bordered" data-au-refresh data-au-tip="Refresh" aria-label="Refresh"><span class="au-icon" aria-hidden="true">refresh</span></button>
+            </div>
         </form>
-    }
+        <div class="au-table-card">
+            @if (Model.Recipients.Items.Count == 0)
+            {
+                var empty = new EmptyStateModel(string.IsNullOrEmpty(Model.Status) ? "No recipients yet." : "No recipients match your filters.", "group");
+                <partial name="_EmptyState" model="empty" />
+            }
+            else
+            {
+                <div class="au-table-scroll">
+                    <table class="au-table">
+                        <thead><tr><th>Lead</th><th>Phone</th><th>Status</th><th>Reason</th><th>Sent</th><th>Replied</th><th>Booked</th></tr></thead>
+                        <tbody>
+                            @foreach (var r in Model.Recipients.Items)
+                            {
+                                <tr data-au-href="/Leads/Details?id=@r.LeadId">
+                                    <td><a href="/Leads/Details?id=@r.LeadId">@(string.IsNullOrWhiteSpace(r.LeadName) ? "(no name)" : r.LeadName)</a></td>
+                                    <td>@Ui.OrDash(r.PhoneNumber)</td>
+                                    <td>@Ui.Badge(r.Status)</td>
+                                    <td>@Ui.OrDash(r.SkipReason ?? r.FailureReason)</td>
+                                    <td>@Ui.Time(r.SentAt)</td>
+                                    <td>@Ui.Time(r.RepliedAt)</td>
+                                    <td>@Ui.Time(r.BookedAt)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            <partial name="_Pager" model="PagerModel.From(Model.Recipients)" />
+        </div>
+    </div>
 </div>
-
-<div class="grid grid-stats">
-    <div class="stat"><div class="label">Audience</div><div class="value">@c.Recipients</div></div>
-    <div class="stat"><div class="label">Sent</div><div class="value">@c.Sent</div></div>
-    <div class="stat"><div class="label">Delivered</div><div class="value">@c.Delivered</div></div>
-    <div class="stat"><div class="label">Read</div><div class="value">@c.Read</div></div>
-    <div class="stat"><div class="label">Replied</div><div class="value">@c.Replied</div></div>
-    <div class="stat"><div class="label">Booked</div><div class="value">@c.Booked</div></div>
-    <div class="stat @(c.Failed > 0 ? "warn" : "")"><div class="label">Failed</div><div class="value">@c.Failed</div></div>
-    <div class="stat"><div class="label">Skipped</div><div class="value">@c.Skipped</div></div>
-</div>
-<div class="card">
-    <dl class="kv">
-        <dt>Scheduled</dt><dd>@Ui.Time(c.ScheduledAt)</dd>
-        <dt>Started</dt><dd>@Ui.Time(c.StartedAt)</dd>
-        <dt>Completed</dt><dd>@Ui.Time(c.CompletedAt)</dd>
-    </dl>
-</div>
-
-<h2 style="margin-top:24px">Recipients</h2>
-<form class="filters" method="get">
-    <input type="hidden" name="id" value="@c.Id" />
-    <label>Status
-        <select name="status"><option value="">All</option>
-            @foreach (var s in CampaignRecipientStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
-        </select>
-    </label>
-    <button class="btn" type="submit">Search</button>
-</form>
-@if (Model.Recipients.Items.Count == 0)
-{
-    <div class="card empty">No recipients.</div>
-}
-else
-{
-<div class="table-wrap">
-<table>
-    <tr><th>Lead</th><th>Phone</th><th>Status</th><th>Reason</th><th>Sent</th><th>Replied</th><th>Booked</th></tr>
-    @foreach (var r in Model.Recipients.Items)
-    {
-        <tr>
-            <td><a href="/Leads/Details?id=@r.LeadId">@(string.IsNullOrWhiteSpace(r.LeadName) ? "(no name)" : r.LeadName)</a></td>
-            <td>@r.PhoneNumber</td>
-            <td>@Ui.Badge(r.Status)</td>
-            <td class="small">@(r.SkipReason ?? r.FailureReason)</td>
-            <td class="small">@Ui.Time(r.SentAt)</td>
-            <td class="small">@Ui.Time(r.RepliedAt)</td>
-            <td class="small">@Ui.Time(r.BookedAt)</td>
-        </tr>
-    }
-</table>
-</div>
-}
-<partial name="_Pager" model="PagerModel.From(Model.Recipients)" />

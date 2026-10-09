@@ -4,80 +4,105 @@
     ViewData["Title"] = "Knowledge base";
     string TabUrl(string tab) => $"?tab={tab}" + (Model.ClinicId.HasValue ? $"&clinicId={Model.ClinicId}" : "");
 }
-<div class="page-head"><div><h1>Knowledge base</h1><div class="muted">What each clinic's AI answers from. Inactive documents are skipped by the AI's search.</div></div></div>
-<div class="tabs">
-    <a class="@(Model.Tab == "documents" ? "active" : "")" href="@TabUrl("documents")">Documents (@Model.Docs.Total)</a>
-    <a class="@(Model.Tab == "websites" ? "active" : "")" href="@TabUrl("websites")">Websites (@Model.Websites.Count)</a>
+<div class="au-page-head"><p class="au-page-head__sub">What each clinic's AI answers from. Inactive documents are skipped by the AI's search.</p></div>
+<div class="au-tabs" style="margin-bottom:16px">
+    <a class="au-tab @(Model.Tab == "documents" ? "is-active" : null)" href="@TabUrl("documents")"><span class="au-icon" aria-hidden="true">description</span>Documents <span class="au-tab__count">@Model.Docs.Total</span></a>
+    <a class="au-tab @(Model.Tab == "websites" ? "is-active" : null)" href="@TabUrl("websites")"><span class="au-icon" aria-hidden="true">language</span>Websites <span class="au-tab__count">@Model.Websites.Count</span></a>
 </div>
-<form class="filters" method="get">
+<form class="filters au-toolbar" method="get">
     <input type="hidden" name="tab" value="@Model.Tab" />
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    @if (Model.Tab == "documents")
-    {
-        <label class="search">Search<input type="search" name="q" value="@Model.Q" placeholder="Title or text" /></label>
-        <label>Status
-            <select name="active"><option value="">All</option>
-                <option value="true" selected="@(Model.Active == "true")">Active</option>
-                <option value="false" selected="@(Model.Active == "false")">Inactive</option>
-            </select>
-        </label>
-    }
-    <partial name="_FilterActions" />
+    <div class="au-toolbar__filters">
+        @if (Model.Tab == "documents")
+        {
+            <div class="au-field" style="width:240px">
+                <label class="au-label" for="f-q">Search</label>
+                <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" placeholder="Title or text" /></span>
+            </div>
+            <div class="au-field" style="width:150px">
+                <label class="au-label" for="f-active">Status</label>
+                <select class="au-select" id="f-active" name="active"><option value="">All</option>
+                    <option value="true" selected="@(Model.Active == "true")">Active</option>
+                    <option value="false" selected="@(Model.Active == "false")">Inactive</option>
+                </select>
+            </div>
+        }
+    </div>
+    <div class="au-toolbar__actions">
+        <partial name="_FilterActions" />
+    </div>
 </form>
 
-@if (Model.Tab == "documents")
-{
-    if (Model.Docs.Items.Count == 0) { <div class="card empty">No documents.</div> }
+<div class="au-table-card">
+    @if (Model.Tab == "documents")
+    {
+        if (Model.Docs.Items.Count == 0)
+        {
+            var empty = new EmptyStateModel(Request.EmptyMessage("documents"), "description");
+            <partial name="_EmptyState" model="empty" />
+        }
+        else
+        {
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead>
+                        <tr><th>Document</th><th>Clinic</th><th>Category</th><th>Source</th><th class="au-right">Chunks</th><th class="au-right">Characters</th><th>Status</th><th>Updated</th><th class="au-shrink"></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.Docs.Items)
+                        {
+                            <tr data-au-href="/Knowledge/Details?id=@d.Id">
+                                <td style="--au-col-max:320px" title="@d.Title"><a href="/Knowledge/Details?id=@d.Id">@d.Title</a></td>
+                                <td><a href="/Clinics/Details?id=@d.ClinicId">@d.ClinicName</a></td>
+                                <td>@KnowledgeCategory.Label(d.Category)</td>
+                                <td>@d.SourceType @if (d.SourceUrl is not null) { <div class="au-caption" title="@d.SourceUrl">@Ui.Truncate(d.SourceUrl, 50)</div> }</td>
+                                <td class="au-right">@d.Chunks</td>
+                                <td class="au-right">@d.ContentLength.ToString("N0")</td>
+                                <td>@Ui.Badge(d.IsActive ? "active" : "inactive")</td>
+                                <td>@Ui.Time(d.UpdatedAt)</td>
+                                <td>
+                                    <form method="post" asp-page-handler="SetActive" asp-route-clinicId="@Model.ClinicId" asp-route-q="@Model.Q" asp-route-p="@Model.PageNumber">
+                                        <input type="hidden" name="id" value="@d.Id" /><input type="hidden" name="active" value="@(!d.IsActive ? "true" : "false")" />
+                                        <button class="au-btn au-btn--sm @(d.IsActive ? "au-btn--danger-outlined" : "au-btn--outlined")" type="submit">@(d.IsActive ? "Deactivate" : "Activate")</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <partial name="_Pager" model="PagerModel.From(Model.Docs)" />
+        }
+    }
     else
     {
-    <div class="table-wrap">
-    <table>
-        <tr><th>Document</th><th>Clinic</th><th>Category</th><th>Source</th><th class="num">Chunks</th><th class="num">Characters</th><th>Status</th><th>Updated</th><th></th></tr>
-        @foreach (var d in Model.Docs.Items)
+        if (Model.Websites.Count == 0)
         {
-            <tr>
-                <td><a href="/Knowledge/Details?id=@d.Id">@d.Title</a></td>
-                <td><a href="/Clinics/Details?id=@d.ClinicId">@d.ClinicName</a></td>
-                <td>@KnowledgeCategory.Label(d.Category)</td>
-                <td class="small">@d.SourceType @if (d.SourceUrl is not null) { <div class="muted">@Ui.Truncate(d.SourceUrl, 50)</div> }</td>
-                <td class="num">@d.Chunks</td>
-                <td class="num">@d.ContentLength.ToString("N0")</td>
-                <td>@Ui.Badge(d.IsActive ? "active" : "inactive")</td>
-                <td class="small">@Ui.Time(d.UpdatedAt)</td>
-                <td>
-                    <form method="post" asp-page-handler="SetActive" asp-route-clinicId="@Model.ClinicId" asp-route-q="@Model.Q" asp-route-p="@Model.PageNumber">
-                        <input type="hidden" name="id" value="@d.Id" /><input type="hidden" name="active" value="@(!d.IsActive ? "true" : "false")" />
-                        <button class="btn sm @(d.IsActive ? "danger" : "")" type="submit">@(d.IsActive ? "Deactivate" : "Activate")</button>
-                    </form>
-                </td>
-            </tr>
+            var empty = new EmptyStateModel(Request.EmptyMessage("websites"), "language");
+            <partial name="_EmptyState" model="empty" />
         }
-    </table>
-    </div>
-    <partial name="_Pager" model="PagerModel.From(Model.Docs)" />
-    }
-}
-else
-{
-    if (Model.Websites.Count == 0) { <div class="card empty">No websites.</div> }
-    else
-    {
-    <div class="table-wrap">
-    <table>
-        <tr><th>Website</th><th>Clinic</th><th>Mode</th><th>Status</th><th class="num">Pages</th><th>Last scraped</th><th>Last error</th></tr>
-        @foreach (var w in Model.Websites)
+        else
         {
-            <tr>
-                <td class="small">@w.StartUrl @if (!w.IsActive) { @Ui.Badge("inactive") }</td>
-                <td><a href="/Clinics/Details?id=@w.ClinicId">@w.ClinicName</a></td>
-                <td>@w.CrawlMode.Replace('_', ' ')</td>
-                <td>@Ui.Badge(w.Status)</td>
-                <td class="num">@w.Pages</td>
-                <td class="small">@Ui.Time(w.LastScrapedAt)</td>
-                <td class="small">@Ui.Truncate(w.LastError, 160)</td>
-            </tr>
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead>
+                        <tr><th>Website</th><th>Clinic</th><th>Mode</th><th>Status</th><th class="au-right">Pages</th><th>Last scraped</th><th>Last error</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var w in Model.Websites)
+                        {
+                            <tr>
+                                <td style="--au-col-max:320px" title="@w.StartUrl"><span class="au-mono">@w.StartUrl</span> @if (!w.IsActive) { @Ui.Badge("inactive") }</td>
+                                <td><a href="/Clinics/Details?id=@w.ClinicId">@w.ClinicName</a></td>
+                                <td>@w.CrawlMode.Replace('_', ' ')</td>
+                                <td>@Ui.Badge(w.Status)</td>
+                                <td class="au-right">@w.Pages</td>
+                                <td>@Ui.Time(w.LastScrapedAt)</td>
+                                <td class="au-wrap au-caption">@Ui.OrDash(Ui.Truncate(w.LastError, 160))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-    </table>
-    </div>
     }
-}
+</div>

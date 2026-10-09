@@ -1,16 +1,16 @@
-// SculptFlow Admin — the only script on signed-in pages. Plain JS, no libraries.
+// SculptFlow Admin — page behaviours on signed-in pages. Plain JS, no libraries. The shell (sidebar, theme, header menus,
+// Ctrl+K, toasts) is aurora.js; this file keeps the pages' own hooks:
 //  - <time data-utc> in the viewer's time zone (data-tz="Area/City" shows that zone instead; appointments use clinic time)
-//  - sidebar: collapse to an icon rail (remembered), drawer on phones, user menu, Light/Dark toggle
 //  - popups: [data-open="dialogId"] opens <dialog id> (data-autoopen opens it on load), [data-close] or a backdrop click closes it
-//  - data-confirm on a button or form asks in a small popup before submitting
+//  - data-confirm on a button or form asks in a small popup (#confirm-dialog in _Layout) before submitting
 //  - tables: click a header to sort the rows on the page; <input data-filter="#tableId"> filters them as you type
 //  - filter bars (form.filters) submit as soon as a select or checkbox changes
-//  - [data-copy="#id"] copies that element's text; toasts for saved/failed messages; submit buttons show a spinner and can't be double-clicked
+//  - [data-copy="#id"] copies that element's text; [data-dismiss-alert] closes its alert; submit buttons show a spinner
+//    and can't be double-clicked
 (function () {
-  var doc = document, root = doc.documentElement;
+  var doc = document;
   function $(sel, el) { return (el || doc).querySelector(sel); }
   function $$(sel, el) { return Array.prototype.slice.call((el || doc).querySelectorAll(sel)); }
-  function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { } }
 
   // ---- Times ----
   $$('time[data-utc]').forEach(function (el) {
@@ -23,65 +23,6 @@
     catch (e) { el.textContent = d.toISOString(); }
     el.title = d.toISOString();
   });
-
-  // ---- Sidebar ----
-  var collapse = $('#sidebar-collapse');
-  function syncCollapse() {
-    if (!collapse) return;
-    var collapsed = root.getAttribute('data-sidebar') === 'collapsed';
-    collapse.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
-    collapse.setAttribute('aria-label', collapse.title);
-  }
-  if (collapse) {
-    syncCollapse();
-    collapse.addEventListener('click', function () {
-      var collapsed = root.getAttribute('data-sidebar') !== 'collapsed';
-      if (collapsed) root.setAttribute('data-sidebar', 'collapsed'); else root.removeAttribute('data-sidebar');
-      store('sf-sidebar', collapsed ? 'collapsed' : 'expanded');
-      syncCollapse();
-    });
-  }
-  var drawerBtn = $('#sidebar-toggle');
-  function setDrawer(open) {
-    doc.body.classList.toggle('sidebar-open', open);
-    if (drawerBtn) drawerBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }
-  if (drawerBtn) drawerBtn.addEventListener('click', function () { setDrawer(!doc.body.classList.contains('sidebar-open')); });
-  var backdrop = $('#sidebar-backdrop');
-  if (backdrop) backdrop.addEventListener('click', function () { setDrawer(false); });
-
-  var menuBtn = $('#user-menu-btn'), menu = $('#user-menu');
-  function setMenu(open) { menu.hidden = !open; menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-  if (menuBtn && menu) {
-    menuBtn.addEventListener('click', function (e) { e.stopPropagation(); setMenu(menu.hidden); });
-    doc.addEventListener('click', function (e) { if (!menu.hidden && !menu.contains(e.target)) setMenu(false); });
-  }
-  doc.addEventListener('keydown', function (e) {
-    if (e.key !== 'Escape') return;
-    if (menu && !menu.hidden) { setMenu(false); menuBtn.focus(); }
-    setDrawer(false);
-  });
-
-  // ---- Light / Dark ----
-  var themeBtn = $('#theme-toggle');
-  function currentTheme() {
-    var t = root.getAttribute('data-theme');
-    if (t === 'light' || t === 'dark') return t;
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-  function showTheme(t) {
-    themeBtn.setAttribute('data-mode', t);
-    $('#theme-toggle-label').textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
-  }
-  if (themeBtn) {
-    showTheme(currentTheme());
-    themeBtn.addEventListener('click', function () {
-      var t = currentTheme() === 'dark' ? 'light' : 'dark';
-      root.setAttribute('data-theme', t);
-      store('sf-theme', t);
-      showTheme(t);
-    });
-  }
 
   // ---- Popups ----
   doc.addEventListener('click', function (e) {
@@ -110,6 +51,12 @@
 
   // ---- Confirm + busy submit ----
   var confirmDlg = $('#confirm-dialog');
+  // A button's visible words, without its icon's ligature name (<span class="au-icon">block</span>Deactivate → "Deactivate").
+  function labelOf(btn) {
+    var copy = btn.cloneNode(true);
+    $$('.au-icon', copy).forEach(function (i) { i.remove(); });
+    return copy.textContent.trim();
+  }
   doc.addEventListener('submit', function (e) {
     var form = e.target, btn = e.submitter;
     if (form.method === 'dialog') return;
@@ -119,9 +66,9 @@
       e.preventDefault();
       if (!confirmDlg) { if (window.confirm(msg)) { form.dataset.confirmed = '1'; form.requestSubmit(btn); } return; }
       $('#confirm-text').textContent = msg;
-      var danger = btn && btn.classList.contains('danger');
-      $('#confirm-ok').className = 'btn ' + (danger ? 'danger' : 'primary');
-      $('#confirm-ok').textContent = (btn && btn.textContent.trim()) || 'Confirm';
+      var danger = btn && (btn.classList.contains('danger') || /(^|\s)au-btn--danger/.test(btn.className));
+      $('#confirm-ok').className = 'au-btn ' + (danger ? 'au-btn--danger' : 'au-btn--primary');
+      $('#confirm-ok').textContent = (btn && labelOf(btn)) || 'Confirm';
       confirmDlg.returnValue = '';
       confirmDlg.onclose = function () {
         if (confirmDlg.returnValue === 'ok') { form.dataset.confirmed = '1'; form.requestSubmit(btn); }
@@ -138,7 +85,7 @@
   // Back/forward cache: a restored page must be usable again.
   window.addEventListener('pageshow', function () {
     $$('form[data-submitting]').forEach(function (f) { delete f.dataset.submitting; });
-    $$('.btn.is-busy').forEach(function (b) { b.classList.remove('is-busy'); });
+    $$('.is-busy').forEach(function (b) { b.classList.remove('is-busy'); });
   });
 
   // ---- Filter bars ----
@@ -224,10 +171,9 @@
     });
   });
 
-  // ---- Toasts ----
-  $$('.toast').forEach(function (t) {
-    function hide() { t.classList.add('hide'); setTimeout(function () { t.remove(); }, 220); }
-    t.querySelector('.toast-x').addEventListener('click', hide);
-    if (t.hasAttribute('data-autohide')) setTimeout(hide, 5000);
+  // ---- Dismissable alerts (e.g. a failed save in _Layout) ----
+  doc.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-dismiss-alert]');
+    if (b) b.closest('.au-alert').remove();
   });
 })();

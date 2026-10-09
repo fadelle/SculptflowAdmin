@@ -1,4 +1,6 @@
 @model PagerModel
+@* Table-card footer: "51–100 of 1,284 rows  ‹ 2 / 26 ›". Page key is p (fixed page size, no size picker); every other
+   query parameter is kept. Renders nothing when there are no rows (the empty state says so). *@
 @{
     string Url(int page)
     {
@@ -10,14 +12,38 @@
 }
 @if (Model.Total > 0)
 {
-<div class="pager">
-    <span class="muted small">@Model.Total.ToString("N0") total@(Model.Pages > 1 ? $" · page {Model.Page} of {Model.Pages}" : "")</span>
-    @if (Model.Pages > 1)
-    {
-        <div class="actions">
-            @if (Model.HasPrevious) { <a class="btn sm" href="@Url(Model.Page - 1)">← Previous</a> }
-            @if (Model.HasNext) { <a class="btn sm" href="@Url(Model.Page + 1)">Next →</a> }
-        </div>
-    }
-</div>
+    <div class="au-pager">
+        <span class="au-pager__count">
+            @if (Model.PageSize > 0)
+            {
+                <text>@Model.First.ToString("N0")–@Model.Last.ToString("N0") of <strong>@Model.Total.ToString("N0")</strong> rows</text>
+            }
+            else
+            {
+                <text><strong>@Model.Total.ToString("N0")</strong> rows</text>
+            }
+        </span>
+        @if (Model.Pages > 1)
+        {
+            <nav class="au-pager__nav" aria-label="Pages">
+                @if (Model.HasPrevious)
+                {
+                    <a class="au-icon-btn au-pager__btn" href="@Url(Model.Page - 1)" aria-label="Previous page"><span class="au-icon" aria-hidden="true">chevron_left</span></a>
+                }
+                else
+                {
+                    <span class="au-icon-btn au-pager__btn is-disabled" aria-disabled="true"><span class="au-icon" aria-hidden="true">chevron_left</span></span>
+                }
+                <span class="au-pager__page">@Model.Page / @Model.Pages</span>
+                @if (Model.HasNext)
+                {
+                    <a class="au-icon-btn au-pager__btn" href="@Url(Model.Page + 1)" aria-label="Next page"><span class="au-icon" aria-hidden="true">chevron_right</span></a>
+                }
+                else
+                {
+                    <span class="au-icon-btn au-pager__btn is-disabled" aria-disabled="true"><span class="au-icon" aria-hidden="true">chevron_right</span></span>
+                }
+            </nav>
+        }
+    </div>
 }

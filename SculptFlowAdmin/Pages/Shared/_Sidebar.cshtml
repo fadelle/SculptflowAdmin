@@ -1,0 +1,49 @@
+@* The dark sidebar: brand, filter, favourites, the nav tree (NavTree.Sections) and who is signed in. *@
+@{
+    var path = Context.Request.Path.Value ?? "/";
+}
+<nav class="au-sidebar" aria-label="Main navigation">
+    <a class="au-brand" href="~/">
+        <span class="au-brand__mark"><partial name="_BrandMark" model="38" /></span>
+        <span class="au-brand__text">
+            <span class="au-brand__name">SculptFlow</span>
+            <span class="au-brand__sub">Admin portal</span>
+        </span>
+    </a>
+    <div class="au-side-rule"></div>
+    <div class="au-side-filter" data-au-nav-filter>
+        <span class="au-icon" aria-hidden="true">filter_list</span>
+        <input type="text" placeholder="Filter menu…" aria-label="Filter navigation" autocomplete="off" />
+        <button type="button" aria-label="Clear filter"><span class="au-icon" aria-hidden="true">close</span></button>
+    </div>
+    <div class="au-side-scroll">
+        <div data-au-favorites></div>
+        <div data-au-nav-tree>
+            @foreach (var navSection in NavTree.Sections) @* not "section": @section is a Razor directive *@
+            {
+                if (navSection.Title is not null)
+                {
+                    <div class="au-side-section">@navSection.Title</div>
+                }
+                var trail = navSection.Title is null ? Array.Empty<string>() : new[] { navSection.Title };
+                foreach (var item in navSection.Items)
+                {
+                    var node = new NavNodeModel(item, path, trail, 0);
+                    <partial name="_NavNode" model="node" />
+                }
+            }
+        </div>
+        <div class="au-nav-empty" hidden></div>
+    </div>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        var name = AdminClaims.Name(User);
+        <div class="au-side-footer" title="@name">
+            <span class="au-avatar" aria-hidden="true">@Ui.Initials(name)</span>
+            <span class="au-side-footer__text">
+                <span class="au-side-footer__name">@name</span>
+                <span class="au-side-footer__email">@AdminClaims.Email(User)</span>
+            </span>
+        </div>
+    }
+</nav>

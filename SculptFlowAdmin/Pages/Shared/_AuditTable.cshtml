@@ -1,24 +1,32 @@
 @model IReadOnlyList<SculptFlowAdmin.Entities.Models.AdminAuditEntry>
+@* Admin audit entries as table rows (audit log, clinic details). The caller wraps it in .au-table-card. *@
 @if (Model.Count == 0)
 {
-    <div class="empty">No admin changes yet.</div>
+    var empty = new EmptyStateModel(Context.Request.HasFilters() ? "No admin changes match your filters." : "No admin changes yet.", "verified_user");
+    <partial name="_EmptyState" model="empty" />
 }
 else
 {
-<div class="table-wrap">
-<table>
-    <tr><th>When</th><th>Admin</th><th>Action</th><th>Record</th><th>Details</th></tr>
-    @foreach (var a in Model)
-    {
-        <tr>
-            <td class="small">@Ui.Time(a.CreatedAt)</td>
-            <td class="small">@a.AdminEmail</td>
-            <td>@a.Action</td>
-            <td class="small">@a.EntityType <span class="mono">@a.EntityId</span>
-                @if (a.ClinicId.HasValue) { <div><a href="/Clinics/Details?id=@a.ClinicId">clinic</a></div> }</td>
-            <td class="mono">@Ui.Truncate(a.Details, 300)</td>
-        </tr>
-    }
-</table>
-</div>
+    <div class="au-table-scroll">
+        <table class="au-table">
+            <thead>
+                <tr><th>When</th><th>Admin</th><th>Action</th><th>Record</th><th>Details</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>@Ui.Time(a.CreatedAt)</td>
+                        <td>@a.AdminEmail</td>
+                        <td class="au-strong">@a.Action</td>
+                        <td>
+                            <div class="au-cell-2l"><span title="@a.EntityId">@a.EntityId</span><span>@a.EntityType</span></div>
+                            @if (a.ClinicId.HasValue) { <a class="au-caption" href="/Clinics/Details?id=@a.ClinicId">clinic</a> }
+                        </td>
+                        <td class="au-wrap"><span class="au-mono">@Ui.Truncate(a.Details, 300)</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }

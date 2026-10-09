@@ -6,172 +6,207 @@
     ViewData["Title"] = c.Name;
     var q = "clinicId=" + c.Id;
 }
-<div class="page-head">
-    <div>
-        <div class="crumbs"><a href="/Clinics">Clinics</a> /</div>
-        <h1>@c.Name @Ui.Badge(c.IsActive ? "active" : "inactive")</h1>
-        <div class="muted small">@c.Slug · <span class="mono">@c.Id</span> · signed up @Ui.Time(c.CreatedAt)</div>
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Clinics" aria-label="Back to clinics"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@c.Name</h2>
+        <span class="au-back-header__sub">@c.Slug · signed up @Ui.Time(c.CreatedAt)</span>
     </div>
-    <div class="actions">
-        <a class="btn" href="/Billing/Clinic?id=@c.Id">Billing</a>
+    <div class="au-row au-row--wrap">
+        <a class="au-btn au-btn--outlined" href="/Billing/Clinic?id=@c.Id"><span class="au-icon" aria-hidden="true">payments</span>Billing</a>
         <form method="post" asp-page-handler="SetActive" asp-route-id="@c.Id">
             @if (c.IsActive)
             {
                 <input type="hidden" name="active" value="false" />
-                <button class="btn danger" type="submit" data-confirm="Deactivate @c.Name? It is marked inactive here; see the note on this page about what the main app does with it.">Deactivate</button>
+                <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Deactivate @c.Name? It is marked inactive here; see the note on this page about what the main app does with it.">Deactivate</button>
             }
             else
             {
                 <input type="hidden" name="active" value="true" />
-                <button class="btn primary" type="submit">Activate</button>
+                <button class="au-btn au-btn--primary" type="submit">Activate</button>
             }
         </form>
     </div>
 </div>
-
-@if (!c.IsActive)
-{
-    <div class="alert info">This clinic is marked inactive. The main app does not check this flag yet, so its staff can still sign in and its AI still replies. To cut access now, lock its staff accounts below and disconnect its channels.</div>
-}
-
-<div class="grid grid-stats">
-    <a class="stat" href="/Staff?@q"><div class="label">Active staff</div><div class="value">@n.Staff</div></a>
-    <a class="stat" href="/Leads?@q"><div class="label">Leads</div><div class="value">@n.Leads</div></a>
-    <a class="stat" href="/Conversations?@q"><div class="label">Conversations</div><div class="value">@n.Conversations</div></a>
-    <a class="stat" href="/Messages?@q"><div class="label">Messages (7d / all)</div><div class="value">@n.MessagesLast7Days <span class="muted small">/ @n.Messages</span></div></a>
-    <div class="stat"><div class="label">AI replies (7d)</div><div class="value">@n.AiMessagesLast7Days</div></div>
-    <a class="stat @(n.FailedMessagesLast7Days > 0 ? "warn" : "")" href="/Messages?failed=true&@q"><div class="label">Failed sends (7d)</div><div class="value">@n.FailedMessagesLast7Days</div></a>
-    <a class="stat" href="/Appointments?upcoming=true&@q"><div class="label">Upcoming appointments</div><div class="value">@n.UpcomingAppointments</div></a>
-    <a class="stat" href="/Procedures?@q"><div class="label">Procedures (active)</div><div class="value">@n.ActiveProcedures <span class="muted small">/ @n.Procedures</span></div></a>
-    <a class="stat" href="/Knowledge?@q"><div class="label">Knowledge documents</div><div class="value">@n.KnowledgeDocuments</div></a>
-    <a class="stat" href="/Campaigns?@q"><div class="label">Campaigns (running)</div><div class="value">@n.Campaigns <span class="muted small">/ @n.RunningCampaigns</span></div></a>
-    <a class="stat" href="/Templates?@q"><div class="label">WhatsApp templates</div><div class="value">@n.Templates</div></a>
-    <div class="stat"><div class="label">Unread staff notifications</div><div class="value">@n.UnreadNotifications</div></div>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">
+    @Ui.Badge(c.IsActive ? "active" : "inactive")
+    <span class="au-copy"><span class="au-mono">@c.Id</span><button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@c.Id" data-au-copy-message="Clinic id copied" aria-label="Copy clinic id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span>
 </div>
 
-<div class="grid grid-2">
-    <div>
-        <div class="card">
-            <div class="card-head"><h2>Clinic details</h2><button class="btn sm" type="button" data-open="edit-clinic">Edit</button></div>
-            <dl class="kv">
-                <dt>Email</dt><dd>@(c.Email ?? "—")</dd>
-                <dt>Phone</dt><dd>@(Model.Edit.Phone ?? "—")</dd>
-                <dt>Website</dt><dd>@(Model.Edit.Website ?? "—")</dd>
-                <dt>Country</dt><dd>@(Model.Edit.CountryCode ?? "—")</dd>
-                <dt>Time zone</dt><dd>@Model.Edit.Timezone</dd>
-                <dt>Address</dt><dd>@(Model.Edit.Address ?? "—")</dd>
-                <dt>Operating hours</dt><dd style="white-space:pre-line">@(Model.Edit.OperatingHours ?? "—")</dd>
-                <dt>Consultation info</dt><dd style="white-space:pre-line">@(Model.Edit.ConsultationInfo ?? "—")</dd>
-            </dl>
+<div class="au-stack">
+    @if (!c.IsActive)
+    {
+        <div class="au-alert" role="status">
+            <span class="au-icon au-alert__icon" aria-hidden="true">info</span>
+            <div class="au-alert__body">This clinic is marked inactive. The main app does not check this flag yet, so its staff can still sign in and its AI still replies. To cut access now, lock its staff accounts below and disconnect its channels.</div>
         </div>
+    }
 
+    <div class="au-grid au-grid--4" style="--au-gap:12px">
+        <a class="au-stat" href="/Staff?@q"><span class="au-eyebrow">Active staff</span><div class="au-stat__value">@n.Staff</div></a>
+        <a class="au-stat" href="/Leads?@q"><span class="au-eyebrow">Leads</span><div class="au-stat__value">@n.Leads</div></a>
+        <a class="au-stat" href="/Conversations?@q"><span class="au-eyebrow">Conversations</span><div class="au-stat__value">@n.Conversations</div></a>
+        <a class="au-stat" href="/Messages?@q"><span class="au-eyebrow">Messages (7d / all)</span><div class="au-stat__value">@n.MessagesLast7Days <span class="au-stat__hint">/ @n.Messages</span></div></a>
+        <div class="au-stat"><span class="au-eyebrow">AI replies (7d)</span><div class="au-stat__value">@n.AiMessagesLast7Days</div></div>
+        <a class="au-stat" href="/Messages?failed=true&@q"><span class="au-eyebrow">Failed sends (7d)</span><div class="au-stat__value @(n.FailedMessagesLast7Days > 0 ? "au-text-error" : null)">@n.FailedMessagesLast7Days</div></a>
+        <a class="au-stat" href="/Appointments?upcoming=true&@q"><span class="au-eyebrow">Upcoming appointments</span><div class="au-stat__value">@n.UpcomingAppointments</div></a>
+        <a class="au-stat" href="/Procedures?@q"><span class="au-eyebrow">Procedures (active)</span><div class="au-stat__value">@n.ActiveProcedures <span class="au-stat__hint">/ @n.Procedures</span></div></a>
+        <a class="au-stat" href="/Knowledge?@q"><span class="au-eyebrow">Knowledge documents</span><div class="au-stat__value">@n.KnowledgeDocuments</div></a>
+        <a class="au-stat" href="/Campaigns?@q"><span class="au-eyebrow">Campaigns (running)</span><div class="au-stat__value">@n.Campaigns <span class="au-stat__hint">/ @n.RunningCampaigns</span></div></a>
+        <a class="au-stat" href="/Templates?@q"><span class="au-eyebrow">WhatsApp templates</span><div class="au-stat__value">@n.Templates</div></a>
+        <div class="au-stat"><span class="au-eyebrow">Unread staff notifications</span><div class="au-stat__value">@n.UnreadNotifications</div></div>
     </div>
 
-    <div>
-        <div class="card">
-            <h2>Staff accounts</h2>
-            @if (Model.Staff.Count == 0)
-            {
-                <div class="empty">No staff.</div>
-            }
-            else
-            {
-                <table>
-                    <tr><th>Name</th><th>Membership</th><th>Login</th></tr>
-                    @foreach (var s in Model.Staff)
-                    {
-                        <tr>
-                            <td><a href="/Staff/Details?id=@s.UserId">@(s.FullName ?? s.Email)</a><div class="small muted">@s.Email</div></td>
-                            <td>@Ui.Badge(s.MembershipActive ? "active" : "inactive")</td>
-                            <td>@Ui.Badge(s.LoginLocked ? "locked" : "active", s.LoginLocked ? "locked" : "can sign in")</td>
-                        </tr>
-                    }
-                </table>
-            }
-        </div>
-
-        <div class="card">
-            <div class="card-head"><h2>Channels</h2><button class="btn sm" type="button" data-open="connect-wa">Connect WhatsApp</button></div>
-            @if (Model.Channels.Count + Model.Calendars.Count + Model.TikTok.Count == 0)
-            {
-                <div class="empty">Nothing connected.</div>
-            }
-            else
-            {
-            <table>
-                @foreach (var ch in Model.Channels)
-                {
-                    <tr>
-                        <td><a href="/Channels/Details?id=@ch.Id">@ch.Channel</a> @Ui.Badge(ch.Provider)</td>
-                        <td>@ch.DisplayName</td>
-                        <td>@Ui.Badge(ch.Status) @if (!ch.IsHealthy) { @Ui.Badge("problem", ch.HealthLevel ?? "unhealthy") }</td>
-                    </tr>
-                }
-                @foreach (var cal in Model.Calendars)
-                {
-                    <tr><td>@cal.Provider calendar</td><td>@cal.Account</td><td>@Ui.Badge(cal.Status)</td></tr>
-                }
-                @foreach (var tt in Model.TikTok)
-                {
-                    <tr><td>TikTok</td><td>@tt.DisplayName</td><td>@Ui.Badge(tt.Status)</td></tr>
-                }
-            </table>
-            }
-        </div>
-
-        <form class="card" method="post" asp-page-handler="SearchSettings" asp-route-id="@c.Id">
-            <h2>Knowledge search (AI retrieval)</h2>
-            @if (Model.SearchSettings is null)
-            {
-                <div class="empty">No settings row for this clinic.</div>
-            }
-            else
-            {
-                var s = Model.SearchSettings;
-                <dl class="kv" style="margin-bottom:10px">
-                    <dt>Embedding model</dt><dd>@s.EmbeddingModel (@s.VectorDimension dims)</dd>
-                    <dt>Chunking</dt><dd>@s.ChunkSizeTokens tokens, @s.ChunkOverlapTokens overlap</dd>
-                    <dt>Index</dt><dd>@KnowledgeVectorIndexType.Label(s.VectorIndexType)</dd>
+    <div class="au-grid au-grid--2" style="align-items:start">
+        <div class="au-stack">
+            <section class="au-panel au-panel--round au-panel--pad">
+                <div class="au-panel__head">
+                    <h3 class="au-panel__title">Clinic details</h3>
+                    <button class="au-btn au-btn--outlined au-btn--sm" type="button" data-open="edit-clinic"><span class="au-icon" aria-hidden="true">edit</span>Edit</button>
+                </div>
+                <dl class="au-detail-rows">
+                    <div class="au-detail-row"><dt>Email</dt><dd>@Ui.OrDash(c.Email)</dd></div>
+                    <div class="au-detail-row"><dt>Phone</dt><dd>@Ui.OrDash(Model.Edit.Phone)</dd></div>
+                    <div class="au-detail-row"><dt>Website</dt><dd>@Ui.OrDash(Model.Edit.Website)</dd></div>
+                    <div class="au-detail-row"><dt>Country</dt><dd>@Ui.OrDash(Model.Edit.CountryCode)</dd></div>
+                    <div class="au-detail-row"><dt>Time zone</dt><dd>@Model.Edit.Timezone</dd></div>
+                    <div class="au-detail-row"><dt>Address</dt><dd>@Ui.OrDash(Model.Edit.Address)</dd></div>
+                    <div class="au-detail-row"><dt>Operating hours</dt><dd style="white-space:pre-line">@Ui.OrDash(Model.Edit.OperatingHours)</dd></div>
+                    <div class="au-detail-row"><dt>Consultation info</dt><dd style="white-space:pre-line">@Ui.OrDash(Model.Edit.ConsultationInfo)</dd></div>
                 </dl>
-                <div class="form-row"><label>Top K (1 to 20)</label><input type="number" name="topK" min="1" max="20" value="@s.TopK" /></div>
-                <div class="form-row"><label>Minimum similarity (0 to 1)</label><input type="number" name="minimumSimilarity" min="0" max="1" step="0.01" value="@s.MinimumSimilarity.ToString(System.Globalization.CultureInfo.InvariantCulture)" /></div>
-                <button class="btn" type="submit">Save search settings</button>
-            }
-        </form>
-    </div>
-</div>
-
-<div class="card">
-    <h2>Recent admin changes to this clinic</h2>
-    <partial name="_AuditTable" model="Model.Audit" />
-    <div class="small" style="margin-top:12px"><a href="/Audit?@q">All admin changes for this clinic →</a></div>
-</div>
-
-<dialog class="modal" id="edit-clinic">
-    <form method="post" asp-page-handler="Update" asp-route-id="@c.Id">
-        <div class="modal-head"><h2>Edit clinic details</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
-        <div class="modal-body">
-            <div class="form-row"><label>Name</label><input name="Edit.Name" value="@Model.Edit.Name" required /></div>
-            <div class="form-row"><label>Email</label><input name="Edit.Email" value="@Model.Edit.Email" /></div>
-            <div class="form-row"><label>Phone</label><input name="Edit.Phone" value="@Model.Edit.Phone" /></div>
-            <div class="form-row"><label>Website</label><input name="Edit.Website" value="@Model.Edit.Website" /></div>
-            <div class="form-row"><label>Country code</label><input name="Edit.CountryCode" value="@Model.Edit.CountryCode" maxlength="2" /></div>
-            <div class="form-row"><label>Time zone</label><input name="Edit.Timezone" value="@Model.Edit.Timezone" required /><div class="hint">IANA name, e.g. Asia/Beirut</div></div>
-            <div class="form-row"><label>Address</label><textarea name="Edit.Address">@Model.Edit.Address</textarea></div>
-            <div class="form-row"><label>Operating hours</label><textarea name="Edit.OperatingHours">@Model.Edit.OperatingHours</textarea><div class="hint">Free text the AI reads</div></div>
-            <div class="form-row"><label>Consultation info</label><textarea name="Edit.ConsultationInfo">@Model.Edit.ConsultationInfo</textarea></div>
+            </section>
         </div>
-        <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Save details</button></div>
+
+        <div class="au-stack">
+            <section class="au-table-card">
+                <div class="au-panel__head"><h3 class="au-panel__title">Staff accounts</h3><a class="au-panel__link" href="/Staff?@q">View all →</a></div>
+                @if (Model.Staff.Count == 0)
+                {
+                    var noStaff = new EmptyStateModel("No staff accounts yet.", "badge");
+                    <partial name="_EmptyState" model="noStaff" />
+                }
+                else
+                {
+                    <div class="au-table-scroll">
+                        <table class="au-table">
+                            <thead><tr><th>Name</th><th>Membership</th><th>Login</th></tr></thead>
+                            <tbody>
+                                @foreach (var s in Model.Staff)
+                                {
+                                    <tr data-au-href="/Staff/Details?id=@s.UserId">
+                                        <td><a href="/Staff/Details?id=@s.UserId">@(s.FullName ?? s.Email)</a><div class="au-caption">@s.Email</div></td>
+                                        <td>@Ui.Badge(s.MembershipActive ? "active" : "inactive")</td>
+                                        <td>@Ui.Badge(s.LoginLocked ? "locked" : "active", s.LoginLocked ? "locked" : "can sign in")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+
+            <section class="au-table-card">
+                <div class="au-panel__head">
+                    <h3 class="au-panel__title">Channels</h3>
+                    <button class="au-btn au-btn--outlined au-btn--sm" type="button" data-open="connect-wa"><span class="au-icon" aria-hidden="true">add_link</span>Connect WhatsApp</button>
+                </div>
+                @if (Model.Channels.Count + Model.Calendars.Count + Model.TikTok.Count == 0)
+                {
+                    var noChannels = new EmptyStateModel("Nothing connected yet.", "hub");
+                    <partial name="_EmptyState" model="noChannels" />
+                }
+                else
+                {
+                    <div class="au-table-scroll">
+                        <table class="au-table" data-nosort>
+                            <thead><tr><th>Connection</th><th>Account</th><th>Status</th></tr></thead>
+                            <tbody>
+                                @foreach (var ch in Model.Channels)
+                                {
+                                    <tr data-au-href="/Channels/Details?id=@ch.Id">
+                                        <td><a href="/Channels/Details?id=@ch.Id">@ch.Channel</a> @Ui.Badge(ch.Provider)</td>
+                                        <td>@Ui.OrDash(ch.DisplayName)</td>
+                                        <td>@Ui.Badge(ch.Status) @if (!ch.IsHealthy) { @Ui.Badge("problem", ch.HealthLevel ?? "unhealthy") }</td>
+                                    </tr>
+                                }
+                                @foreach (var cal in Model.Calendars)
+                                {
+                                    <tr><td>@cal.Provider calendar</td><td>@Ui.OrDash(cal.Account)</td><td>@Ui.Badge(cal.Status)</td></tr>
+                                }
+                                @foreach (var tt in Model.TikTok)
+                                {
+                                    <tr><td>TikTok</td><td>@Ui.OrDash(tt.DisplayName)</td><td>@Ui.Badge(tt.Status)</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+
+            <form class="au-panel au-panel--round au-panel--pad" method="post" asp-page-handler="SearchSettings" asp-route-id="@c.Id">
+                <div class="au-panel__head"><h3 class="au-panel__title">Knowledge search (AI retrieval)</h3></div>
+                @if (Model.SearchSettings is null)
+                {
+                    var noSettings = new EmptyStateModel("No search settings row for this clinic.", "manage_search");
+                    <partial name="_EmptyState" model="noSettings" />
+                }
+                else
+                {
+                    var s = Model.SearchSettings;
+                    <dl class="au-detail-rows" style="margin-bottom:16px">
+                        <div class="au-detail-row"><dt>Embedding model</dt><dd>@s.EmbeddingModel (@s.VectorDimension dims)</dd></div>
+                        <div class="au-detail-row"><dt>Chunking</dt><dd>@s.ChunkSizeTokens tokens, @s.ChunkOverlapTokens overlap</dd></div>
+                        <div class="au-detail-row"><dt>Index</dt><dd>@KnowledgeVectorIndexType.Label(s.VectorIndexType)</dd></div>
+                    </dl>
+                    <div class="au-form-grid">
+                        <div class="au-form-field">
+                            <label class="au-form-label" for="ks-topk">Top K (1 to 20)</label>
+                            <input class="au-input" id="ks-topk" type="number" name="topK" min="1" max="20" value="@s.TopK" />
+                        </div>
+                        <div class="au-form-field">
+                            <label class="au-form-label" for="ks-min">Minimum similarity (0 to 1)</label>
+                            <input class="au-input" id="ks-min" type="number" name="minimumSimilarity" min="0" max="1" step="0.01" value="@s.MinimumSimilarity.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                        </div>
+                    </div>
+                    <div class="au-form-actions"><button class="au-btn au-btn--primary" type="submit">Save search settings</button></div>
+                }
+            </form>
+        </div>
+    </div>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Recent admin changes to this clinic</h3><a class="au-panel__link" href="/Audit?@q">All admin changes for this clinic →</a></div>
+        <partial name="_AuditTable" model="Model.Audit" />
+    </section>
+</div>
+
+<dialog class="au-dialog au-dialog--sm" id="edit-clinic" aria-labelledby="edit-clinic-title">
+    <form method="post" asp-page-handler="Update" asp-route-id="@c.Id">
+        <h2 class="au-dialog__title" id="edit-clinic-title">Edit clinic details<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+        <div class="au-dialog__content">
+            <div class="au-form-grid">
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-name">Name<span class="au-required">*</span></label><input class="au-input" id="ec-name" name="Edit.Name" value="@Model.Edit.Name" required /></div>
+                <div class="au-form-field"><label class="au-form-label" for="ec-email">Email</label><input class="au-input" id="ec-email" name="Edit.Email" value="@Model.Edit.Email" /></div>
+                <div class="au-form-field"><label class="au-form-label" for="ec-phone">Phone</label><input class="au-input" id="ec-phone" name="Edit.Phone" value="@Model.Edit.Phone" /></div>
+                <div class="au-form-field"><label class="au-form-label" for="ec-web">Website</label><input class="au-input" id="ec-web" name="Edit.Website" value="@Model.Edit.Website" /></div>
+                <div class="au-form-field"><label class="au-form-label" for="ec-cc">Country code</label><input class="au-input" id="ec-cc" name="Edit.CountryCode" value="@Model.Edit.CountryCode" maxlength="2" /></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-tz">Time zone<span class="au-required">*</span></label><input class="au-input" id="ec-tz" name="Edit.Timezone" value="@Model.Edit.Timezone" required /><span class="au-help">IANA name, e.g. Asia/Beirut</span></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-addr">Address</label><textarea class="au-textarea" id="ec-addr" name="Edit.Address">@Model.Edit.Address</textarea></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-hours">Operating hours</label><textarea class="au-textarea" id="ec-hours" name="Edit.OperatingHours">@Model.Edit.OperatingHours</textarea><span class="au-help">Free text the AI reads</span></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-consult">Consultation info</label><textarea class="au-textarea" id="ec-consult" name="Edit.ConsultationInfo">@Model.Edit.ConsultationInfo</textarea></div>
+            </div>
+        </div>
+        <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Save details</button></div>
     </form>
 </dialog>
 
-<dialog class="modal" id="connect-wa">
+<dialog class="au-dialog au-dialog--sm" id="connect-wa" aria-labelledby="connect-wa-title">
     <form method="post" asp-page-handler="ConnectWhatsApp" asp-route-id="@c.Id">
-        <div class="modal-head"><h2>Connect a WhatsApp sender (Infobip)</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
-        <div class="modal-body">
-            <p class="small muted">Register the number as a WhatsApp sender in the Infobip portal first. This sets the clinic's WhatsApp to that sender, replacing whatever was connected before. The main app checks the number with Infobip first and applies the clinic's plan limits.</p>
-            <div class="form-row"><label>Sender number (international)</label><input name="sender" placeholder="+44 7860 099299" required /></div>
+        <h2 class="au-dialog__title" id="connect-wa-title">Connect a WhatsApp sender (Infobip)<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+        <div class="au-dialog__content">
+            <p class="au-dialog__text" style="font-size:0.875rem;margin-bottom:16px">Register the number as a WhatsApp sender in the Infobip portal first. This sets the clinic's WhatsApp to that sender, replacing whatever was connected before. The main app checks the number with Infobip first and applies the clinic's plan limits.</p>
+            <div class="au-form-field"><label class="au-form-label" for="wa-sender">Sender number (international)<span class="au-required">*</span></label><input class="au-input" id="wa-sender" name="sender" placeholder="+44 7860 099299" required /></div>
         </div>
-        <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit" data-confirm="Connect this number as the clinic's WhatsApp?">Connect sender</button></div>
+        <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Connect this number as the clinic's WhatsApp?">Connect sender</button></div>
     </form>
 </dialog>

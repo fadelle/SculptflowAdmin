@@ -1,0 +1,8 @@
+@using SculptFlowAdmin.Pages.Shared
+@* Success feedback after a POST (AdminPageModel.Flash, set by RunAsync before the redirect) as an auto-dismissing toast.
+   Failures (FlashError) are NOT toasts: the layout shows them as an alert that stays until dismissed or the next page. *@
+<div class="au-toasts" aria-live="polite"></div>
+@if (Model is AdminPageModel adminPage && !string.IsNullOrEmpty(adminPage.Flash))
+{
+    <div hidden data-au-toast="success">@adminPage.Flash</div>
+}

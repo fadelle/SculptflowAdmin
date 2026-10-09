@@ -26,12 +26,14 @@ using SculptFlowAdmin.Business.Services.Content;
 using SculptFlowAdmin.Business.Services.Leads;
 using SculptFlowAdmin.Business.Services.Overview;
 using SculptFlowAdmin.Business.Services.Staff;
+using SculptFlowAdmin.Common.Configs;
 using SculptFlowAdmin.Entities.Models;
 using SculptFlowAdmin.Persistence.Contexts;
 using SculptFlowAdmin.Persistence.Contracts;
 using SculptFlowAdmin.Persistence.Contracts.Admins;
 using SculptFlowAdmin.Persistence.Repositories;
 using SculptFlowAdmin.Persistence.Repositories.Admins;
+using SculptFlowAdmin.Pages.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,6 +84,13 @@ builder.Services.AddHttpClient<ILeadsApiClient, LeadsApiClient>(c => c.Timeout =
 builder.Services.AddHttpClient<IContentApiClient, ContentApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<IOverviewApiClient, OverviewApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 
+// The header's global clinic scope (docs/UI_GUIDE.md §7): ScopePageFilter resolves it for every page (?clinicId=, else
+// the cookie); ClinicScopeLookup names it from the clinic list, cached briefly.
+builder.Services.Configure<ScopeOptions>(builder.Configuration.GetSection("Scope"));
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ScopeContext>();
+builder.Services.AddScoped<IScopeLookup, ClinicScopeLookup>();
+
 // Admin-only cookie. Its own name, so it can never be confused with the main app's staff cookie.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
@@ -110,7 +119,7 @@ builder.Services.AddAuthorization(o =>
     o.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
 });
 
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages().AddMvcOptions(o => o.Filters.Add<ScopePageFilter>());
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -128,6 +137,11 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+// An error status with no body (404 for an unknown address or a missing record, 400 for an expired form…) shows the
+// styled Status page. The JSON API (/api) keeps its plain status codes.
+app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"),
+    branch => branch.UseStatusCodePagesWithReExecute("/Status", "?code={0}"));
 
 app.UseHttpsRedirection();
 app.UseRouting();

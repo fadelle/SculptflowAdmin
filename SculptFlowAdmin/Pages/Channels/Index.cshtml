@@ -4,123 +4,150 @@
     ViewData["Title"] = "Channels & integrations";
     string TabUrl(string tab) => $"?tab={tab}" + (Model.ClinicId.HasValue ? $"&clinicId={Model.ClinicId}" : "");
 }
-<div class="page-head">
-    <div><h1>Channels &amp; integrations</h1>
-        <div class="muted">Messaging connections, calendars and TikTok for every clinic. Main app WhatsApp provider: @Ui.Badge(Model.ActiveProvider)</div></div>
+<div class="au-page-head">
+    <p class="au-page-head__sub">Messaging connections, calendars and TikTok for every clinic. Main app WhatsApp provider: @Ui.Badge(Model.ActiveProvider)</p>
 </div>
-<div class="tabs">
-    <a class="@(Model.Tab == "messaging" ? "active" : "")" href="@TabUrl("messaging")">Messaging (@Model.Rows.Count)</a>
-    <a class="@(Model.Tab == "calendars" ? "active" : "")" href="@TabUrl("calendars")">Calendars (@Model.Calendars.Count)</a>
-    <a class="@(Model.Tab == "tiktok" ? "active" : "")" href="@TabUrl("tiktok")">TikTok (@Model.TikTok.Count)</a>
+<div class="au-tabs" style="margin-bottom:16px">
+    <a class="au-tab @(Model.Tab == "messaging" ? "is-active" : null)" href="@TabUrl("messaging")"><span class="au-icon" aria-hidden="true">chat</span>Messaging <span class="au-tab__count">@Model.Rows.Count</span></a>
+    <a class="au-tab @(Model.Tab == "calendars" ? "is-active" : null)" href="@TabUrl("calendars")"><span class="au-icon" aria-hidden="true">calendar_month</span>Calendars <span class="au-tab__count">@Model.Calendars.Count</span></a>
+    <a class="au-tab @(Model.Tab == "tiktok" ? "is-active" : null)" href="@TabUrl("tiktok")"><span class="au-icon" aria-hidden="true">music_note</span>TikTok <span class="au-tab__count">@Model.TikTok.Count</span></a>
 </div>
-<form class="filters" method="get">
+<form class="filters au-toolbar" method="get">
     <input type="hidden" name="tab" value="@Model.Tab" />
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    @if (Model.Tab == "messaging")
-    {
-        <label>Channel
-            <select name="channel"><option value="">All</option>
-                @foreach (var c in ChannelType.All) { <option value="@c" selected="@(c == Model.Channel)">@c</option> }
-            </select>
-        </label>
-        <label class="check"><input type="checkbox" name="problems" value="true" checked="@Model.Problems" /> Problems only</label>
-    }
-    <partial name="_FilterActions" />
+    <div class="au-toolbar__filters">
+        @if (Model.Tab == "messaging")
+        {
+            <div class="au-field" style="width:160px">
+                <label class="au-label" for="f-channel">Channel</label>
+                <select class="au-select" id="f-channel" name="channel"><option value="">All</option>
+                    @foreach (var c in ChannelType.All) { <option value="@c" selected="@(c == Model.Channel)">@c</option> }
+                </select>
+            </div>
+            <label class="au-check"><input type="checkbox" name="problems" value="true" checked="@Model.Problems" /> Problems only</label>
+        }
+    </div>
+    <div class="au-toolbar__actions">
+        <partial name="_FilterActions" />
+    </div>
 </form>
 
-@if (Model.Tab == "messaging")
-{
-    if (Model.Rows.Count == 0) { <div class="card empty">No messaging connections.</div> }
+<div class="au-table-card">
+    @if (Model.Tab == "messaging")
+    {
+        if (Model.Rows.Count == 0)
+        {
+            var empty = new EmptyStateModel(Request.EmptyMessage("messaging connections"), "chat");
+            <partial name="_EmptyState" model="empty" />
+        }
+        else
+        {
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead>
+                        <tr><th>Clinic</th><th>Channel</th><th>Provider</th><th>Account / number</th><th>Status</th><th>Health</th><th>Last webhook</th><th>Updated</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Rows)
+                        {
+                            <tr data-au-href="/Channels/Details?id=@r.Id">
+                                <td><a href="/Clinics/Details?id=@r.ClinicId">@r.ClinicName</a></td>
+                                <td><a href="/Channels/Details?id=@r.Id">@r.Channel</a></td>
+                                <td>@Ui.Badge(r.Provider)</td>
+                                <td><div class="au-cell-2l"><span>@Ui.OrDash(r.SenderId)</span><span>@r.DisplayName</span></div></td>
+                                <td>@Ui.Badge(r.Status) @if (r.WebhookStatus is not null) { <div class="au-caption">webhook @r.WebhookStatus</div> }</td>
+                                <td>@Ui.Badge(r.IsHealthy ? (r.HealthLevel ?? "healthy") : (r.HealthLevel ?? "problem"))
+                                    @if (r.LastProblemMessage is not null || r.LastError is not null) { <div class="au-caption au-text-error" title="@(r.LastProblemMessage ?? r.LastError)">@Ui.Truncate(r.LastProblemMessage ?? r.LastError, 120)</div> }</td>
+                                <td>@Ui.Time(r.LastWebhookAt)</td>
+                                <td>@Ui.Time(r.UpdatedAt)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+    else if (Model.Tab == "calendars")
+    {
+        if (Model.Calendars.Count == 0)
+        {
+            var empty = new EmptyStateModel(Request.EmptyMessage("calendar connections"), "calendar_month");
+            <partial name="_EmptyState" model="empty" />
+        }
+        else
+        {
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead>
+                        <tr><th>Clinic</th><th>Calendar</th><th>Status</th><th>Sync</th><th class="au-right">Failed syncs</th><th>Last synced</th><th class="au-shrink"></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.Calendars)
+                        {
+                            <tr>
+                                <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
+                                <td style="--au-col-max:260px" title="@c.CalendarName">@Ui.OrDash(c.CalendarName)<div class="au-caption">@c.Provider@(string.IsNullOrEmpty(c.Account) ? "" : " · " + c.Account)</div></td>
+                                <td>@Ui.Badge(c.Status) @if (!c.IsHealthy) { <div class="au-caption au-text-error">@c.LastProblemMessage</div> }</td>
+                                <td>@Ui.YesNo(c.SyncEnabled, "on", "off")</td>
+                                <td class="au-right">@c.FailedSyncs</td>
+                                <td>@Ui.Time(c.LastSyncedAt)</td>
+                                <td><span class="au-row-actions">
+                                    @if (c.Status == "connected")
+                                    {
+                                        <form method="post" asp-page-handler="CalendarSync" asp-route-tab="calendars">
+                                            <input type="hidden" name="id" value="@c.Id" /><input type="hidden" name="enabled" value="@(!c.SyncEnabled ? "true" : "false")" />
+                                            <button class="au-btn au-btn--outlined au-btn--sm" type="submit">@(c.SyncEnabled ? "Pause sync" : "Resume sync")</button>
+                                        </form>
+                                        <form method="post" asp-page-handler="DisconnectCalendar" asp-route-tab="calendars">
+                                            <input type="hidden" name="id" value="@c.Id" />
+                                            <button class="au-btn au-btn--danger-outlined au-btn--sm" type="submit" data-confirm="Disconnect this calendar? The clinic will have to reconnect it.">Disconnect</button>
+                                        </form>
+                                    }
+                                </span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
     else
     {
-    <div class="table-wrap">
-    <table>
-        <tr><th>Clinic</th><th>Channel</th><th>Provider</th><th>Account / number</th><th>Status</th><th>Health</th><th>Last webhook</th><th>Updated</th></tr>
-        @foreach (var r in Model.Rows)
+        if (Model.TikTok.Count == 0)
         {
-            <tr>
-                <td><a href="/Clinics/Details?id=@r.ClinicId">@r.ClinicName</a></td>
-                <td><a href="/Channels/Details?id=@r.Id">@r.Channel</a></td>
-                <td>@Ui.Badge(r.Provider)</td>
-                <td>@r.DisplayName <div class="small muted mono">@r.SenderId</div></td>
-                <td>@Ui.Badge(r.Status) @if (r.WebhookStatus is not null) { <div class="small muted">webhook @r.WebhookStatus</div> }</td>
-                <td>@Ui.Badge(r.IsHealthy ? (r.HealthLevel ?? "healthy") : (r.HealthLevel ?? "problem"))
-                    @if (r.LastProblemMessage is not null || r.LastError is not null) { <div class="small" style="color:var(--red-text)">@Ui.Truncate(r.LastProblemMessage ?? r.LastError, 120)</div> }</td>
-                <td class="small">@Ui.Time(r.LastWebhookAt)</td>
-                <td class="small">@Ui.Time(r.UpdatedAt)</td>
-            </tr>
+            var empty = new EmptyStateModel(Request.EmptyMessage("TikTok connections"), "music_note");
+            <partial name="_EmptyState" model="empty" />
         }
-    </table>
-    </div>
-    }
-}
-else if (Model.Tab == "calendars")
-{
-    if (Model.Calendars.Count == 0) { <div class="card empty">No calendar connections.</div> }
-    else
-    {
-    <div class="table-wrap">
-    <table>
-        <tr><th>Clinic</th><th>Provider</th><th>Account</th><th>Calendar</th><th>Status</th><th>Sync</th><th class="num">Failed syncs</th><th>Last synced</th><th></th></tr>
-        @foreach (var c in Model.Calendars)
+        else
         {
-            <tr>
-                <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
-                <td>@c.Provider</td>
-                <td>@c.Account</td>
-                <td>@c.CalendarName</td>
-                <td>@Ui.Badge(c.Status) @if (!c.IsHealthy) { <div class="small" style="color:var(--red-text)">@c.LastProblemMessage</div> }</td>
-                <td>@Ui.YesNo(c.SyncEnabled, "on", "off")</td>
-                <td class="num">@c.FailedSyncs</td>
-                <td class="small">@Ui.Time(c.LastSyncedAt)</td>
-                <td><div class="actions">
-                    @if (c.Status == "connected")
-                    {
-                        <form method="post" asp-page-handler="CalendarSync" asp-route-tab="calendars">
-                            <input type="hidden" name="id" value="@c.Id" /><input type="hidden" name="enabled" value="@(!c.SyncEnabled ? "true" : "false")" />
-                            <button class="btn sm" type="submit">@(c.SyncEnabled ? "Pause sync" : "Resume sync")</button>
-                        </form>
-                        <form method="post" asp-page-handler="DisconnectCalendar" asp-route-tab="calendars">
-                            <input type="hidden" name="id" value="@c.Id" />
-                            <button class="btn sm danger" type="submit" data-confirm="Disconnect this calendar? The clinic will have to reconnect it.">Disconnect</button>
-                        </form>
-                    }
-                </div></td>
-            </tr>
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead>
+                        <tr><th>Clinic</th><th>Account</th><th>Status</th><th>Health</th><th>Token expires</th><th>Updated</th><th class="au-shrink"></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.TikTok)
+                        {
+                            <tr>
+                                <td><a href="/Clinics/Details?id=@t.ClinicId">@t.ClinicName</a></td>
+                                <td>@Ui.OrDash(t.DisplayName)</td>
+                                <td>@Ui.Badge(t.Status)</td>
+                                <td>@Ui.Badge(t.IsHealthy ? "healthy" : "problem") <span class="au-caption">@t.LastProblemMessage</span></td>
+                                <td>@Ui.Time(t.TokenExpiresAt)</td>
+                                <td>@Ui.Time(t.UpdatedAt)</td>
+                                <td>
+                                    @if (t.Status != "disconnected")
+                                    {
+                                        <form method="post" asp-page-handler="DisconnectTikTok" asp-route-tab="tiktok">
+                                            <input type="hidden" name="id" value="@t.Id" />
+                                            <button class="au-btn au-btn--danger-outlined au-btn--sm" type="submit" data-confirm="Disconnect this TikTok account?">Disconnect</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-    </table>
-    </div>
     }
-}
-else
-{
-    if (Model.TikTok.Count == 0) { <div class="card empty">No TikTok connections.</div> }
-    else
-    {
-    <div class="table-wrap">
-    <table>
-        <tr><th>Clinic</th><th>Account</th><th>Status</th><th>Health</th><th>Token expires</th><th>Updated</th><th></th></tr>
-        @foreach (var t in Model.TikTok)
-        {
-            <tr>
-                <td><a href="/Clinics/Details?id=@t.ClinicId">@t.ClinicName</a></td>
-                <td>@t.DisplayName</td>
-                <td>@Ui.Badge(t.Status)</td>
-                <td>@Ui.Badge(t.IsHealthy ? "healthy" : "problem") <span class="small">@t.LastProblemMessage</span></td>
-                <td class="small">@Ui.Time(t.TokenExpiresAt)</td>
-                <td class="small">@Ui.Time(t.UpdatedAt)</td>
-                <td>
-                    @if (t.Status != "disconnected")
-                    {
-                        <form method="post" asp-page-handler="DisconnectTikTok" asp-route-tab="tiktok">
-                            <input type="hidden" name="id" value="@t.Id" />
-                            <button class="btn sm danger" type="submit" data-confirm="Disconnect this TikTok account?">Disconnect</button>
-                        </form>
-                    }
-                </td>
-            </tr>
-        }
-    </table>
-    </div>
-    }
-}
+</div>

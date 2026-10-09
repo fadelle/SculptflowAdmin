@@ -5,66 +5,82 @@
     var name = l.FullName ?? $"{l.FirstName} {l.LastName}".Trim();
     if (string.IsNullOrWhiteSpace(name)) name = "(no name)";
     ViewData["Title"] = name;
+    var where = string.Join(" · ", new[] { l.PreferredLanguage, l.CountryCode, l.City }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    var source = string.Join(" · ", new[] { l.Source, l.SourceDetail }.Where(x => !string.IsNullOrWhiteSpace(x)));
 }
-<div class="page-head">
-    <div>
-        <div class="crumbs"><a href="/Leads">Leads</a> /</div>
-        <h1>@name @Ui.Badge(l.Status)</h1>
-        <div class="muted small"><a href="/Clinics/Details?id=@l.ClinicId">@l.Clinic?.Name</a> · <span class="mono">@l.Id</span> · created @Ui.Time(l.CreatedAt)</div>
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Leads" aria-label="Back to leads"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@name</h2>
+        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@l.ClinicId">@l.Clinic?.Name</a> · created @Ui.Time(l.CreatedAt)</span>
+    </div>
+    <div class="au-row au-row--wrap">
+        <button class="au-btn au-btn--outlined" type="button" data-open="edit-lead"><span class="au-icon" aria-hidden="true">edit</span>Edit</button>
     </div>
 </div>
-
-<div class="card">
-        <div class="card-head"><h2>Lead</h2><button class="btn sm" type="button" data-open="edit-lead">Edit</button></div>
-        <dl class="kv">
-            <dt>Phone</dt><dd>@l.Phone</dd>
-            <dt>Email</dt><dd>@l.Email</dd>
-            <dt>Procedure of interest</dt><dd>@l.Procedure?.Name</dd>
-            <dt>Source</dt><dd>@l.Source @l.SourceDetail</dd>
-            <dt>Ad campaign</dt><dd>@l.CampaignName</dd>
-            <dt>External lead id</dt><dd class="mono">@l.ExternalLeadId</dd>
-            <dt>Language / country / city</dt><dd>@l.PreferredLanguage @l.CountryCode @l.City</dd>
-            <dt>Timeline</dt><dd>@l.DesiredTimeline</dd>
-            <dt>Last contact</dt><dd>@Ui.Time(l.LastContactAt)</dd>
-            <dt>Next follow-up</dt><dd>@Ui.Time(l.NextFollowupAt)</dd>
-            <dt>Opted out at</dt><dd>@Ui.Time(l.OptedOutAt)</dd>
-            <dt>Qualification</dt><dd>@Ui.Badge(l.QualificationStatus)</dd>
-            <dt>Marketing</dt><dd>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</dd>
-            <dt>Notes</dt><dd style="white-space:pre-line">@(string.IsNullOrWhiteSpace(l.Notes) ? "—" : l.Notes)</dd>
-        </dl>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">
+    @Ui.Badge(l.Status) @Ui.Badge(l.QualificationStatus)
+    <span class="au-copy"><span class="au-mono">@l.Id</span><button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@l.Id" data-au-copy-message="Lead id copied" aria-label="Copy lead id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span>
 </div>
 
-
-<div class="card">
-    <h2>Conversations</h2>
-    <partial name="_ConversationTable" model="Model.Conversations" />
-</div>
-
-<div class="card">
-    <h2>Appointments</h2>
-    <partial name="_AppointmentTable" model="Model.Appointments" />
-</div>
-
-<div class="card">
-    <h2>Events (latest 100)</h2>
-    <partial name="_EventTable" model="Model.Events.Select(e => new EventRow(e.Id, l.ClinicId, l.Clinic?.Name ?? string.Empty, e.EventType, e.Source, e.LeadId, e.ConversationId, e.AppointmentId, e.Metadata, e.CreatedAt)).ToList()" />
-</div>
-
-<dialog class="modal" id="edit-lead">
-    <form method="post" asp-page-handler="Update" asp-route-id="@l.Id">
-        <div class="modal-head"><h2>Edit lead</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
-        <div class="modal-body">
-        <div class="form-row"><label>Status</label>
-            <select name="status">@foreach (var s in LeadStatus.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.Status)">@s.Replace('_', ' ')</option> }</select></div>
-        <div class="form-row"><label>Qualification</label>
-            <select name="qualificationStatus">@foreach (var s in LeadQualificationStatus.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.QualificationStatus)">@s.Replace('_', ' ')</option> }</select></div>
-        <div class="form-row"><label>Marketing</label>
-            <select name="marketingOptIn">
-                <option value="true" selected="@l.MarketingOptIn">Opted in (campaigns can reach them)</option>
-                <option value="false" selected="@(!l.MarketingOptIn)">Opted out</option>
-            </select></div>
-        <div class="form-row"><label>Notes</label><textarea name="notes">@l.Notes</textarea></div>
+<div class="au-stack">
+    <section class="au-panel au-panel--round au-panel--pad">
+        <div class="au-panel__head"><h3 class="au-panel__title">Lead</h3></div>
+        <div class="au-grid au-grid--2" style="--au-gap:0 32px">
+            <dl class="au-detail-rows">
+                <div class="au-detail-row"><dt>Phone</dt><dd>@Ui.OrDash(l.Phone)</dd></div>
+                <div class="au-detail-row"><dt>Email</dt><dd>@Ui.OrDash(l.Email)</dd></div>
+                <div class="au-detail-row"><dt>Procedure of interest</dt><dd>@Ui.OrDash(l.Procedure?.Name)</dd></div>
+                <div class="au-detail-row"><dt>Source</dt><dd>@Ui.OrDash(source)</dd></div>
+                <div class="au-detail-row"><dt>Ad campaign</dt><dd>@Ui.OrDash(l.CampaignName)</dd></div>
+                <div class="au-detail-row"><dt>External lead id</dt><dd><span class="au-mono">@Ui.OrDash(l.ExternalLeadId)</span></dd></div>
+                <div class="au-detail-row"><dt>Language / country / city</dt><dd>@Ui.OrDash(where)</dd></div>
+            </dl>
+            <dl class="au-detail-rows">
+                <div class="au-detail-row"><dt>Timeline</dt><dd>@Ui.OrDash(l.DesiredTimeline)</dd></div>
+                <div class="au-detail-row"><dt>Last contact</dt><dd>@Ui.Time(l.LastContactAt)</dd></div>
+                <div class="au-detail-row"><dt>Next follow-up</dt><dd>@Ui.Time(l.NextFollowupAt)</dd></div>
+                <div class="au-detail-row"><dt>Opted out at</dt><dd>@Ui.Time(l.OptedOutAt)</dd></div>
+                <div class="au-detail-row"><dt>Qualification</dt><dd>@Ui.Badge(l.QualificationStatus)</dd></div>
+                <div class="au-detail-row"><dt>Marketing</dt><dd>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</dd></div>
+                <div class="au-detail-row"><dt>Notes</dt><dd style="white-space:pre-line">@Ui.OrDash(l.Notes)</dd></div>
+            </dl>
         </div>
-        <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Save lead</button></div>
+    </section>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Conversations</h3></div>
+        <partial name="_ConversationTable" model="Model.Conversations" />
+    </section>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Appointments</h3></div>
+        <partial name="_AppointmentTable" model="Model.Appointments" />
+    </section>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Events (latest 100)</h3></div>
+        <partial name="_EventTable" model="Model.Events.Select(e => new EventRow(e.Id, l.ClinicId, l.Clinic?.Name ?? string.Empty, e.EventType, e.Source, e.LeadId, e.ConversationId, e.AppointmentId, e.Metadata, e.CreatedAt)).ToList()" />
+    </section>
+</div>
+
+<dialog class="au-dialog au-dialog--sm" id="edit-lead" aria-labelledby="edit-lead-title">
+    <form method="post" asp-page-handler="Update" asp-route-id="@l.Id">
+        <h2 class="au-dialog__title" id="edit-lead-title">Edit lead<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+        <div class="au-dialog__content">
+            <div class="au-form-grid">
+                <div class="au-form-field"><label class="au-form-label" for="el-status">Status</label>
+                    <select class="au-select" id="el-status" name="status">@foreach (var s in LeadStatus.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.Status)">@s.Replace('_', ' ')</option> }</select></div>
+                <div class="au-form-field"><label class="au-form-label" for="el-qual">Qualification</label>
+                    <select class="au-select" id="el-qual" name="qualificationStatus">@foreach (var s in LeadQualificationStatus.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.QualificationStatus)">@s.Replace('_', ' ')</option> }</select></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="el-mkt">Marketing</label>
+                    <select class="au-select" id="el-mkt" name="marketingOptIn">
+                        <option value="true" selected="@l.MarketingOptIn">Opted in (campaigns can reach them)</option>
+                        <option value="false" selected="@(!l.MarketingOptIn)">Opted out</option>
+                    </select></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="el-notes">Notes</label><textarea class="au-textarea" id="el-notes" name="notes">@l.Notes</textarea></div>
+            </div>
+        </div>
+        <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Save lead</button></div>
     </form>
 </dialog>

@@ -1,21 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using SculptFlowAdmin.Business.Contracts.Services.Channels;
-using SculptFlowAdmin.Business.Contracts.Services.Clinics;
+using SculptFlowAdmin.Common.Enums;
 using SculptFlowAdmin.Entities.Dtos.Channels;
-using SculptFlowAdmin.Entities.Dtos.Clinics;
 using SculptFlowAdmin.Pages.Shared;
 
 namespace SculptFlowAdmin.Pages.Channels;
 
+[ScopeCapability(ScopeCapability.Clinic)]
 public class IndexModel : AdminPageModel
 {
     private readonly IChannelAdminService _channels;
-    private readonly IClinicAdminService _clinics;
+    private readonly ScopeContext _scope;
 
-    public IndexModel(IChannelAdminService channels, IClinicAdminService clinics)
+    public IndexModel(IChannelAdminService channels, ScopeContext scope)
     {
         _channels = channels;
-        _clinics = clinics;
+        _scope = scope;
     }
 
     [BindProperty(SupportsGet = true)] public Guid? ClinicId { get; set; }
@@ -25,12 +25,11 @@ public class IndexModel : AdminPageModel
     public List<ChannelRow> Rows { get; private set; } = new();
     public List<CalendarRow> Calendars { get; private set; } = new();
     public List<TikTokRow> TikTok { get; private set; } = new();
-    public List<ClinicOption> Clinics { get; private set; } = new();
     public string ActiveProvider => _channels.ActiveWhatsAppProvider;
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        Clinics = await _clinics.OptionsAsync(ct);
+        ClinicId ??= _scope.FilterGuid; // the header's clinic scope when the URL names none
         Rows = await _channels.ListChannelsAsync(ClinicId, Channel, Problems, ct);
         Calendars = await _channels.ListCalendarsAsync(ClinicId, ct);
         TikTok = await _channels.ListTikTokAsync(ClinicId, ct);
