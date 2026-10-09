@@ -1,40 +1,56 @@
 @page
 @model SculptFlowAdmin.Pages.Templates.IndexModel
 @{ ViewData["Title"] = "WhatsApp templates"; }
-<div class="page-head"><div><h1>WhatsApp templates</h1><div class="muted">Read-only. Templates are created and approved through the WhatsApp provider; clinics manage them in the main app.</div></div></div>
-<form class="filters" method="get">
-    <label class="search">Find<input type="search" data-filter="#rows" placeholder="Name, body or clinic" /></label>
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <label>Status
-        <select name="status"><option value="">All</option>
-            @foreach (var s in WhatsAppTemplateStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
-        </select>
-    </label>
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">Read-only. Templates are created and approved through the WhatsApp provider; clinics manage them in the main app.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:240px">
+            <label class="au-label" for="f-find">Find on this page</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">filter_list</span><input class="au-input" type="search" id="f-find" data-filter="#rows" placeholder="Name, body or clinic" /></span>
+        </div>
+        <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+        <div class="au-field" style="width:160px">
+            <label class="au-label" for="f-status">Status</label>
+            <select class="au-select" id="f-status" name="status"><option value="">All</option>
+                @foreach (var s in WhatsAppTemplateStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
+            </select>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Rows.Count, "template", "templates")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-@if (Model.Rows.Count == 0)
-{
-    <div class="card empty">No templates.</div>
-}
-else
-{
-<div class="table-wrap">
-<table id="rows">
-    <tr><th>Template</th><th>Clinic</th><th>Provider</th><th>Category</th><th>Language</th><th>Status</th><th>Quality</th><th>Body</th><th>Updated</th></tr>
-    @foreach (var t in Model.Rows)
+<div class="au-table-card">
+    @if (Model.Rows.Count == 0)
     {
-        <tr>
-            <td class="mono">@t.Name</td>
-            <td><a href="/Clinics/Details?id=@t.ClinicId">@t.ClinicName</a></td>
-            <td>@Ui.Badge(t.Provider)</td>
-            <td>@t.Category</td>
-            <td>@t.Language</td>
-            <td>@Ui.Badge(t.Status) @if (t.RejectionReason is not null) { <div class="small" style="color:var(--red-text)">@t.RejectionReason</div> }</td>
-            <td>@t.QualityRating</td>
-            <td class="small">@Ui.Truncate(t.Body, 160)</td>
-            <td class="small">@Ui.Time(t.UpdatedAt)</td>
-        </tr>
+        var empty = new EmptyStateModel(Request.EmptyMessage("templates"), "article");
+        <partial name="_EmptyState" model="empty" />
     }
-</table>
+    else
+    {
+        <div class="au-table-scroll">
+            <table class="au-table" id="rows">
+                <thead>
+                    <tr><th>Template</th><th>Clinic</th><th>Provider</th><th>Category</th><th>Language</th><th>Status</th><th>Quality</th><th>Body</th><th>Updated</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Rows)
+                    {
+                        <tr>
+                            <td><span class="au-mono">@t.Name</span></td>
+                            <td><a href="/Clinics/Details?id=@t.ClinicId">@t.ClinicName</a></td>
+                            <td>@Ui.Badge(t.Provider)</td>
+                            <td>@Ui.OrDash(t.Category)</td>
+                            <td>@Ui.OrDash(t.Language)</td>
+                            <td>@Ui.Badge(t.Status) @if (t.RejectionReason is not null) { <div class="au-caption au-text-error">@t.RejectionReason</div> }</td>
+                            <td>@Ui.OrDash(t.QualityRating)</td>
+                            <td style="--au-col-max:340px" title="@t.Body">@Ui.Truncate(t.Body, 160)</td>
+                            <td>@Ui.Time(t.UpdatedAt)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
-}

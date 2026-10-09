@@ -4,59 +4,77 @@
     ViewData["Title"] = "Billing accounts";
     var a = Model.Accounts;
     var cur = Model.Currency;
+    var pastDue = a.Count(x => x.SubscriptionStatus == "past_due");
 }
-<div class="page-head">
-    <div><h1>Billing accounts</h1>
-        <div class="muted">Every clinic's plan, prepaid wallet and included credit. Billing rules and balances live in the main app; changes here go through its billing API.</div></div>
+<div class="au-page-head">
+    <p class="au-page-head__sub">Every clinic's plan, prepaid wallet and included credit. Billing rules and balances live in the main app; changes here go through its billing API.</p>
 </div>
 
 @if (Model.LoadError is null)
 {
-    <div class="grid grid-stats">
-        <div class="stat"><div class="label">Clinics</div><div class="value">@a.Count</div></div>
-        <div class="stat"><div class="label">Active subscriptions</div><div class="value">@a.Count(x => x.SubscriptionStatus == "active")</div></div>
-        <div class="stat @(a.Any(x => x.SubscriptionStatus == "past_due") ? "warn" : "")"><div class="label">Past due</div><div class="value">@a.Count(x => x.SubscriptionStatus == "past_due")</div></div>
-        <div class="stat"><div class="label">No plan</div><div class="value">@a.Count(x => x.SubscriptionStatus is null)</div></div>
-        <div class="stat"><div class="label">Wallets (total)</div><div class="value">@BillingUi.Money(a.Sum(x => x.WalletBalance)) <span class="muted small">@cur</span></div></div>
-        <div class="stat"><div class="label">Included credit left</div><div class="value">@BillingUi.Money(a.Sum(x => x.IncludedCreditBalance)) <span class="muted small">@cur</span></div></div>
-        <div class="stat"><div class="label">Reserved now</div><div class="value">@BillingUi.Money(a.Sum(x => x.ReservedAmount)) <span class="muted small">@cur</span></div></div>
-    </div>
-
-    <form class="filters" method="get">
-        <label class="search">Clinic or plan<input type="search" name="q" value="@Model.Q" /></label>
-        <label>Subscription
-            <select name="status">
-                <option value="">All</option>
-                @foreach (var s in new[] { "active", "past_due", "cancelled", "expired" }) { <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option> }
-                <option value="none" selected="@(Model.Status == "none")">no plan</option>
-            </select>
-        </label>
-        <partial name="_FilterActions" />
-    </form>
-
-    @if (Model.Shown.Count == 0)
-    {
-        <div class="card empty">No billing accounts match.</div>
-    }
-    else
-    {
-        <div class="table-wrap">
-            <table>
-                <tr><th>Clinic</th><th>Plan</th><th>Subscription</th><th>Period ends</th><th class="num">Wallet</th><th class="num">Included credit</th><th class="num">Reserved</th></tr>
-                @foreach (var r in Model.Shown)
-                {
-                    <tr>
-                        <td><a href="/Billing/Clinic?id=@r.ClinicId">@r.ClinicName</a></td>
-                        <td>@(r.PlanCode ?? "—")</td>
-                        <td>@Ui.Badge(r.SubscriptionStatus ?? "none", r.SubscriptionStatus is null ? "no plan" : null)</td>
-                        <td class="small">@Ui.Time(r.CurrentPeriodEnd)</td>
-                        <td class="num @(r.WalletBalance < 0 ? "neg" : "")">@BillingUi.Money(r.WalletBalance)</td>
-                        <td class="num">@BillingUi.Money(r.IncludedCreditBalance)</td>
-                        <td class="num">@BillingUi.Money(r.ReservedAmount)</td>
-                    </tr>
-                }
-            </table>
+    <div class="au-stack">
+        <div class="au-grid au-grid--4" style="--au-gap:12px">
+            <div class="au-stat"><span class="au-eyebrow">Clinics</span><div class="au-stat__value">@a.Count</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Active subscriptions</span><div class="au-stat__value">@a.Count(x => x.SubscriptionStatus == "active")</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Past due</span><div class="au-stat__value @(pastDue > 0 ? "au-text-error" : null)">@pastDue</div></div>
+            <div class="au-stat"><span class="au-eyebrow">No plan</span><div class="au-stat__value">@a.Count(x => x.SubscriptionStatus is null)</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Wallets (total)</span><div class="au-stat__value">@BillingUi.Money(a.Sum(x => x.WalletBalance)) <span class="au-stat__hint">@cur</span></div></div>
+            <div class="au-stat"><span class="au-eyebrow">Included credit left</span><div class="au-stat__value">@BillingUi.Money(a.Sum(x => x.IncludedCreditBalance)) <span class="au-stat__hint">@cur</span></div></div>
+            <div class="au-stat"><span class="au-eyebrow">Reserved now</span><div class="au-stat__value">@BillingUi.Money(a.Sum(x => x.ReservedAmount)) <span class="au-stat__hint">@cur</span></div></div>
         </div>
-        <div class="small muted" style="margin-top:10px">Amounts in @cur.</div>
-    }
+
+        <div>
+            <form class="filters au-toolbar" method="get">
+                <div class="au-toolbar__filters">
+                    <div class="au-field" style="width:240px">
+                        <label class="au-label" for="f-q">Clinic or plan</label>
+                        <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" /></span>
+                    </div>
+                    <div class="au-field" style="width:170px">
+                        <label class="au-label" for="f-status">Subscription</label>
+                        <select class="au-select" id="f-status" name="status">
+                            <option value="">All</option>
+                            @foreach (var s in new[] { "active", "past_due", "cancelled", "expired" }) { <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option> }
+                            <option value="none" selected="@(Model.Status == "none")">no plan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="au-toolbar__actions">
+                    <span class="au-toolbar__meta">@Ui.Count(Model.Shown.Count, "account", "accounts")</span>
+                    <partial name="_FilterActions" />
+                </div>
+            </form>
+
+            <div class="au-table-card">
+                @if (Model.Shown.Count == 0)
+                {
+                    var empty = new EmptyStateModel(Request.EmptyMessage("billing accounts"), "account_balance_wallet");
+                    <partial name="_EmptyState" model="empty" />
+                }
+                else
+                {
+                    <div class="au-table-scroll">
+                        <table class="au-table">
+                            <thead><tr><th>Clinic</th><th>Plan</th><th>Subscription</th><th>Period ends</th><th class="au-right">Wallet</th><th class="au-right">Included credit</th><th class="au-right">Reserved</th></tr></thead>
+                            <tbody>
+                                @foreach (var r in Model.Shown)
+                                {
+                                    <tr data-au-href="/Billing/Clinic?id=@r.ClinicId">
+                                        <td><a href="/Billing/Clinic?id=@r.ClinicId">@r.ClinicName</a></td>
+                                        <td>@Ui.OrDash(r.PlanCode)</td>
+                                        <td>@Ui.Badge(r.SubscriptionStatus ?? "none", r.SubscriptionStatus is null ? "no plan" : null)</td>
+                                        <td>@Ui.Time(r.CurrentPeriodEnd)</td>
+                                        <td class="au-right @(r.WalletBalance < 0 ? "au-text-error" : null)">@BillingUi.Money(r.WalletBalance)</td>
+                                        <td class="au-right">@BillingUi.Money(r.IncludedCreditBalance)</td>
+                                        <td class="au-right">@BillingUi.Money(r.ReservedAmount)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="au-pager"><span class="au-pager__count">Amounts in @cur.</span></div>
+                }
+            </div>
+        </div>
+    </div>
 }

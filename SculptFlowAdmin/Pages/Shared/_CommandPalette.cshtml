@@ -1,0 +1,15 @@
+@using System.Text.Json
+@* Ctrl/⌘+K quick navigation over every NavTree leaf; an empty query shows Favorites → Recent → All (aurora.js). *@
+@{
+    var pages = NavTree.Leaves().Select(l => new { label = l.Item.Label, path = Url.Content("~" + l.Item.Path), trail = l.Trail, icon = l.Item.Icon });
+}
+<dialog class="au-palette" aria-label="Search pages">
+    <div class="au-palette__search">
+        <span class="au-icon" aria-hidden="true">search</span>
+        <input type="text" placeholder="Search pages…" aria-label="Search pages" autocomplete="off" />
+        <span class="au-kbd">Esc</span>
+    </div>
+    <ul class="au-palette__list" role="listbox"></ul>
+    <div class="au-palette__foot"><span><span class="au-kbd">↑</span> <span class="au-kbd">↓</span> navigate</span><span><span class="au-kbd">Enter</span> open</span></div>
+</dialog>
+<script type="application/json" id="au-nav-data">@Html.Raw(JsonSerializer.Serialize(pages))</script>

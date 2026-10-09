@@ -2,13 +2,22 @@
 @model ErrorModel
 @{
     ViewData["Title"] = "Error";
+    // Inside the shell when signed in; the plain auth card otherwise (docs/UI_GUIDE.md §8.6).
+    Layout = User.Identity?.IsAuthenticated == true ? "_Layout" : "_AuthLayout";
 }
-<div class="card state">
-    <h1>Something went wrong</h1>
-    <p class="muted">The page couldn't be shown. Try again, or go back to the dashboard.</p>
-    @if (Model.ShowRequestId)
-    {
-        <p class="small muted">Request ID: <span class="mono">@Model.RequestId</span></p>
-    }
-    <div class="actions" style="justify-content:center"><a class="btn primary" href="/">Dashboard</a></div>
+<div class="au-fullpage-msg">
+    <div class="au-fullpage-msg__inner">
+        <div class="au-fullpage-msg__code">Error</div>
+        <h3 class="au-h3" style="margin:0">Something went wrong</h3>
+        <p class="au-muted" style="margin:0">The page couldn't be shown. Try again, or go back to the dashboard.</p>
+        @if (Model.ShowRequestId)
+        {
+            <span class="au-copy"><span class="au-caption">Request id&nbsp;</span><span class="au-mono">@Model.RequestId</span>
+                <button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@Model.RequestId" data-au-copy-message="Request id copied" aria-label="Copy request id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span>
+        }
+        <div class="au-row au-row--wrap" style="justify-content:center">
+            <button type="button" class="au-btn au-btn--outlined" data-au-refresh><span class="au-icon" aria-hidden="true">refresh</span>Try again</button>
+            <a class="au-btn au-btn--primary" href="/"><span class="au-icon" aria-hidden="true">dashboard</span>Go to dashboard</a>
+        </div>
+    </div>
 </div>

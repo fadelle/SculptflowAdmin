@@ -1,38 +1,53 @@
 @page
 @model SculptFlowAdmin.Pages.Procedures.IndexModel
 @{ ViewData["Title"] = "Procedures"; }
-<div class="page-head"><div><h1>Procedures</h1><div class="muted">Each clinic's service catalog. Inactive procedures are hidden from the AI and from booking.</div></div></div>
-<form class="filters" method="get">
-    <label class="search">Find<input type="search" data-filter="#rows" placeholder="Name, code or clinic" /></label>
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">Each clinic's service catalog. Inactive procedures are hidden from the AI and from booking.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:240px">
+            <label class="au-label" for="f-find">Find on this page</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">filter_list</span><input class="au-input" type="search" id="f-find" data-filter="#rows" placeholder="Name, code or clinic" /></span>
+        </div>
+        <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Rows.Count, "procedure", "procedures")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-@if (Model.Rows.Count == 0)
-{
-    <div class="card empty">No procedures.</div>
-}
-else
-{
-<div class="table-wrap">
-<table id="rows">
-    <tr><th>Procedure</th><th>Clinic</th><th>Code</th><th class="num">Consultation (min)</th><th class="num">Leads interested</th><th>Status</th><th></th></tr>
-    @foreach (var p in Model.Rows)
+<div class="au-table-card">
+    @if (Model.Rows.Count == 0)
     {
-        <tr>
-            <td>@p.Name</td>
-            <td><a href="/Clinics/Details?id=@p.ClinicId">@p.ClinicName</a></td>
-            <td class="mono">@p.Code</td>
-            <td class="num">@p.ConsultationDuration</td>
-            <td class="num">@p.Leads</td>
-            <td>@Ui.Badge(p.IsActive ? "active" : "inactive")</td>
-            <td>
-                <form method="post" asp-page-handler="SetActive" asp-route-clinicId="@Model.ClinicId">
-                    <input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="active" value="@(!p.IsActive ? "true" : "false")" />
-                    <button class="btn sm @(p.IsActive ? "danger" : "")" type="submit">@(p.IsActive ? "Deactivate" : "Activate")</button>
-                </form>
-            </td>
-        </tr>
+        var empty = new EmptyStateModel(Request.EmptyMessage("procedures"), "medical_services");
+        <partial name="_EmptyState" model="empty" />
     }
-</table>
+    else
+    {
+        <div class="au-table-scroll">
+            <table class="au-table" id="rows">
+                <thead>
+                    <tr><th>Procedure</th><th>Clinic</th><th>Code</th><th class="au-right">Consultation (min)</th><th class="au-right">Leads interested</th><th>Status</th><th class="au-shrink"></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Rows)
+                    {
+                        <tr>
+                            <td class="au-strong">@p.Name</td>
+                            <td><a href="/Clinics/Details?id=@p.ClinicId">@p.ClinicName</a></td>
+                            <td><span class="au-mono">@p.Code</span></td>
+                            <td class="au-right">@p.ConsultationDuration</td>
+                            <td class="au-right">@p.Leads</td>
+                            <td>@Ui.Badge(p.IsActive ? "active" : "inactive")</td>
+                            <td>
+                                <form method="post" asp-page-handler="SetActive" asp-route-clinicId="@Model.ClinicId">
+                                    <input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="active" value="@(!p.IsActive ? "true" : "false")" />
+                                    <button class="au-btn au-btn--sm @(p.IsActive ? "au-btn--danger-outlined" : "au-btn--outlined")" type="submit">@(p.IsActive ? "Deactivate" : "Activate")</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
-}

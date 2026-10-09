@@ -1,0 +1,74 @@
+@* The glass header: sidebar toggle, breadcrumb (ancestors are sibling switchers), page title, search, theme, user menu. *@
+@{
+    var path = Context.Request.Path.Value ?? "/";
+    var steps = NavTree.Resolve(path);
+    var title = (steps.Count > 0 ? steps[^1].Node.Label : null) ?? ViewData["Title"] as string ?? "SculptFlow Admin";
+}
+<div class="au-header__bar">
+    <button type="button" class="au-icon-btn au-icon-btn--primary" data-au-sidebar-toggle aria-label="Toggle sidebar">
+        <span class="au-icon" aria-hidden="true">view_sidebar</span>
+    </button>
+    <div class="au-header__title-wrap">
+        @if (steps.Count > 1)
+        {
+            <nav class="au-crumbs" aria-label="Breadcrumb">
+                @for (var i = 0; i < steps.Count - 1; i++)
+                {
+                    var step = steps[i];
+                    var options = step.Siblings.Where(s => s.FirstLeafPath is not null).ToArray();
+                    if (i > 0)
+                    {
+                        <span class="au-crumbs__sep" aria-hidden="true">›</span>
+                    }
+                    if (options.Length > 1)
+                    {
+                        <details class="au-dropdown">
+                            <summary class="au-crumb" aria-label="Switch @step.Node.Label">@step.Node.Label<span class="au-icon" aria-hidden="true">expand_more</span></summary>
+                            <div class="au-menu">
+                                @foreach (var o in options)
+                                {
+                                    <a class="au-menu__item @(ReferenceEquals(o, step.Node) ? "is-selected" : null)" href="@Url.Content("~" + o.FirstLeafPath)">
+                                        <span class="au-icon" aria-hidden="true">@o.Icon</span>@o.Label
+                                    </a>
+                                }
+                            </div>
+                        </details>
+                    }
+                    else
+                    {
+                        <span class="au-crumb">@step.Node.Label</span>
+                    }
+                }
+            </nav>
+        }
+        <h1 class="au-header__title">@title</h1>
+    </div>
+    <div class="au-header__tools">
+        <button type="button" class="au-search-btn au-hide-mobile" data-au-palette-open aria-label="Search pages (Ctrl+K)">
+            <span class="au-icon" aria-hidden="true">search</span>Search<span class="au-kbd">Ctrl K</span>
+        </button>
+        <button type="button" class="au-icon-btn au-icon-btn--bordered au-show-mobile" data-au-palette-open aria-label="Search pages">
+            <span class="au-icon" aria-hidden="true">search</span>
+        </button>
+        <button type="button" class="au-icon-btn au-icon-btn--bordered" data-au-theme-toggle aria-label="Toggle color mode">
+            <span class="au-icon" aria-hidden="true">dark_mode</span>
+        </button>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            var name = AdminClaims.Name(User);
+            <details class="au-dropdown au-user-menu">
+                <summary aria-label="Account menu for @name">
+                    <span class="au-avatar" aria-hidden="true">@Ui.Initials(name)</span>
+                    <span class="au-icon" aria-hidden="true">expand_more</span>
+                </summary>
+                <div class="au-menu au-menu--end">
+                    <span class="au-user-menu__who"><strong>@name</strong><span>@AdminClaims.Email(User)</span></span>
+                    @* asp-antiforgery: with an explicit action the tag helper omits the token, and /Logout then answers 400. *@
+                    <form method="post" action="/Logout" asp-antiforgery="true">
+                        <button class="au-menu__item" type="submit"><span class="au-icon" aria-hidden="true">logout</span>Sign out</button>
+                    </form>
+                </div>
+            </details>
+        }
+    </div>
+</div>

@@ -1,17 +1,28 @@
 @page
 @model SculptFlowAdmin.Pages.Clinics.IndexModel
 @{ ViewData["Title"] = "Clinics"; }
-<div class="page-head"><div><h1>Clinics</h1><div class="muted">Every tenant. Open one to edit it, switch it on or off, and see everything it owns.</div></div></div>
-<form class="filters" method="get">
-    <label class="search">Search<input type="search" name="q" value="@Model.Q" placeholder="Name, slug or email" /></label>
-    <label>Status
-        <select name="active">
-            <option value="">All</option>
-            <option value="true" selected="@(Model.Active == "true")">Active</option>
-            <option value="false" selected="@(Model.Active == "false")">Inactive</option>
-        </select>
-    </label>
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">Every tenant. Open one to edit it, switch it on or off, and see everything it owns.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:260px">
+            <label class="au-label" for="f-q">Search</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" placeholder="Name, slug or email" /></span>
+        </div>
+        <div class="au-field" style="width:150px">
+            <label class="au-label" for="f-active">Status</label>
+            <select class="au-select" id="f-active" name="active">
+                <option value="">All</option>
+                <option value="true" selected="@(Model.Active == "true")">Active</option>
+                <option value="false" selected="@(Model.Active == "false")">Inactive</option>
+            </select>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "clinic", "clinics")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-<partial name="_ClinicTable" model="Model.Result.Items" />
-<partial name="_Pager" model="PagerModel.From(Model.Result)" />
+<div class="au-table-card">
+    <partial name="_ClinicTable" model="Model.Result.Items" />
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
+</div>

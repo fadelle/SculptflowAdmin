@@ -1,16 +1,24 @@
 @page
 @model SculptFlowAdmin.Pages.Appointments.IndexModel
 @{ ViewData["Title"] = "Appointments"; }
-<div class="page-head"><div><h1>Appointments</h1><div class="muted">Times are shown in each clinic's own time zone. Changing a status here doesn't update the clinic's connected Google/Outlook calendar.</div></div></div>
-<form class="filters" method="get">
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <label>Status
-        <select name="status"><option value="">All</option>
-            @foreach (var s in AppointmentStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option> }
-        </select>
-    </label>
-    <label class="check"><input type="checkbox" name="upcoming" value="true" checked="@Model.Upcoming" /> Upcoming only</label>
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">Times are shown in each clinic's own time zone. Changing a status here doesn't update the clinic's connected Google/Outlook calendar.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+        <div class="au-field" style="width:180px">
+            <label class="au-label" for="f-status">Status</label>
+            <select class="au-select" id="f-status" name="status"><option value="">All</option>
+                @foreach (var s in AppointmentStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option> }
+            </select>
+        </div>
+        <label class="au-check"><input type="checkbox" name="upcoming" value="true" checked="@Model.Upcoming" /> Upcoming only</label>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "appointment", "appointments")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-<partial name="_AppointmentTable" model="Model.Result.Items" />
-<partial name="_Pager" model="PagerModel.From(Model.Result)" />
+<div class="au-table-card">
+    <partial name="_AppointmentTable" model="Model.Result.Items" />
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
+</div>

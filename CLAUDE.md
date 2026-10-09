@@ -49,6 +49,10 @@ Rules:
    APIs") + a client, service and page here, with the request/response shapes copied (see `MAIN_APP_SYNC.md`).
 7. Never commit or push unless Mohammad says so.
 
+## UI (standing rule)
+
+UI: follow docs/UI_GUIDE.md for every page, partial and component; keep it up to date.
+
 ## Other docs (read on demand)
 
 `README.md` (coverage, setup), `MAIN_APP_SYNC.md` (last-checked main-app commit, how to sync).

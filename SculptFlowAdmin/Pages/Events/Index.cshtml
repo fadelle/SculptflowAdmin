@@ -1,15 +1,23 @@
 @page
 @model SculptFlowAdmin.Pages.Events.IndexModel
 @{ ViewData["Title"] = "Event log"; }
-<div class="page-head"><div><h1>Event log</h1><div class="muted">The main app's activity log (the events table): leads, bookings, handoffs, sends, webhook events.</div></div></div>
-<form class="filters" method="get">
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <label>Event
-        <select name="type"><option value="">All</option>
-            @foreach (var t in Model.Types) { <option value="@t" selected="@(t == Model.Type)">@t.Replace('_', ' ')</option> }
-        </select>
-    </label>
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">The main app's activity log (the events table): leads, bookings, handoffs, sends, webhook events.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+        <div class="au-field" style="width:220px">
+            <label class="au-label" for="f-type">Event</label>
+            <select class="au-select" id="f-type" name="type"><option value="">All</option>
+                @foreach (var t in Model.Types) { <option value="@t" selected="@(t == Model.Type)">@t.Replace('_', ' ')</option> }
+            </select>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "event", "events")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-<partial name="_EventTable" model="Model.Result.Items" />
-<partial name="_Pager" model="PagerModel.From(Model.Result)" />
+<div class="au-table-card">
+    <partial name="_EventTable" model="Model.Result.Items" />
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
+</div>

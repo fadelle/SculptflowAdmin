@@ -1,51 +1,63 @@
 @page
 @model SculptFlowAdmin.Pages.Admins.IndexModel
 @{ ViewData["Title"] = "Admin users"; }
-<div class="page-head"><div><h1>Admin users</h1><div class="muted">People who can sign in to this portal. Separate from clinic staff accounts.</div></div><button class="btn primary" type="button" data-open="add-admin">+ Add admin</button></div>
-
-<div class="table-wrap">
-<table>
-    <tr><th>Name</th><th>Email</th><th>Status</th><th>Last sign-in</th><th></th></tr>
-    @foreach (var a in Model.Admins)
-    {
-        <tr>
-            <td>@a.FullName @if (a.Id == Model.Me) { <span class="badge blue">you</span> }</td>
-            <td>@a.Email</td>
-            <td>@Ui.Badge(a.IsActive ? "active" : "inactive") @if (a.LockedUntil > DateTimeOffset.UtcNow) { @Ui.Badge("locked", "locked out") }</td>
-            <td class="small">@Ui.Time(a.LastLoginAt)</td>
-
-            <td><div class="actions" style="justify-content:flex-end">
-                <button class="btn sm" type="button" data-open="pw-@a.Id">Set password</button>
-                @if (a.Id != Model.Me)
-                {
-                    <form method="post" asp-page-handler="SetActive">
-                        <input type="hidden" name="id" value="@a.Id" /><input type="hidden" name="active" value="@(!a.IsActive ? "true" : "false")" />
-                        <button class="btn sm @(a.IsActive ? "danger" : "")" type="submit" data-confirm="@(a.IsActive ? "Remove portal access for " + a.Email + "?" : "Restore access?")">@(a.IsActive ? "Deactivate" : "Activate")</button>
-                    </form>
-                }
-            </div>
-            <dialog class="modal modal-sm" id="pw-@a.Id">
-                <form method="post" asp-page-handler="Password">
-                    <input type="hidden" name="id" value="@a.Id" />
-                    <div class="modal-head"><h2>Set password for @a.Email</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
-                    <div class="modal-body"><div class="form-row"><label>New password</label><input type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /><div class="hint">At least @AdminAuthService.MinPasswordLength characters.</div></div></div>
-                    <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Set password</button></div>
-                </form>
-            </dialog>
-            </td>
-        </tr>
-    }
-</table>
+<div class="au-page-head">
+    <p class="au-page-head__sub">People who can sign in to this portal. Separate from clinic staff accounts.</p>
+    <div class="au-page-head__actions"><button class="au-btn au-btn--primary" type="button" data-open="add-admin"><span class="au-icon" aria-hidden="true">person_add</span>Add admin</button></div>
 </div>
 
-<dialog class="modal" id="add-admin">
+<div class="au-table-card">
+    <div class="au-table-scroll">
+        <table class="au-table">
+            <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Last sign-in</th><th class="au-shrink"></th></tr></thead>
+            <tbody>
+                @foreach (var a in Model.Admins)
+                {
+                    <tr>
+                        <td><span class="au-row" style="--au-gap:8px"><span class="au-avatar" aria-hidden="true">@Ui.Initials(a.FullName)</span><span class="au-strong">@a.FullName</span> @if (a.Id == Model.Me) { <span class="au-chip au-chip--outlined au-chip--primary">you</span> }</span></td>
+                        <td>@a.Email</td>
+                        <td>@Ui.Badge(a.IsActive ? "active" : "inactive") @if (a.LockedUntil > DateTimeOffset.UtcNow) { @Ui.Badge("locked", "locked out") }</td>
+                        <td>@Ui.Time(a.LastLoginAt)</td>
+                        <td>
+                            <span class="au-row-actions">
+                                <button class="au-btn au-btn--outlined au-btn--sm" type="button" data-open="pw-@a.Id"><span class="au-icon" aria-hidden="true">password</span>Set password</button>
+                                @if (a.Id != Model.Me)
+                                {
+                                    <form method="post" asp-page-handler="SetActive">
+                                        <input type="hidden" name="id" value="@a.Id" /><input type="hidden" name="active" value="@(!a.IsActive ? "true" : "false")" />
+                                        <button class="au-btn au-btn--sm @(a.IsActive ? "au-btn--danger-outlined" : "au-btn--outlined")" type="submit" data-confirm="@(a.IsActive ? "Remove portal access for " + a.Email + "?" : "Restore access?")">@(a.IsActive ? "Deactivate" : "Activate")</button>
+                                    </form>
+                                }
+                            </span>
+                            @* inside a table cell: undo the cell's nowrap for the popup *@
+                            <dialog class="au-dialog" style="white-space:normal" id="pw-@a.Id" aria-labelledby="pw-title-@a.Id">
+                                <form method="post" asp-page-handler="Password">
+                                    <input type="hidden" name="id" value="@a.Id" />
+                                    <h2 class="au-dialog__title" id="pw-title-@a.Id">Set password for @a.Email<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+                                    <div class="au-dialog__content">
+                                        <div class="au-form-field"><label class="au-form-label" for="pw-input-@a.Id">New password<span class="au-required">*</span></label><input class="au-input" id="pw-input-@a.Id" type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /><span class="au-help">At least @AdminAuthService.MinPasswordLength characters.</span></div>
+                                    </div>
+                                    <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Set password</button></div>
+                                </form>
+                            </dialog>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<dialog class="au-dialog" id="add-admin" aria-labelledby="add-admin-title">
     <form method="post" asp-page-handler="Create">
-        <div class="modal-head"><h2>Add an admin</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
-        <div class="modal-body">
-            <div class="form-row"><label>Full name</label><input name="fullName" required /></div>
-            <div class="form-row"><label>Email</label><input type="email" name="email" required /></div>
-            <div class="form-row"><label>Password</label><input type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /><div class="hint">At least @AdminAuthService.MinPasswordLength characters.</div></div>
+        <h2 class="au-dialog__title" id="add-admin-title">Add an admin<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+        <div class="au-dialog__content">
+            <div class="au-stack" style="--au-gap:16px">
+                <div class="au-form-field"><label class="au-form-label" for="aa-name">Full name<span class="au-required">*</span></label><input class="au-input" id="aa-name" name="fullName" required /></div>
+                <div class="au-form-field"><label class="au-form-label" for="aa-email">Email<span class="au-required">*</span></label><input class="au-input" id="aa-email" type="email" name="email" required /></div>
+                <div class="au-form-field"><label class="au-form-label" for="aa-pw">Password<span class="au-required">*</span></label><input class="au-input" id="aa-pw" type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /><span class="au-help">At least @AdminAuthService.MinPasswordLength characters.</span></div>
+            </div>
         </div>
-        <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Add admin</button></div>
+        <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Add admin</button></div>
     </form>
 </dialog>

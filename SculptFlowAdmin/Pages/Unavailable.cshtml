@@ -2,13 +2,20 @@
 @model SculptFlowAdmin.Pages.UnavailableModel
 @{
     ViewData["Title"] = "Main app unavailable";
+    var panel = ErrorPanelModel.From("The main app didn't answer", Model.Reason, HttpContext,
+        "This portal reads everything through the main app. Check that it's up and reachable from this server.");
 }
-<div class="card state">
-    <h1>Couldn't load this page</h1>
-    <p class="muted">This portal reads everything through the main app, and the main app didn't answer.</p>
-    <div class="alert err">@Model.Reason</div>
-    @if (Model.From is not null)
-    {
-        <div class="actions" style="justify-content:center"><a class="btn primary" href="@Model.From">Try again</a></div>
-    }
+<div class="au-fullpage-msg">
+    <div class="au-fullpage-msg__inner" style="max-width:640px">
+        <span class="au-empty__icon"><span class="au-icon" aria-hidden="true">cloud_off</span></span>
+        <h3 class="au-h3" style="margin:0">Couldn't load this page</h3>
+        <div style="width:100%;text-align:left"><partial name="_ErrorPanel" model="panel" /></div>
+        <div class="au-row au-row--wrap" style="justify-content:center">
+            @if (Model.From is not null)
+            {
+                <a class="au-btn au-btn--primary" href="@Model.From"><span class="au-icon" aria-hidden="true">refresh</span>Try again</a>
+            }
+            <a class="au-btn au-btn--outlined" href="/"><span class="au-icon" aria-hidden="true">dashboard</span>Go to dashboard</a>
+        </div>
+    </div>
 </div>

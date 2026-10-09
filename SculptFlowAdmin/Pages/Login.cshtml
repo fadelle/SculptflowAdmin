@@ -1,68 +1,49 @@
 @page
 @model SculptFlowAdmin.Pages.LoginModel
 @{
-    Layout = null;
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Sign in";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex, nofollow" />
-    <title>Sign in · SculptFlow Admin</title>
-    <link rel="icon" type="image/svg+xml" href="~/logo.svg" />
-    <link rel="icon" href="~/favicon.ico" sizes="32x32" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@@400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <script>try { var t = localStorage.getItem('sf-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) { }</script>
-</head>
-<body class="login-body">
-<div class="login-split">
-    <aside class="login-side">
-        <div class="login-logo"><img src="~/logo.svg" alt="" width="32" height="32" /> SculptFlow <span class="login-tag">Admin</span></div>
-        <div class="login-side-body">
-            <h2>The control panel for every SculptFlow clinic.</h2>
-            <ul class="login-points">
-                <li><span>▦</span>Clinics, staff accounts, channels and integrations in one place</li>
-                <li><span>$</span>Plans, wallets, rate cards and revenue, through the main app's billing API</li>
-                <li><span>⚙</span>Platform settings, with every change recorded in the audit log</li>
-            </ul>
+<div class="au-auth__card">
+    <div class="au-auth__brand">
+        <span class="au-brand__mark"><partial name="_BrandMark" model="52" /></span>
+        <h1 class="au-auth__title">Welcome back</h1>
+        <p class="au-auth__sub">Sign in with your SculptFlow admin account. Clinic staff accounts can't sign in here.</p>
+    </div>
+
+    @* data-au-no-busy: login.js shows its own "Signing in…" state on the button *@
+    <form class="au-auth__form" method="post" data-login-form data-au-no-busy>
+        @if (!string.IsNullOrEmpty(Model.Error))
+        {
+            <div class="au-alert au-alert--error" role="alert" style="margin:0">
+                <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
+                <div class="au-alert__body">@Model.Error</div>
+            </div>
+        }
+
+        <div class="au-form-field">
+            <label class="au-form-label" for="email">Email</label>
+            <input class="au-input" id="email" name="Email" type="email" value="@Model.Email" autocomplete="username" placeholder="you@sculptflow.com"
+                   required autofocus="@string.IsNullOrEmpty(Model.Email)" />
         </div>
-        <div class="login-side-foot">© @DateTime.UtcNow.Year SculptFlow · Internal use only</div>
-    </aside>
+        <div class="au-form-field">
+            <label class="au-form-label" for="pw">Password</label>
+            @* login.js finds the input through the toggle's parent: keep both inside .login-pw *@
+            <span class="login-pw">
+                <input class="au-input" id="pw" name="Password" type="password" autocomplete="current-password" required data-pw
+                       autofocus="@(!string.IsNullOrEmpty(Model.Email))" />
+                <button type="button" class="au-icon-btn au-icon-btn--sm login-eye" data-pw-toggle aria-label="Show password" title="Show password"><span class="au-icon" aria-hidden="true">visibility</span></button>
+            </span>
+            <div class="au-help au-text-warning" data-caps hidden>Caps Lock is on</div>
+        </div>
 
-    <main class="login-main">
-        <form class="login-form" method="post" data-login-form>
-            <h1>Welcome back</h1>
-            <p class="muted">Sign in with your admin account. Clinic staff accounts can't sign in here.</p>
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+        <button class="au-btn au-btn--primary au-btn--lg au-btn--block" type="submit" data-busy-label="Signing in…">Sign in</button>
+    </form>
 
-            @if (!string.IsNullOrEmpty(Model.Error))
-            {
-                <div class="login-error" role="alert"><span aria-hidden="true">!</span><div>@Model.Error</div></div>
-            }
-
-            <label class="login-field">
-                <span>Email</span>
-                <input id="email" name="Email" type="email" value="@Model.Email" autocomplete="username" placeholder="you@sculptflow.com"
-                       required autofocus="@string.IsNullOrEmpty(Model.Email)" />
-            </label>
-            <label class="login-field">
-                <span>Password</span>
-                <span class="login-pw">
-                    <input id="pw" name="Password" type="password" autocomplete="current-password" required data-pw
-                           autofocus="@(!string.IsNullOrEmpty(Model.Email))" />
-                    <button type="button" class="login-eye" data-pw-toggle aria-label="Show password" title="Show password">👁</button>
-                </span>
-            </label>
-            <div class="login-caps" data-caps hidden>⇪ Caps Lock is on</div>
-
-            <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
-            <button class="btn primary login-submit" type="submit" data-busy-label="Signing in…">Sign in</button>
-        </form>
-    </main>
+    <p class="au-auth__legal">© @DateTime.UtcNow.Year SculptFlow · Internal use only</p>
 </div>
-<script src="~/js/login.js" asp-append-version="true"></script>
-</body>
-</html>
+
+@section Scripts {
+    <script src="~/js/login.js" asp-append-version="true"></script>
+}

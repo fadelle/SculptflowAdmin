@@ -5,111 +5,126 @@
     ViewData["Title"] = (c?.Name ?? "Rate card") + " · Rates";
     var now = DateTimeOffset.UtcNow;
 }
-<div class="page-head">
-    <div>
-        <div class="crumbs"><a href="/Billing/RateCards">Rate cards</a> /</div>
-        <h1>@(c?.Name ?? "Rate card") <span class="muted small mono">@c?.Code</span></h1>
-        <div class="muted small">
-            @if (c is not null) { <span> · @Ui.Badge(c.IsActive ? "active" : "inactive") @if (c.IsDefault) { @Ui.Badge("new", "default") }</span> }</div>
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Billing/RateCards" aria-label="Back to rate cards"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@(c?.Name ?? "Rate card")</h2>
+        <span class="au-back-header__sub au-mono">@c?.Code</span>
     </div>
     @if (c is not null && Model.LoadError is null)
     {
-        <div class="actions"><button class="btn" type="button" data-open="edit-card">Edit card</button><button class="btn primary" type="button" data-open="add-rate">+ Add rate</button></div>
+        <div class="au-row au-row--wrap">
+            <button class="au-btn au-btn--outlined" type="button" data-open="edit-card"><span class="au-icon" aria-hidden="true">edit</span>Edit card</button>
+            <button class="au-btn au-btn--primary" type="button" data-open="add-rate"><span class="au-icon" aria-hidden="true">add</span>Add rate</button>
+        </div>
     }
 </div>
+@if (c is not null)
+{
+    <div class="au-row au-row--wrap" style="margin-bottom:16px">@Ui.Badge(c.IsActive ? "active" : "inactive") @if (c.IsDefault) { @Ui.Badge("new", "default") }</div>
+}
 
 @if (c is not null && Model.LoadError is null)
 {
-    <div class="card">
-        <div class="card-head">
-            <h2>@(Model.History ? "All rate versions" : "Current and upcoming rates")</h2>
-            <a class="btn sm" href="?code=@c.Code&history=@(!Model.History)">@(Model.History ? "Hide past versions" : "Show past versions")</a>
+    <section class="au-table-card">
+        <div class="au-panel__head">
+            <h3 class="au-panel__title">@(Model.History ? "All rate versions" : "Current and upcoming rates")</h3>
+            <a class="au-btn au-btn--outlined au-btn--sm" href="?code=@c.Code&history=@(!Model.History)"><span class="au-icon" aria-hidden="true">history</span>@(Model.History ? "Hide past versions" : "Show past versions")</a>
         </div>
-        <p class="small muted">A rate is never edited: add a new version and the old one ends when it starts, so past usage keeps its price. The most specific rate wins (country, then operator, then provider, then who pays the provider). "Who pays: any" rates price usage SculptFlow pays the provider for; a rate for a customer-paid mode is a SculptFlow usage fee.</p>
+        <p class="au-caption" style="padding:0 16px 12px;margin:0">A rate is never edited: add a new version and the old one ends when it starts, so past usage keeps its price. The most specific rate wins (country, then operator, then provider, then who pays the provider). "Who pays: any" rates price usage SculptFlow pays the provider for; a rate for a customer-paid mode is a SculptFlow usage fee.</p>
         @if (Model.Rates.Count == 0)
         {
-            <div class="empty">No rates on this card yet.</div>
+            var empty = new EmptyStateModel("No rates on this card yet.", "request_quote");
+            <partial name="_EmptyState" model="empty" />
         }
         else
         {
-            <div class="table-wrap">
-            <table>
-                <tr><th>Event</th><th>Country</th><th>Operator</th><th>Provider</th><th>Who pays the provider</th><th class="num">Provider cost</th><th class="num">Client rate</th><th class="num">Margin</th><th>Effective</th><th>Notes</th><th></th></tr>
-                @foreach (var r in Model.Rates.OrderBy(r => r.EventType).ThenBy(r => r.CountryCode).ThenBy(r => r.EffectiveFrom))
-                {
-                    var current = r.EffectiveFrom <= now && (r.EffectiveTo is null || r.EffectiveTo > now);
-                    var upcoming = r.EffectiveFrom > now;
-                    <tr style="@(current || upcoming ? "" : "opacity:.6")">
-                        <td>@BillingUi.EventLabel(r.EventType) <div class="small muted">per @r.Unit</div></td>
-                        <td>@(r.CountryCode ?? "any")</td>
-                        <td>@(r.Operator ?? "any")</td>
-                        <td>@(r.Provider ?? "any")</td>
-                        <td class="small">@BillingUi.ResponsibilityLabel(r.ProviderBilling)</td>
-                        <td class="num">@BillingUi.Money(r.ProviderCost)</td>
-                        <td class="num"><strong>@BillingUi.Money(r.ClientRate)</strong></td>
-                        <td class="num @(r.Margin < 0 ? "neg" : "")">@BillingUi.Money(r.Margin)</td>
-                        <td class="small">@Ui.Time(r.EffectiveFrom) → @if (r.EffectiveTo is null) { <span>open</span> } else { @Ui.Time(r.EffectiveTo) }
-                            <div>@Ui.Badge(current ? "active" : upcoming ? "scheduled" : "inactive", current ? "current" : upcoming ? "upcoming" : "ended")</div></td>
-                        <td class="small">@r.Notes @if (r.CreatedBy is not null) { <div class="muted">by @r.CreatedBy</div> }</td>
-                        <td>
-                            @if (current || upcoming)
-                            {
-                                <form method="post" asp-page-handler="CloseRate" asp-route-code="@c.Code" asp-route-history="@Model.History">
-                                    <input type="hidden" name="rateId" value="@r.Id" />
-                                    <button class="btn sm danger" type="submit" data-confirm="End this rate now? Usage it priced keeps its price; new usage falls back to the next matching rate.">End now</button>
-                                </form>
-                            }
-                        </td>
-                    </tr>
-                }
-            </table>
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead>
+                        <tr><th>Event</th><th>Country</th><th>Operator</th><th>Provider</th><th>Who pays the provider</th><th class="au-right">Provider cost</th><th class="au-right">Client rate</th><th class="au-right">Margin</th><th>Effective</th><th>Notes</th><th class="au-shrink"></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Rates.OrderBy(r => r.EventType).ThenBy(r => r.CountryCode).ThenBy(r => r.EffectiveFrom))
+                        {
+                            var current = r.EffectiveFrom <= now && (r.EffectiveTo is null || r.EffectiveTo > now);
+                            var upcoming = r.EffectiveFrom > now;
+                            <tr style="@(current || upcoming ? "" : "opacity:.6")">
+                                <td>@BillingUi.EventLabel(r.EventType) <div class="au-caption">per @r.Unit</div></td>
+                                <td>@(r.CountryCode ?? "any")</td>
+                                <td>@(r.Operator ?? "any")</td>
+                                <td>@(r.Provider ?? "any")</td>
+                                <td>@BillingUi.ResponsibilityLabel(r.ProviderBilling)</td>
+                                <td class="au-right">@BillingUi.Money(r.ProviderCost)</td>
+                                <td class="au-right au-strong">@BillingUi.Money(r.ClientRate)</td>
+                                <td class="au-right @(r.Margin < 0 ? "au-text-error" : null)">@BillingUi.Money(r.Margin)</td>
+                                <td>@Ui.Time(r.EffectiveFrom) → @if (r.EffectiveTo is null) { <span>open</span> } else { @Ui.Time(r.EffectiveTo) }
+                                    <div>@Ui.Badge(current ? "active" : upcoming ? "scheduled" : "inactive", current ? "current" : upcoming ? "upcoming" : "ended")</div></td>
+                                <td class="au-wrap">@Ui.OrDash(r.Notes) @if (r.CreatedBy is not null) { <div class="au-caption">by @r.CreatedBy</div> }</td>
+                                <td>
+                                    @if (current || upcoming)
+                                    {
+                                        <form method="post" asp-page-handler="CloseRate" asp-route-code="@c.Code" asp-route-history="@Model.History">
+                                            <input type="hidden" name="rateId" value="@r.Id" />
+                                            <button class="au-btn au-btn--danger-outlined au-btn--sm" type="submit" data-confirm="End this rate now? Usage it priced keeps its price; new usage falls back to the next matching rate.">End now</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-            <div class="small muted" style="margin-top:12px">Amounts in @(Model.Rates.First().Currency).</div>
+            <div class="au-pager"><span class="au-pager__count">Amounts in @(Model.Rates.First().Currency).</span></div>
         }
-    </div>
+    </section>
 
-    <dialog class="modal" id="add-rate">
+    <dialog class="au-dialog au-dialog--sm" id="add-rate" aria-labelledby="add-rate-title">
         <form method="post" asp-page-handler="AddRate" asp-route-code="@c.Code" asp-route-history="@Model.History">
-            <div class="modal-head"><h2>Add a rate (or a new version of one)</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
-            <div class="modal-body">
-            <div class="form-row"><label>Event type</label><input name="eventType" list="event-types" required /></div>
-            <datalist id="event-types">@foreach (var e in BillingVocab.EventTypes) { <option value="@e"></option> }</datalist>
-            <div class="form-row"><label>Country (ISO 2, blank = any)</label><input name="countryCode" maxlength="2" /></div>
-            <div class="form-row"><label>Operator (blank = any)</label><input name="operator" maxlength="100" /></div>
-            <div class="form-row"><label>Provider (e.g. infobip, meta; blank = any)</label><input name="provider" maxlength="50" /></div>
-            <div class="form-row"><label>Who pays the provider</label>
-                <select name="providerBilling">
-                    <option value="">Any: SculptFlow-funded price</option>
-                    @foreach (var m in Model.Modes?.Modes ?? []) { if (m.Value != "platform_funded") { <option value="@m.Value">@m.Label (usage fee)</option> } }
-                    <option value="platform_funded">SculptFlow pays provider only</option>
-                </select></div>
-            <div class="form-row"><label>Unit (blank = the event's usual unit)</label><input name="unit" maxlength="30" placeholder="message, segment, minute…" /></div>
-            <div class="form-row"><label>Provider cost per unit</label><input type="number" name="providerCost" min="0" step="0.000001" value="0" required /></div>
-            <div class="form-row"><label>Client rate per unit (what SculptFlow charges)</label><input type="number" name="clientRate" min="0" step="0.000001" required /></div>
-            <div class="form-row"><label>Effective from (UTC, blank = now; can't be in the past)</label><input type="datetime-local" name="effectiveFrom" /></div>
-            <div class="form-row"><label>Notes (optional)</label><input name="notes" maxlength="500" /></div>
+            <h2 class="au-dialog__title" id="add-rate-title">Add a rate (or a new version of one)<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+            <div class="au-dialog__content">
+                <div class="au-form-grid">
+                    <div class="au-form-field au-span-2"><label class="au-form-label" for="ar-event">Event type<span class="au-required">*</span></label><input class="au-input" id="ar-event" name="eventType" list="event-types" required /></div>
+                    <datalist id="event-types">@foreach (var e in BillingVocab.EventTypes) { <option value="@e"></option> }</datalist>
+                    <div class="au-form-field"><label class="au-form-label" for="ar-country">Country (ISO 2, blank = any)</label><input class="au-input" id="ar-country" name="countryCode" maxlength="2" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ar-operator">Operator (blank = any)</label><input class="au-input" id="ar-operator" name="operator" maxlength="100" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ar-provider">Provider (blank = any)</label><input class="au-input" id="ar-provider" name="provider" maxlength="50" placeholder="infobip, meta…" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ar-unit">Unit (blank = the event's usual unit)</label><input class="au-input" id="ar-unit" name="unit" maxlength="30" placeholder="message, segment, minute…" /></div>
+                    <div class="au-form-field au-span-2"><label class="au-form-label" for="ar-billing">Who pays the provider</label>
+                        <select class="au-select" id="ar-billing" name="providerBilling">
+                            <option value="">Any: SculptFlow-funded price</option>
+                            @foreach (var m in Model.Modes?.Modes ?? []) { if (m.Value != "platform_funded") { <option value="@m.Value">@m.Label (usage fee)</option> } }
+                            <option value="platform_funded">SculptFlow pays provider only</option>
+                        </select></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ar-cost">Provider cost per unit<span class="au-required">*</span></label><input class="au-input" id="ar-cost" type="number" name="providerCost" min="0" step="0.000001" value="0" required /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ar-rate">Client rate per unit<span class="au-required">*</span></label><input class="au-input" id="ar-rate" type="number" name="clientRate" min="0" step="0.000001" required /><span class="au-help">What SculptFlow charges.</span></div>
+                    <div class="au-form-field au-span-2"><label class="au-form-label" for="ar-from">Effective from (UTC)</label><input class="au-input" id="ar-from" type="datetime-local" name="effectiveFrom" /><span class="au-help">Blank = now; can't be in the past.</span></div>
+                    <div class="au-form-field au-span-2"><label class="au-form-label" for="ar-notes">Notes (optional)</label><input class="au-input" id="ar-notes" name="notes" maxlength="500" /></div>
+                </div>
             </div>
-            <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit" data-confirm="Add this rate? It can't be edited afterwards, only replaced by a new version.">Add rate</button></div>
+            <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Add this rate? It can't be edited afterwards, only replaced by a new version.">Add rate</button></div>
         </form>
     </dialog>
 
-    <dialog class="modal" id="edit-card">
+    <dialog class="au-dialog" id="edit-card" aria-labelledby="edit-card-title">
         <form method="post" asp-page-handler="UpdateCard" asp-route-code="@c.Code" asp-route-history="@Model.History">
-            <div class="modal-head"><h2>Card details</h2><button class="icon-btn" type="button" data-close aria-label="Close">✕</button></div>
-            <div class="modal-body">
-            <div class="form-row"><label>Name</label><input name="name" value="@c.Name" required maxlength="100" /></div>
-            <div class="form-row"><label>Description</label><input name="description" value="@c.Description" maxlength="500" /></div>
-            <div class="form-row check"><label><input type="checkbox" name="isActive" value="true" checked="@c.IsActive" /> Active</label></div>
-            @if (c.ClinicId is null)
-            {
-                <div class="form-row check"><label><input type="checkbox" name="isDefault" value="true" checked="@c.IsDefault" /> Default card</label></div>
-            }
-            else
-            {
-                <p class="small">Custom prices for <a href="/Billing/Clinic?id=@c.ClinicId">this clinic</a>.</p>
-            }
+            <h2 class="au-dialog__title" id="edit-card-title">Card details<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+            <div class="au-dialog__content">
+                <div class="au-stack" style="--au-gap:16px">
+                    <div class="au-form-field"><label class="au-form-label" for="ec-name">Name<span class="au-required">*</span></label><input class="au-input" id="ec-name" name="name" value="@c.Name" required maxlength="100" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ec-desc">Description</label><input class="au-input" id="ec-desc" name="description" value="@c.Description" maxlength="500" /></div>
+                    <label class="au-check"><input type="checkbox" name="isActive" value="true" checked="@c.IsActive" /> Active</label>
+                    @if (c.ClinicId is null)
+                    {
+                        <label class="au-check"><input type="checkbox" name="isDefault" value="true" checked="@c.IsDefault" /> Default card</label>
+                    }
+                    else
+                    {
+                        <p class="au-help">Custom prices for <a href="/Billing/Clinic?id=@c.ClinicId">this clinic</a>.</p>
+                    }
+                </div>
             </div>
-            <div class="modal-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Save card</button></div>
+            <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Save card</button></div>
         </form>
     </dialog>
 }

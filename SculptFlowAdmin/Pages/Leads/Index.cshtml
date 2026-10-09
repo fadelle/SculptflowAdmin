@@ -1,45 +1,61 @@
 @page
 @model SculptFlowAdmin.Pages.Leads.IndexModel
 @{ ViewData["Title"] = "Leads"; }
-<div class="page-head"><div><h1>Leads</h1><div class="muted">Patients and prospects across every clinic.</div></div></div>
-<form class="filters" method="get">
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <label>Status
-        <select name="status">
-            <option value="">All</option>
-            @foreach (var s in LeadStatus.All.OrderBy(x => x))
-            {
-                <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option>
-            }
-        </select>
-    </label>
-    <label class="search">Search<input type="search" name="q" value="@Model.Q" placeholder="Name, phone or email" /></label>
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">Patients and prospects across every clinic.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+        <div class="au-field" style="width:200px">
+            <label class="au-label" for="f-status">Status</label>
+            <select class="au-select" id="f-status" name="status">
+                <option value="">All</option>
+                @foreach (var s in LeadStatus.All.OrderBy(x => x))
+                {
+                    <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option>
+                }
+            </select>
+        </div>
+        <div class="au-field" style="width:260px">
+            <label class="au-label" for="f-q">Search</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" placeholder="Name, phone or email" /></span>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "lead", "leads")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-@if (Model.Result.Items.Count == 0)
-{
-    <div class="card empty">No leads.</div>
-}
-else
-{
-<div class="table-wrap">
-<table>
-    <tr><th>Lead</th><th>Clinic</th><th>Status</th><th>Qualification</th><th>Procedure</th><th>Source</th><th>Marketing</th><th>Last contact</th><th>Created</th></tr>
-    @foreach (var l in Model.Result.Items)
+<div class="au-table-card">
+    @if (Model.Result.Items.Count == 0)
     {
-        <tr>
-            <td><a href="/Leads/Details?id=@l.Id">@(string.IsNullOrWhiteSpace(l.Name) ? "(no name)" : l.Name)</a><div class="small muted">@l.Phone @l.Email</div></td>
-            <td><a href="/Clinics/Details?id=@l.ClinicId">@l.ClinicName</a></td>
-            <td>@Ui.Badge(l.Status)</td>
-            <td>@Ui.Badge(l.QualificationStatus)</td>
-            <td>@l.ProcedureName</td>
-            <td class="small">@l.Source</td>
-            <td>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</td>
-            <td class="small">@Ui.Time(l.LastContactAt)</td>
-            <td class="small">@Ui.Time(l.CreatedAt)</td>
-        </tr>
+        var empty = new EmptyStateModel(Request.EmptyMessage("leads"), "person_search");
+        <partial name="_EmptyState" model="empty" />
     }
-</table>
+    else
+    {
+        <div class="au-table-scroll">
+            <table class="au-table">
+                <thead>
+                    <tr><th>Lead</th><th>Clinic</th><th>Status</th><th>Qualification</th><th>Procedure</th><th>Source</th><th>Marketing</th><th>Last contact</th><th>Created</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model.Result.Items)
+                    {
+                        <tr data-au-href="/Leads/Details?id=@l.Id">
+                            <td><a href="/Leads/Details?id=@l.Id">@(string.IsNullOrWhiteSpace(l.Name) ? "(no name)" : l.Name)</a><div class="au-caption">@l.Phone @l.Email</div></td>
+                            <td><a href="/Clinics/Details?id=@l.ClinicId">@l.ClinicName</a></td>
+                            <td>@Ui.Badge(l.Status)</td>
+                            <td>@Ui.Badge(l.QualificationStatus)</td>
+                            <td>@Ui.OrDash(l.ProcedureName)</td>
+                            <td>@Ui.OrDash(l.Source)</td>
+                            <td>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</td>
+                            <td>@Ui.Time(l.LastContactAt)</td>
+                            <td>@Ui.Time(l.CreatedAt)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
 </div>
-}
-<partial name="_Pager" model="PagerModel.From(Model.Result)" />

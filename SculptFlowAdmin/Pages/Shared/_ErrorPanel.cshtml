@@ -1,0 +1,34 @@
+@model ErrorPanelModel
+@* The ONE way a failed load/operation is shown: headline · cause · what to check · the call · details · copy. *@
+<div class="au-alert au-alert--error au-error-panel" role="alert">
+    <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
+    <div class="au-alert__body">
+        <div class="au-alert__title">@Model.Title</div>
+        <div>@Model.Message</div>
+        @if (Model.Hint is not null)
+        {
+            <div class="au-alert__hint"><b>What to check:</b> @Model.Hint</div>
+        }
+        @if (Model.Call is not null)
+        {
+            <div class="au-alert__call">@Model.Call</div>
+        }
+        @if (Model.Facts is { Count: > 0 })
+        {
+            <details>
+                <summary>Details</summary>
+                <dl>
+                    @foreach (var f in Model.Facts)
+                    {
+                        <dt>@f.Key</dt><dd>@f.Value</dd>
+                    }
+                </dl>
+            </details>
+        }
+    </div>
+    <div class="au-alert__actions">
+        <button type="button" class="au-icon-btn au-icon-btn--sm" data-au-copy="@Model.Report" data-au-copy-message="Error details copied" aria-label="Copy error details">
+            <span class="au-icon" aria-hidden="true">content_copy</span>
+        </button>
+    </div>
+</div>

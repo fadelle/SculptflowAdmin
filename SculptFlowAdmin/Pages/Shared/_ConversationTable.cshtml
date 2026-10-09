@@ -1,25 +1,31 @@
 @model IReadOnlyList<ConversationRow>
+@* Conversations as table rows (Conversations list, lead details). The caller wraps it in .au-table-card. *@
 @if (Model.Count == 0)
 {
-    <div class="empty">No conversations.</div>
+    var empty = new EmptyStateModel(Context.Request.EmptyMessage("conversations"), "forum");
+    <partial name="_EmptyState" model="empty" />
 }
 else
 {
-<div class="table-wrap">
-<table>
-    <tr><th>Lead</th><th>Clinic</th><th>Channel</th><th>Handled by</th><th>Status</th><th class="num">Messages</th><th>Last message</th></tr>
-    @foreach (var c in Model)
-    {
-        <tr>
-            <td><a href="/Conversations/Details?id=@c.Id">@(string.IsNullOrWhiteSpace(c.LeadName) ? "(no name)" : c.LeadName)</a></td>
-            <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
-            <td>@c.Channel</td>
-            <td>@Ui.Badge(c.Mode, c.Mode == "ai" ? "AI" : c.Mode == "human" ? "staff" : c.Mode)</td>
-            <td>@Ui.Badge(c.Status)</td>
-            <td class="num">@c.MessageCount</td>
-            <td class="small">@Ui.Time(c.LastMessageAt) <span class="muted">@c.LastMessageDirection</span></td>
-        </tr>
-    }
-</table>
-</div>
+    <div class="au-table-scroll">
+        <table class="au-table">
+            <thead>
+                <tr><th>Lead</th><th>Clinic</th><th>Channel</th><th>Handled by</th><th>Status</th><th class="au-right">Messages</th><th>Last message</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr data-au-href="/Conversations/Details?id=@c.Id">
+                        <td><a href="/Conversations/Details?id=@c.Id">@(string.IsNullOrWhiteSpace(c.LeadName) ? "(no name)" : c.LeadName)</a></td>
+                        <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
+                        <td>@c.Channel</td>
+                        <td>@Ui.Badge(c.Mode, c.Mode == "ai" ? "AI" : c.Mode == "human" ? "staff" : c.Mode)</td>
+                        <td>@Ui.Badge(c.Status)</td>
+                        <td class="au-right">@c.MessageCount</td>
+                        <td>@Ui.Time(c.LastMessageAt) <span class="au-caption">@c.LastMessageDirection</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }

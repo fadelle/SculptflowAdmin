@@ -1,42 +1,55 @@
 @page
 @model SculptFlowAdmin.Pages.Campaigns.IndexModel
 @{ ViewData["Title"] = "Campaigns"; }
-<div class="page-head"><div><h1>Campaigns</h1><div class="muted">Outbound template campaigns across clinics, with delivery and reply counts.</div></div></div>
-<form class="filters" method="get">
-    <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
-    <label>Status
-        <select name="status"><option value="">All</option>
-            @foreach (var s in CampaignStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
-        </select>
-    </label>
-    <partial name="_FilterActions" />
+<div class="au-page-head"><p class="au-page-head__sub">Outbound template campaigns across clinics, with delivery and reply counts.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <partial name="_ClinicFilter" model="(Model.Clinics, Model.ClinicId)" />
+        <div class="au-field" style="width:170px">
+            <label class="au-label" for="f-status">Status</label>
+            <select class="au-select" id="f-status" name="status"><option value="">All</option>
+                @foreach (var s in CampaignStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s</option> }
+            </select>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "campaign", "campaigns")</span>
+        <partial name="_FilterActions" />
+    </div>
 </form>
-@if (Model.Result.Items.Count == 0)
-{
-    <div class="card empty">No campaigns.</div>
-}
-else
-{
-<div class="table-wrap">
-<table>
-    <tr><th>Campaign</th><th>Clinic</th><th>Status</th><th class="num">Audience</th><th class="num">Sent</th><th class="num">Delivered</th><th class="num">Read</th><th class="num">Replied</th><th class="num">Booked</th><th class="num">Failed</th><th>Started</th></tr>
-    @foreach (var c in Model.Result.Items)
+<div class="au-table-card">
+    @if (Model.Result.Items.Count == 0)
     {
-        <tr>
-            <td><a href="/Campaigns/Details?id=@c.Id">@c.Name</a><div class="small muted">@c.CampaignType.Replace('_', ' ') · @c.TemplateName</div></td>
-            <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
-            <td>@Ui.Badge(c.Status)</td>
-            <td class="num">@c.Recipients</td>
-            <td class="num">@c.Sent</td>
-            <td class="num">@c.Delivered</td>
-            <td class="num">@c.Read</td>
-            <td class="num">@c.Replied</td>
-            <td class="num">@c.Booked</td>
-            <td class="num">@c.Failed</td>
-            <td class="small">@Ui.Time(c.StartedAt ?? c.ScheduledAt)</td>
-        </tr>
+        var empty = new EmptyStateModel(Request.EmptyMessage("campaigns"), "campaign");
+        <partial name="_EmptyState" model="empty" />
     }
-</table>
+    else
+    {
+        <div class="au-table-scroll">
+            <table class="au-table">
+                <thead>
+                    <tr><th>Campaign</th><th>Clinic</th><th>Status</th><th class="au-right">Audience</th><th class="au-right">Sent</th><th class="au-right">Delivered</th><th class="au-right">Read</th><th class="au-right">Replied</th><th class="au-right">Booked</th><th class="au-right">Failed</th><th>Started</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Result.Items)
+                    {
+                        <tr data-au-href="/Campaigns/Details?id=@c.Id">
+                            <td><a href="/Campaigns/Details?id=@c.Id">@c.Name</a><div class="au-caption">@c.CampaignType.Replace('_', ' ') · @c.TemplateName</div></td>
+                            <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
+                            <td>@Ui.Badge(c.Status)</td>
+                            <td class="au-right">@c.Recipients</td>
+                            <td class="au-right">@c.Sent</td>
+                            <td class="au-right">@c.Delivered</td>
+                            <td class="au-right">@c.Read</td>
+                            <td class="au-right">@c.Replied</td>
+                            <td class="au-right">@c.Booked</td>
+                            <td class="au-right @(c.Failed > 0 ? "au-text-error" : null)">@c.Failed</td>
+                            <td>@Ui.Time(c.StartedAt ?? c.ScheduledAt)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
 </div>
-}
-<partial name="_Pager" model="PagerModel.From(Model.Result)" />

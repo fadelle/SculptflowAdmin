@@ -1,0 +1,49 @@
+@model NavNodeModel
+@* One node of the sidebar tree (recursive). A group of leaves is ONE row; its pages are listed only while filtering. *@
+@{
+    var item = Model.Item;
+    var trail = string.Join(" ", Model.Trail);
+}
+@if (item.IsLeaf || item.IsLeafGroup)
+{
+    var href = Url.Content("~" + (item.IsLeaf ? item.Path : item.FirstLeafPath));
+    var active = item.IsActive(Model.CurrentPath);
+    <div class="au-nav-row">
+        <a class="au-nav-item @(active ? "is-active" : null)" href="@href" data-trail="@trail" aria-current="@(active ? "page" : null)">
+            <span class="au-icon" aria-hidden="true">@item.Icon</span>
+            <span class="au-nav-item__label">@item.Label</span>
+        </a>
+        <button type="button" class="au-nav-star" data-path="@href" data-label="@item.Label" aria-label="Pin @item.Label">
+            <span class="au-icon" aria-hidden="true">star</span>
+        </button>
+    </div>
+    if (item.IsLeafGroup)
+    {
+        foreach (var child in item.Children!)
+        {
+            <div class="au-nav-row au-nav-row--search-only">
+                <a class="au-nav-item" href="@Url.Content("~" + child.Path)" data-trail="@trail @item.Label">
+                    <span class="au-icon" aria-hidden="true">@child.Icon</span>
+                    <span class="au-nav-item__label">@child.Label</span>
+                </a>
+            </div>
+        }
+    }
+}
+else
+{
+    <details class="au-nav-group @(Model.Depth > 0 ? "au-nav-group--nested" : null)" open="@item.IsActive(Model.CurrentPath)">
+        <summary>
+            <span class="au-icon" aria-hidden="true">@item.Icon</span>
+            <span class="au-nav-item__label">@item.Label</span>
+            <span class="au-icon au-nav-chevron" aria-hidden="true">expand_more</span>
+        </summary>
+        <div class="au-nav-children">
+            @foreach (var child in item.Children!)
+            {
+                var childModel = Model with { Item = child, Trail = Model.Trail.Append(item.Label).ToArray(), Depth = Model.Depth + 1 };
+                <partial name="_NavNode" model="childModel" />
+            }
+        </div>
+    </details>
+}
