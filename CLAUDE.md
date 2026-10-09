@@ -47,12 +47,8 @@ Rules:
    path and are registered against it in DI; pages and controllers inject the interface.
 6. **A new admin feature** = an endpoint in the main app's `/api/platform-admin/{domain}` (its CLAUDE.md, "Platform-admin
    APIs") + a client, service and page here, with the request/response shapes copied (see `MAIN_APP_SYNC.md`).
-7. Never commit or push unless Mohammad says so.
 
 ## Other docs (read on demand)
 
 `README.md` (coverage, setup), `MAIN_APP_SYNC.md` (last-checked main-app commit, how to sync).
 **Do not read the main app's `PROJECT_HANDOFF.md` unless Mohammad asks.**
-
-Keep threads short; if a task is unrelated to the current thread's task or the thread has grown long, suggest or start a
-new thread.
