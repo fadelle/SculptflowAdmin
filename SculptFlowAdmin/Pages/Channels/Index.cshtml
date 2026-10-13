@@ -5,7 +5,7 @@
     string TabUrl(string tab) => $"?tab={tab}" + (Model.ClinicId.HasValue ? $"&clinicId={Model.ClinicId}" : "");
 }
 <div class="au-page-head">
-    <p class="au-page-head__sub">Messaging connections, calendars and TikTok for every clinic. Main app WhatsApp provider: @Ui.Badge(Model.ActiveProvider)</p>
+    <p class="au-page-head__sub">Messaging connections, calendars and TikTok for every clinic.</p>
 </div>
 <div class="au-tabs" style="margin-bottom:16px">
     <a class="au-tab @(Model.Tab == "messaging" ? "is-active" : null)" href="@TabUrl("messaging")"><span class="au-icon" aria-hidden="true">chat</span>Messaging <span class="au-tab__count">@Model.Rows.Count</span></a>
@@ -44,7 +44,7 @@
             <div class="au-table-scroll">
                 <table class="au-table">
                     <thead>
-                        <tr><th>Clinic</th><th>Channel</th><th>Provider</th><th>Account / number</th><th>Status</th><th>Health</th><th>Last webhook</th><th>Updated</th></tr>
+                        <tr><th>Clinic</th><th>Channel</th><th>Account / number</th><th>Status</th><th>Health</th><th>Last webhook</th><th>Updated</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var r in Model.Rows)
@@ -52,7 +52,6 @@
                             <tr data-au-href="/Channels/Details?id=@r.Id">
                                 <td><a href="/Clinics/Details?id=@r.ClinicId">@r.ClinicName</a></td>
                                 <td><a href="/Channels/Details?id=@r.Id">@r.Channel</a></td>
-                                <td>@Ui.Badge(r.Provider)</td>
                                 <td><div class="au-cell-2l"><span>@Ui.OrDash(r.SenderId)</span><span>@r.DisplayName</span></div></td>
                                 <td>@Ui.Badge(r.Status) @if (r.WebhookStatus is not null) { <div class="au-caption">webhook @r.WebhookStatus</div> }</td>
                                 <td>@Ui.Badge(r.IsHealthy ? (r.HealthLevel ?? "healthy") : (r.HealthLevel ?? "problem"))

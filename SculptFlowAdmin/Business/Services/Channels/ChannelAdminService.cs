@@ -8,19 +8,17 @@ namespace SculptFlowAdmin.Business.Services.Channels;
 
 /// <summary>
 /// The main app does every change with the same services a clinic uses (Telegram webhook removal, calendar token
-/// revocation, the live Infobip check, plan limits); this service audits each one.
+/// revocation, plan limits); this service audits each one.
 /// </summary>
 public class ChannelAdminService : IChannelAdminService
 {
     private readonly IChannelsApiClient _api;
     private readonly IAdminAudit _audit;
-    private readonly IConfiguration _config;
 
-    public ChannelAdminService(IChannelsApiClient api, IAdminAudit audit, IConfiguration config)
+    public ChannelAdminService(IChannelsApiClient api, IAdminAudit audit)
     {
         _api = api;
         _audit = audit;
-        _config = config;
     }
 
     public Task<List<ChannelRow>> ListChannelsAsync(Guid? clinicId, string? channel, bool problemsOnly, CancellationToken ct = default) =>
@@ -41,13 +39,6 @@ public class ChannelAdminService : IChannelAdminService
         await _audit.LogAsync("channel.disconnected", "channel_integration", id, change.ClinicId, ct: ct);
     }
 
-    public async Task<ChannelDetail> ConnectInfobipSenderAsync(Guid clinicId, string? senderNumber, CancellationToken ct = default)
-    {
-        var row = await _api.ConnectInfobipSenderAsync(clinicId, senderNumber, ct);
-        await _audit.LogAsync("channel.infobip_connected", "channel_integration", row.Id, clinicId, new { sender = row.ProviderSenderId }, ct);
-        return row;
-    }
-
     public async Task DisconnectCalendarAsync(Guid id, CancellationToken ct = default)
     {
         var change = await _api.DisconnectCalendarAsync(id, ct);
@@ -65,6 +56,4 @@ public class ChannelAdminService : IChannelAdminService
         var change = await _api.DisconnectTikTokAsync(id, ct);
         await _audit.LogAsync("tiktok.disconnected", "tiktok_integration", id, change.ClinicId, ct: ct);
     }
-
-    public string ActiveWhatsAppProvider => _config["MainApp:WhatsAppProvider"] ?? "unknown (set MainApp:WhatsAppProvider)";
 }

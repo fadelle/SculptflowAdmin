@@ -14,7 +14,6 @@ public class DetailsModel : AdminPageModel
     [BindProperty(SupportsGet = true)] public Guid Id { get; set; }
     public ChannelDetail Row { get; private set; } = null!;
     public List<HealthEventRow> Events { get; private set; } = new();
-    public string? InfobipWebhookUrl { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
@@ -22,7 +21,6 @@ public class DetailsModel : AdminPageModel
         if (row is null) return NotFound();
         Row = row;
         Events = await _channels.HealthEventsAsync(Id, ct);
-        InfobipWebhookUrl = row.InfobipWebhookUrl;
         return Page();
     }
 

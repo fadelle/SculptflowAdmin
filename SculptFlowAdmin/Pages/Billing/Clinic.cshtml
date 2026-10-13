@@ -179,7 +179,6 @@
                                             else
                                             {
                                                 <span class="au-muted">Default for @acc.Channel@(acc.Provider is null ? "" : " via " + acc.Provider)</span>
-                                                @if (acc.OverrideAppliesToProvider is not null) { <div class="au-caption">(an override set for @acc.OverrideAppliesToProvider no longer applies)</div> }
                                             }
                                         </td>
                                         <td>
@@ -265,7 +264,7 @@
                     <div class="au-form-grid">
                         <div class="au-form-field au-span-2"><label class="au-form-label" for="qc-event">Event type<span class="au-required">*</span></label><input class="au-input" id="qc-event" name="quoteEvent" list="event-types" value="@Model.QuoteEvent" required /></div>
                         <div class="au-form-field"><label class="au-form-label" for="qc-country">Country (ISO 2, optional)</label><input class="au-input" id="qc-country" name="quoteCountry" value="@Model.QuoteCountry" maxlength="2" /></div>
-                        <div class="au-form-field"><label class="au-form-label" for="qc-provider">Provider (optional)</label><input class="au-input" id="qc-provider" name="quoteProvider" value="@Model.QuoteProvider" placeholder="infobip" /></div>
+                        <div class="au-form-field"><label class="au-form-label" for="qc-provider">Provider (optional)</label><input class="au-input" id="qc-provider" name="quoteProvider" value="@Model.QuoteProvider" placeholder="meta" /></div>
                         <div class="au-form-field au-span-2"><label class="au-form-label" for="qc-billing">Who pays the provider</label>
                             <select class="au-select" id="qc-billing" name="quoteBilling"><option value="">SculptFlow pays provider (default)</option>
                                 @foreach (var m in Model.Modes?.Modes ?? []) { if (m.Value != "platform_funded") { <option value="@m.Value" selected="@(m.Value == Model.QuoteBilling)">@m.Label (usage fee)</option> } }

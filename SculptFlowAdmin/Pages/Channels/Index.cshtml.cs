@@ -25,7 +25,6 @@ public class IndexModel : AdminPageModel
     public List<ChannelRow> Rows { get; private set; } = new();
     public List<CalendarRow> Calendars { get; private set; } = new();
     public List<TikTokRow> TikTok { get; private set; } = new();
-    public string ActiveProvider => _channels.ActiveWhatsAppProvider;
 
     public async Task OnGetAsync(CancellationToken ct)
     {

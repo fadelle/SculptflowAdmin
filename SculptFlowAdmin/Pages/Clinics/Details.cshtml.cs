@@ -67,10 +67,6 @@ public class DetailsModel : AdminPageModel
     public Task<IActionResult> OnPostSetActiveAsync(bool active, CancellationToken ct) =>
         RunAsync(() => _clinics.SetActiveAsync(Id, active, ct), active ? "Clinic activated." : "Clinic deactivated.", new { id = Id });
 
-    public Task<IActionResult> OnPostConnectWhatsAppAsync(string? sender, CancellationToken ct) =>
-        RunAsync(() => _channels.ConnectInfobipSenderAsync(Id, sender, ct),
-            "WhatsApp sender connected. Paste its webhook URL into the Infobip sender (see the channel's page).", new { id = Id });
-
     public Task<IActionResult> OnPostSearchSettingsAsync(int topK, double minimumSimilarity, CancellationToken ct) =>
         RunAsync(() => _content.UpdateSearchSettingsAsync(Id, topK, minimumSimilarity, ct), "Knowledge search settings saved.", new { id = Id });
 }

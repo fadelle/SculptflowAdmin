@@ -29,7 +29,7 @@ public static class Ui
     };
     private static readonly HashSet<string> Blue = new(StringComparer.OrdinalIgnoreCase)
     {
-        "new", "sent", "contacted", "draft", "infobip", "meta", "telegram", "cold"
+        "new", "sent", "contacted", "draft", "meta", "telegram", "cold"
     };
     private static readonly HashSet<string> Purple = new(StringComparer.OrdinalIgnoreCase) { "ai" };
 

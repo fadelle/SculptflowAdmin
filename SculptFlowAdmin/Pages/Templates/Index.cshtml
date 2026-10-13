@@ -1,7 +1,7 @@
 @page
 @model SculptFlowAdmin.Pages.Templates.IndexModel
 @{ ViewData["Title"] = "WhatsApp templates"; }
-<div class="au-page-head"><p class="au-page-head__sub">Read-only. Templates are created and approved through the WhatsApp provider; clinics manage them in the main app.</p></div>
+<div class="au-page-head"><p class="au-page-head__sub">Read-only. Templates are created and approved through Meta; clinics manage them in the main app.</p></div>
 <form class="filters au-toolbar" method="get">
     <div class="au-toolbar__filters">
         <div class="au-field" style="width:240px">
@@ -31,7 +31,7 @@
         <div class="au-table-scroll">
             <table class="au-table" id="rows">
                 <thead>
-                    <tr><th>Template</th><th>Clinic</th><th>Provider</th><th>Category</th><th>Language</th><th>Status</th><th>Quality</th><th>Body</th><th>Updated</th></tr>
+                    <tr><th>Template</th><th>Clinic</th><th>Category</th><th>Language</th><th>Status</th><th>Quality</th><th>Body</th><th>Updated</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var t in Model.Rows)
@@ -39,7 +39,6 @@
                         <tr>
                             <td><span class="au-mono">@t.Name</span></td>
                             <td><a href="/Clinics/Details?id=@t.ClinicId">@t.ClinicName</a></td>
-                            <td>@Ui.Badge(t.Provider)</td>
                             <td>@Ui.OrDash(t.Category)</td>
                             <td>@Ui.OrDash(t.Language)</td>
                             <td>@Ui.Badge(t.Status) @if (t.RejectionReason is not null) { <div class="au-caption au-text-error">@t.RejectionReason</div> }</td>

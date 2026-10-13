@@ -108,7 +108,6 @@
             <section class="au-table-card">
                 <div class="au-panel__head">
                     <h3 class="au-panel__title">Channels</h3>
-                    <button class="au-btn au-btn--outlined au-btn--sm" type="button" data-open="connect-wa"><span class="au-icon" aria-hidden="true">add_link</span>Connect WhatsApp</button>
                 </div>
                 @if (Model.Channels.Count + Model.Calendars.Count + Model.TikTok.Count == 0)
                 {
@@ -124,7 +123,7 @@
                                 @foreach (var ch in Model.Channels)
                                 {
                                     <tr data-au-href="/Channels/Details?id=@ch.Id">
-                                        <td><a href="/Channels/Details?id=@ch.Id">@ch.Channel</a> @Ui.Badge(ch.Provider)</td>
+                                        <td><a href="/Channels/Details?id=@ch.Id">@ch.Channel</a></td>
                                         <td>@Ui.OrDash(ch.DisplayName)</td>
                                         <td>@Ui.Badge(ch.Status) @if (!ch.IsHealthy) { @Ui.Badge("problem", ch.HealthLevel ?? "unhealthy") }</td>
                                     </tr>
@@ -197,16 +196,5 @@
             </div>
         </div>
         <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Save details</button></div>
-    </form>
-</dialog>
-
-<dialog class="au-dialog au-dialog--sm" id="connect-wa" aria-labelledby="connect-wa-title">
-    <form method="post" asp-page-handler="ConnectWhatsApp" asp-route-id="@c.Id">
-        <h2 class="au-dialog__title" id="connect-wa-title">Connect a WhatsApp sender (Infobip)<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
-        <div class="au-dialog__content">
-            <p class="au-dialog__text" style="font-size:0.875rem;margin-bottom:16px">Register the number as a WhatsApp sender in the Infobip portal first. This sets the clinic's WhatsApp to that sender, replacing whatever was connected before. The main app checks the number with Infobip first and applies the clinic's plan limits.</p>
-            <div class="au-form-field"><label class="au-form-label" for="wa-sender">Sender number (international)<span class="au-required">*</span></label><input class="au-input" id="wa-sender" name="sender" placeholder="+44 7860 099299" required /></div>
-        </div>
-        <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Connect this number as the clinic's WhatsApp?">Connect sender</button></div>
     </form>
 </dialog>

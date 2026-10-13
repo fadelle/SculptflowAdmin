@@ -18,14 +18,9 @@ public interface IChannelAdminService
 
     Task DisconnectAsync(Guid id, CancellationToken ct = default);
 
-    /// <summary>The main app checks the number with Infobip and connects (or moves) the clinic's WhatsApp to it.</summary>
-    Task<ChannelDetail> ConnectInfobipSenderAsync(Guid clinicId, string? senderNumber, CancellationToken ct = default);
-
     Task DisconnectCalendarAsync(Guid id, CancellationToken ct = default);
 
     Task SetCalendarSyncAsync(Guid id, bool enabled, CancellationToken ct = default);
 
     Task DisconnectTikTokAsync(Guid id, CancellationToken ct = default);
-
-    string ActiveWhatsAppProvider { get; }
 }

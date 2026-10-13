@@ -2,7 +2,6 @@ using Microsoft.Extensions.Options;
 using SculptFlowAdmin.Business.Contracts.HttpClients.MainApp;
 using SculptFlowAdmin.Common.Configs;
 using SculptFlowAdmin.Entities.Dtos.Channels;
-using SculptFlowAdmin.Entities.Requests.Channels;
 using SculptFlowAdmin.Entities.Requests.PlatformAdmin;
 using SculptFlowAdmin.Entities.Responses.PlatformAdmin;
 
@@ -29,9 +28,6 @@ public class ChannelsApiClient : MainAppApiClient, IChannelsApiClient
 
     public Task<PlatformAdminChange> DisconnectAsync(Guid id, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Post, $"/{id}/disconnect", null, null, false, ct);
-
-    public Task<ChannelDetail> ConnectInfobipSenderAsync(Guid clinicId, string? sender, CancellationToken ct) =>
-        WriteForAsync<ChannelDetail>(HttpMethod.Post, $"/whatsapp/infobip/{clinicId}", new InfobipSenderBody(sender), null, false, ct);
 
     public Task<List<CalendarRow>> ListCalendarsAsync(Guid? clinicId, CancellationToken ct) =>
         GetRequiredAsync<List<CalendarRow>>("/calendars" + Query(("clinicId", clinicId)), ct);

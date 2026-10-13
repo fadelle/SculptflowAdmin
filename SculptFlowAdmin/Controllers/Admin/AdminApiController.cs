@@ -9,7 +9,6 @@ using SculptFlowAdmin.Business.Contracts.Services.Staff;
 using SculptFlowAdmin.Common.Enums;
 using SculptFlowAdmin.Common.Exceptions;
 using SculptFlowAdmin.Entities.Models;
-using SculptFlowAdmin.Entities.Requests.Channels;
 using SculptFlowAdmin.Entities.Requests.Clinics;
 using SculptFlowAdmin.Entities.Requests.Content;
 using SculptFlowAdmin.Entities.Requests.Leads;
@@ -98,18 +97,6 @@ public class AdminApiController : ControllerBase
 
     [HttpPost("clinics/{id:guid}/deactivate")]
     public Task<IActionResult> DeactivateClinic(Guid id, CancellationToken ct) => Write(() => _clinics.SetActiveAsync(id, false, ct));
-
-    [HttpPost("clinics/{id:guid}/whatsapp/infobip")]
-    public async Task<IActionResult> ConnectInfobip(Guid id, InfobipSenderBody body, CancellationToken ct)
-    {
-        try
-        {
-            var row = await _channels.ConnectInfobipSenderAsync(id, body.Sender, ct);
-            return Ok(new { row.Id, row.Status, row.DisplayName, webhookUrl = row.InfobipWebhookUrl });
-        }
-        catch (Exception ex) when (ex is AdminRuleException or ArgumentException) { return BadRequest(new { error = ex.Message }); }
-        catch (KeyNotFoundException) { return NotFound(); }
-    }
 
     [HttpPut("clinics/{id:guid}/knowledge-settings")]
     public Task<IActionResult> UpdateSearchSettings(Guid id, SearchSettingsBody body, CancellationToken ct) =>

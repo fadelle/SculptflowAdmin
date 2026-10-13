@@ -4,5 +4,5 @@ namespace SculptFlowAdmin.Entities.Dtos.Billing;
 public record ChannelAccountBilling(
     Guid ChannelIntegrationId, string Channel, string? Provider, string Status, string? DisplayName,
     string ProviderBilling, string ProviderBillingLabel, bool OmniUsageBilling, string Source,
-    string DefaultProviderBilling, string? OverrideProviderBilling, bool? OverrideOmniUsageBilling, string? OverrideAppliesToProvider,
+    string DefaultProviderBilling, string? OverrideProviderBilling, bool? OverrideOmniUsageBilling,
     string? OverrideReason, string? OverrideUpdatedBy, DateTimeOffset? OverrideUpdatedAt);

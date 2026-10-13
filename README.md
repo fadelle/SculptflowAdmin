@@ -6,21 +6,21 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 - Admins are their own user list (`admin_users`). Clinic staff accounts can never sign in here, and admin accounts are
   not clinic users.
 - Every change made here is recorded in `admin_audit_log` (who, what, when, before/after).
-- Internal only: it shows provider details (Infobip, Meta ids) that clinic-facing pages never show.
+- Internal only: it shows provider details (Meta ids) that clinic-facing pages never show.
 
 ## What it covers
 
 | Area | See | Change |
 |---|---|---|
 | Dashboard | Totals across clinics, messages per day, a "needs attention" list (broken channels/calendars, failing sends, stuck campaigns, failed website scrapes), newest clinics | |
-| Clinics | Every tenant with counts; per clinic: details, staff, channels, KB search settings, admin history | Edit details, activate/deactivate, connect an Infobip WhatsApp sender, tune KB retrieval |
+| Clinics | Every tenant with counts; per clinic: details, staff, channels, KB search settings, admin history | Edit details, activate/deactivate, tune KB retrieval |
 | Staff accounts | All main-app users with clinic, membership, sign-in methods | Lock/unlock sign-in, deactivate/reactivate membership, set password, mark email confirmed |
 | Leads | All leads with filters; per lead: conversations, appointments, events | Status, qualification, marketing opt-in, notes |
 | Conversations | All threads; full message timeline | Hand to staff / return to AI, close/reopen |
 | Messages | Every message, failed-only filter | |
 | Appointments | All, in clinic time | Change status |
 | Billing | Every clinic's plan, wallet, included credit; per clinic: subscription, who pays the provider per messaging account, usage this period with provider cost and margin, usage records, ledger, ledger check, price check; plans; rate cards and versioned rates; revenue report | Start/change/cancel/resume plans, top up the wallet, manual adjustments, refunds, set who pays per account, create/edit plans and rate cards, add/end rates. All through the main app's billing API (below) |
-| Channels & integrations | WhatsApp/Instagram/Facebook/Telegram connections with health events; calendars; TikTok | Disconnect; pause/resume calendar sync; Infobip webhook URL |
+| Channels & integrations | WhatsApp/Instagram/Facebook/Telegram connections with health events; calendars; TikTok | Disconnect; pause/resume calendar sync |
 | WhatsApp templates | All templates and their approval status | |
 | Campaigns | Delivery/read/reply/booking funnel, recipients | Cancel |
 | Procedures | Every clinic's catalog | Activate/deactivate |
@@ -38,9 +38,7 @@ need a signed-in admin.
    `admin_audit_log`; it never touches the main app's tables.
 2. Connection string, same key as the main app:
    `dotnet user-secrets set ConnectionStrings:Postgres "<connection string>"` (hosted: `ConnectionStrings__Postgres`).
-3. Optional config: `MainApp:PublicBaseUrl` (the main app's public URL, used to show Infobip webhook URLs) and
-   `MainApp:WhatsAppProvider` (`meta` or `infobip`, shown on the Channels page). Set these to match the main app.
-   For the Billing pages: `MainApp:PlatformAdminApiKey` (a SECRET, user-secrets or `MainApp__PlatformAdminApiKey`) equal
+3. Optional config: `MainApp:PublicBaseUrl` (the main app's public URL). For the Billing pages: `MainApp:PlatformAdminApiKey` (a SECRET, user-secrets or `MainApp__PlatformAdminApiKey`) equal
    to the main app's `PlatformAdmin:ApiKey`, and optionally `MainApp:ApiBaseUrl` (where to call the main app; blank =
    `PublicBaseUrl`). Without them the Billing and Configuration pages say they aren't connected; the rest of the portal works.
 4. Create the first admin: `cd SculptFlowAdmin` then `dotnet run -- create-admin you@example.com "Your Name"` (type the

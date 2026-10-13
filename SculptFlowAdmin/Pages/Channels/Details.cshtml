@@ -3,7 +3,6 @@
 @{
     var r = Model.Row;
     ViewData["Title"] = r.Channel + " · " + r.Clinic?.Name;
-    var provider = ChannelProvider.Of(r);
     var problem = string.Join(" ", new[] { r.LastProblemCode, r.LastProblemMessage }.Where(x => !string.IsNullOrWhiteSpace(x)));
 }
 <div class="au-back-header">
@@ -22,39 +21,17 @@
     }
 </div>
 <div class="au-row au-row--wrap" style="margin-bottom:16px">
-    @Ui.Badge(r.Status) @Ui.Badge(r.Channel == ChannelType.Telegram ? "telegram" : provider)
+    @Ui.Badge(r.Status)
     <span class="au-copy"><span class="au-mono">@r.Id</span><button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@r.Id" data-au-copy-message="Connection id copied" aria-label="Copy connection id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span>
 </div>
 
 <div class="au-stack">
-    @if (r.Channel == ChannelType.WhatsApp && provider == ChannelProvider.Infobip)
-    {
-        <section class="au-panel au-panel--round au-panel--pad">
-            <div class="au-panel__head"><h3 class="au-panel__title">Infobip webhook URL</h3></div>
-            @if (Model.InfobipWebhookUrl is not null)
-            {
-                <p class="au-muted" style="font-size:0.8125rem">Paste this as the inbound message and delivery report URL of sender +@r.ProviderSenderId in the Infobip portal. It contains this connection's secret.</p>
-                <div class="au-row" style="align-items:flex-start">
-                    <div class="au-code" id="webhook-url" style="flex:1;word-break:break-all">@Model.InfobipWebhookUrl</div>
-                    @* site.js data-copy swaps this button's text for "Copied", so it stays text-only *@
-                    <button class="au-btn au-btn--outlined au-btn--sm" type="button" data-copy="#webhook-url">Copy</button>
-                </div>
-            }
-            else
-            {
-                <p class="au-muted">Not available. The connection must be connected, and MainApp:PublicBaseUrl must be set in the admin portal's config.</p>
-            }
-        </section>
-    }
-
     <div class="au-grid au-grid--2" style="align-items:start">
         <section class="au-panel au-panel--round au-panel--pad">
             <div class="au-panel__head"><h3 class="au-panel__title">Connection</h3></div>
             <dl class="au-detail-rows">
-                <div class="au-detail-row"><dt>Provider</dt><dd>@Ui.Badge(r.Channel == ChannelType.Telegram ? "telegram" : provider)</dd></div>
                 <div class="au-detail-row"><dt>Display name</dt><dd>@Ui.OrDash(r.DisplayName)</dd></div>
                 <div class="au-detail-row"><dt>Verified name</dt><dd>@Ui.OrDash(r.VerifiedName)</dd></div>
-                @if (r.ProviderSenderId is not null) { <div class="au-detail-row"><dt>Sender number</dt><dd>+@r.ProviderSenderId</dd></div> }
                 @if (r.PhoneNumberId is not null) { <div class="au-detail-row"><dt>Meta phone number id</dt><dd class="au-mono">@r.PhoneNumberId</dd></div> }
                 @if (r.WhatsAppBusinessId is not null) { <div class="au-detail-row"><dt>WABA id</dt><dd class="au-mono">@r.WhatsAppBusinessId</dd></div> }
                 @if (r.MetaBusinessId is not null) { <div class="au-detail-row"><dt>Meta business id</dt><dd class="au-mono">@r.MetaBusinessId</dd></div> }

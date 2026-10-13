@@ -13,8 +13,6 @@ public interface IChannelsApiClient
 
     Task<PlatformAdminChange> DisconnectAsync(Guid id, CancellationToken ct);
 
-    Task<ChannelDetail> ConnectInfobipSenderAsync(Guid clinicId, string? sender, CancellationToken ct);
-
     Task<List<CalendarRow>> ListCalendarsAsync(Guid? clinicId, CancellationToken ct);
 
     Task<PlatformAdminChange> DisconnectCalendarAsync(Guid id, CancellationToken ct);
