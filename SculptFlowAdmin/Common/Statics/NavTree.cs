@@ -58,6 +58,7 @@ public static class NavTree
             {
                 new NavItem("Configuration", "settings_suggest", "/Configuration"),
                 new NavItem("Cache", "storage", "/Cache"),
+                new NavItem("API timings", "speed", "/ApiTimings"),
                 new NavItem("Admin users", "admin_panel_settings", "/Admins"),
             }),
         }),
