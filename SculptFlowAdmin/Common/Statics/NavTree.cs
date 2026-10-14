@@ -45,11 +45,14 @@ public static class NavTree
             }),
             new NavItem("Setup", "tune", Children: new[]
             {
-                new NavItem("Channels & integrations", "hub", "/Channels"),
+                new NavItem("Channels & integrations", "hub", "/Channels", Aliases: new[] { "/Channels/Details" }),
+                new NavItem("WhatsApp token check", "key", "/Channels/TokenDebug"),
                 new NavItem("WhatsApp templates", "article", "/Templates"),
                 new NavItem("Campaigns", "campaign", "/Campaigns"),
                 new NavItem("Procedures", "medical_services", "/Procedures"),
-                new NavItem("Knowledge base", "menu_book", "/Knowledge"),
+                // Exact, so the benchmark (also under /Knowledge) lights up its own tab.
+                new NavItem("Knowledge base", "menu_book", "/Knowledge", Exact: true, Aliases: new[] { "/Knowledge/Index", "/Knowledge/Details" }),
+                new NavItem("Search benchmark", "fact_check", "/Knowledge/Benchmark"),
             }),
             new NavItem("System", "settings", Children: new[]
             {

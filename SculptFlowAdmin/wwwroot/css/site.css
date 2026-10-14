@@ -1,6 +1,6 @@
 /* SculptFlow Admin — project styles on top of the Aurora kit (aurora.css loads AFTER this file; docs/UI_GUIDE.md).
    Only what the kit doesn't have: glue for site.js / login.js hooks, a few project patterns built from kit parts, and
-   page-specific bits (conversation timeline, message chart, plan entitlements, knowledge text, sign-in password box).
+   page-specific bits (conversation timeline, message chart, plan entitlements, knowledge text, search benchmark, sign-in password box).
    Tokens only: every colour is a var(--au-*). */
 
 /* ---------- Base ---------- */
@@ -62,6 +62,25 @@ a.au-stat:hover { border-color: var(--au-primary-light); transform: translateY(-
 
 /* ---------- Knowledge document text (Knowledge/Details) ---------- */
 .doc-text { max-width: 860px; padding: 14px 16px; border: 1px solid var(--au-divider); border-radius: var(--au-r-md); background: var(--au-code-bg); line-height: 1.65; white-space: pre-wrap; }
+
+/* ---------- Search benchmark (knowledge-benchmark*.js, Pages/Knowledge/Benchmark*) ---------- */
+.bm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.bm-progress { display: grid; gap: 6px; margin-top: 12px; }
+.bm-add-form { max-width: 760px; margin: 0 16px 16px; }
+.bm-pager { padding: 10px 16px 14px; }
+.bm-run-gens { padding: 0 16px 12px; }
+.bm-run-gens .au-table-scroll { margin-top: 6px; border: 1px solid var(--au-divider); border-radius: var(--au-r-md); }
+.bm-empty td { padding: 24px; text-align: center; color: var(--au-text-2); white-space: normal; }
+.au-table td.bm-question { min-width: 240px; max-width: 380px; white-space: normal; }
+.au-table td.bm-clip { max-width: 300px; }
+.bm-block { margin-top: 4px; padding: 10px 12px; border: 1px solid var(--au-divider); border-radius: var(--au-r-md); background: var(--au-code-bg); font-size: 0.875rem; white-space: pre-wrap; word-break: break-word; }
+.bm-retrieved td { vertical-align: top; white-space: normal; }
+.bm-retrieved tr.expected-chunk td { background: color-mix(in srgb, var(--au-success) 10%, transparent); }
+.bm-retrieved tr.expected-doc td { background: color-mix(in srgb, var(--au-warning) 10%, transparent); }
+.bm-retrieved tr.dropped td { color: var(--au-text-2); }
+.bm-summary-toggle { color: var(--au-text-2); font-size: 0.875rem; cursor: pointer; }
+.bm-chunks-list { margin: 6px 0 0 18px; padding: 0; font-size: 0.8125rem; }
+.bm-details-list { margin: 6px 0 0 18px; padding: 0; font-size: 0.8125rem; }
 
 /* ---------- Sign-in (login.js hooks) ---------- */
 .login-pw { position: relative; display: block; }

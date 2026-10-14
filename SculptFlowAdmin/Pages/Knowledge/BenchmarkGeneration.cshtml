@@ -1,0 +1,89 @@
+@page "/Knowledge/Benchmark/Generations/{id:guid}"
+@model SculptFlowAdmin.Pages.Knowledge.BenchmarkGenerationModel
+@{
+    ViewData["Title"] = "Generated test cases";
+    var back = Model.ClinicId is null ? "/Knowledge/Benchmark" : $"/Knowledge/Benchmark?clinicId={Model.ClinicId}";
+}
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="@back" aria-label="Back to the search benchmark"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">Generated test cases</h2>
+        <span class="au-back-header__sub">@(Model.ClinicName is null ? "" : Model.ClinicName + " · ")One request to the question generator, and how its cases score.</span>
+    </div>
+</div>
+
+@if (Model.ClinicId is null)
+{
+    <div class="au-table-card">
+        <partial name="_EmptyState" model="@(new EmptyStateModel("Choose this generation's clinic with the clinic selector in the header.", "fact_check"))" />
+    </div>
+}
+else
+{
+    <div id="bmg-root" class="au-stack" data-api="/api/admin/knowledge-benchmark/@Model.ClinicId" data-id="@Model.Id">
+        <div id="bmg-message"></div>
+
+        @* ---------- Generation summary ---------- *@
+        <section class="au-panel au-panel--round au-panel--pad" id="bmg-summary">Loading…</section>
+
+        @* ---------- Latest scores of this generation's cases ---------- *@
+        <div id="bmg-scores"></div>
+
+        @* ---------- Rejected questions (if any) ---------- *@
+        <section class="au-table-card" id="bmg-rejected" hidden>
+            <div class="au-panel__head"><h3 class="au-panel__title" id="bmg-rejected-title">Rejected questions</h3></div>
+            <div class="au-table-scroll">
+                <table class="au-table" data-nosort>
+                    <thead><tr><th>Question</th><th>Reason</th></tr></thead>
+                    <tbody id="bmg-rejected-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        @* ---------- Chunks sent + raw n8n reply ---------- *@
+        <section class="au-panel au-panel--round au-panel--pad">
+            <details>
+                <summary class="bm-summary-toggle">Chunks sent (<span id="bmg-chunks-count">0</span>)</summary>
+                <ul id="bmg-chunks-list" class="bm-chunks-list"></ul>
+            </details>
+            <details id="bmg-raw-wrap" style="margin-top:8px" hidden>
+                <summary class="bm-summary-toggle">What n8n sent back (raw)</summary>
+                <pre class="au-code" id="bmg-raw"></pre>
+            </details>
+        </section>
+
+        @* ---------- This generation's test cases ---------- *@
+        <section class="au-table-card">
+            <div class="au-panel__head">
+                <h3 class="au-panel__title">Test cases</h3>
+                <select id="bmg-case-view" class="au-select au-select--sm" style="width:auto" aria-label="Filter cases">
+                    <option value="all">All cases</option>
+                    <option value="reviewed">Reviewed</option>
+                    <option value="unreviewed">Not reviewed</option>
+                    <option value="stale">Stale</option>
+                </select>
+            </div>
+            <div class="au-table-scroll">
+                <table class="au-table" data-nosort>
+                    <thead><tr><th>Question</th><th>Expected document / chunk</th><th>Reviewed</th><th>Last result</th><th></th></tr></thead>
+                    <tbody id="bmg-cases-body"><tr class="bm-empty"><td colspan="5">Loading…</td></tr></tbody>
+                </table>
+            </div>
+            <div class="au-row bm-pager" id="bmg-cases-pager" hidden>
+                <button type="button" class="au-btn au-btn--outlined au-btn--sm" id="bmg-cases-prev"><span class="au-icon" aria-hidden="true">chevron_left</span>Previous</button>
+                <span class="au-caption" id="bmg-cases-range"></span>
+                <button type="button" class="au-btn au-btn--outlined au-btn--sm" id="bmg-cases-next">Next<span class="au-icon" aria-hidden="true">chevron_right</span></button>
+            </div>
+        </section>
+    </div>
+
+    <partial name="_BenchmarkDialog" />
+}
+
+@section Scripts {
+    @if (Model.ClinicId is not null)
+    {
+        <script src="~/js/knowledge-benchmark-kit.js" asp-append-version="true"></script>
+        <script src="~/js/knowledge-benchmark-generation.js" asp-append-version="true"></script>
+    }
+}

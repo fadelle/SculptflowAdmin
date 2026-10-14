@@ -41,6 +41,9 @@ public class ChannelsApiClient : MainAppApiClient, IChannelsApiClient
     public Task<List<TikTokRow>> ListTikTokAsync(Guid? clinicId, CancellationToken ct) =>
         GetRequiredAsync<List<TikTokRow>>("/tiktok" + Query(("clinicId", clinicId)), ct);
 
+    public Task<WhatsAppTokenDebugResult> DebugTokenAsync(DebugTokenRequest request, CancellationToken ct) =>
+        WriteForAsync<WhatsAppTokenDebugResult>(HttpMethod.Post, "/whatsapp/debug-token", request, null, false, ct);
+
     public Task<PlatformAdminChange> DisconnectTikTokAsync(Guid id, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Post, $"/tiktok/{id}/disconnect", null, null, false, ct);
 }

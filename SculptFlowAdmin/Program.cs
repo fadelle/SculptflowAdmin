@@ -7,6 +7,7 @@ using SculptFlowAdmin.Business.Contracts.Services.Auth;
 using SculptFlowAdmin.Business.Contracts.Services.Channels;
 using SculptFlowAdmin.Business.Contracts.Services.Clinics;
 using SculptFlowAdmin.Business.Contracts.Services.Content;
+using SculptFlowAdmin.Business.Contracts.Services.KnowledgeBenchmark;
 using SculptFlowAdmin.Business.Contracts.Services.Leads;
 using SculptFlowAdmin.Business.Contracts.Services.Overview;
 using SculptFlowAdmin.Business.Contracts.Services.Staff;
@@ -23,6 +24,7 @@ using SculptFlowAdmin.Business.Services.Auth;
 using SculptFlowAdmin.Business.Services.Channels;
 using SculptFlowAdmin.Business.Services.Clinics;
 using SculptFlowAdmin.Business.Services.Content;
+using SculptFlowAdmin.Business.Services.KnowledgeBenchmark;
 using SculptFlowAdmin.Business.Services.Leads;
 using SculptFlowAdmin.Business.Services.Overview;
 using SculptFlowAdmin.Business.Services.Staff;
@@ -83,6 +85,9 @@ builder.Services.AddHttpClient<IStaffApiClient, StaffApiClient>(c => c.Timeout =
 builder.Services.AddHttpClient<ILeadsApiClient, LeadsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<IContentApiClient, ContentApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<IOverviewApiClient, OverviewApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+// A clinic's Knowledge Retrieval Benchmark (Search benchmark page). Generate waits for the main app to hand the chunks to n8n.
+builder.Services.AddHttpClient<IKnowledgeBenchmarkApiClient, KnowledgeBenchmarkApiClient>(c => c.Timeout = TimeSpan.FromSeconds(120));
+builder.Services.AddScoped<IKnowledgeBenchmarkAdminService, KnowledgeBenchmarkAdminService>();
 
 // The header's global clinic scope (docs/UI_GUIDE.md §7): ScopePageFilter resolves it for every page (?clinicId=, else
 // the cookie); ClinicScopeLookup names it from the clinic list, cached briefly.

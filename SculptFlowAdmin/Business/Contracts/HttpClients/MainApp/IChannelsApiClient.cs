@@ -1,4 +1,5 @@
 using SculptFlowAdmin.Entities.Dtos.Channels;
+using SculptFlowAdmin.Entities.Requests.PlatformAdmin;
 using SculptFlowAdmin.Entities.Responses.PlatformAdmin;
 
 namespace SculptFlowAdmin.Business.Contracts.HttpClients.MainApp;
@@ -22,4 +23,7 @@ public interface IChannelsApiClient
     Task<List<TikTokRow>> ListTikTokAsync(Guid? clinicId, CancellationToken ct);
 
     Task<PlatformAdminChange> DisconnectTikTokAsync(Guid id, CancellationToken ct);
+
+    /// <summary>Inspect an access token (or exchange an embedded-signup code first) with the platform's own Meta app.</summary>
+    Task<WhatsAppTokenDebugResult> DebugTokenAsync(DebugTokenRequest request, CancellationToken ct);
 }

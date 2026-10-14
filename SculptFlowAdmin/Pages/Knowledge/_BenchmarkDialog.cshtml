@@ -1,0 +1,6 @@
+@* The search benchmark's detail popup (a test case, or one result's analysis). knowledge-benchmark-kit.js fills and opens it;
+   site.js closes it on [data-close] or a backdrop click, the browser on Esc. *@
+<dialog class="au-dialog au-dialog--md" id="bm-dialog" aria-labelledby="bm-dialog-title">
+    <h2 class="au-dialog__title" id="bm-dialog-title"><span id="bm-dialog-heading">Details</span><button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+    <div class="au-dialog__content" id="bm-dialog-body"></div>
+</dialog>

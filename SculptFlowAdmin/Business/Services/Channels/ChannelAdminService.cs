@@ -2,6 +2,7 @@ using SculptFlowAdmin.Business.Contracts.HttpClients.MainApp;
 using SculptFlowAdmin.Business.Contracts.Managers;
 using SculptFlowAdmin.Business.Contracts.Services.Channels;
 using SculptFlowAdmin.Entities.Dtos.Channels;
+using SculptFlowAdmin.Entities.Requests.PlatformAdmin;
 using SculptFlowAdmin.Entities.Responses.PlatformAdmin;
 
 namespace SculptFlowAdmin.Business.Services.Channels;
@@ -49,6 +50,23 @@ public class ChannelAdminService : IChannelAdminService
     {
         var change = await _api.SetCalendarSyncAsync(id, enabled, ct);
         await _audit.LogAsync(enabled ? "calendar.sync_enabled" : "calendar.sync_disabled", "calendar_integration", id, change.ClinicId, ct: ct);
+    }
+
+    public async Task<WhatsAppTokenDebugResult> DebugWhatsAppTokenAsync(string? accessToken, string? code, string? redirectUri, CancellationToken ct = default)
+    {
+        accessToken = string.IsNullOrWhiteSpace(accessToken) ? null : accessToken.Trim();
+        code = string.IsNullOrWhiteSpace(code) ? null : code.Trim();
+        if (accessToken is null && code is null)
+        {
+            throw new ArgumentException("Paste an access token, or an embedded-signup code.");
+        }
+
+        var result = await _api.DebugTokenAsync(
+            new DebugTokenRequest(code, accessToken, string.IsNullOrWhiteSpace(redirectUri) ? null : redirectUri.Trim()), ct);
+        // The token itself is never written anywhere: the audit entry records only that an inspection happened.
+        await _audit.LogAsync("whatsapp.token_inspected", "whatsapp_token", null, null,
+            new { input = accessToken is not null ? "access_token" : "code", scopes = result.Scopes.Count, wabas = result.ClientWabas.Count }, ct);
+        return result;
     }
 
     public async Task DisconnectTikTokAsync(Guid id, CancellationToken ct = default)

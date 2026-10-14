@@ -21,10 +21,12 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 | Appointments | All, in clinic time | Change status |
 | Billing | Every clinic's plan, wallet, included credit; per clinic: subscription, who pays the provider per messaging account, usage this period with provider cost and margin, usage records, ledger, ledger check, price check; plans; rate cards and versioned rates; revenue report | Start/change/cancel/resume plans, top up the wallet, manual adjustments, refunds, set who pays per account, create/edit plans and rate cards, add/end rates. All through the main app's billing API (below) |
 | Channels & integrations | WhatsApp/Instagram/Facebook/Telegram connections with health events; calendars; TikTok | Disconnect; pause/resume calendar sync |
+| WhatsApp token check | Asks Meta what permissions a token has and which client WhatsApp business accounts it sees (embedded-signup diagnostic) | Inspect a token or code (nothing stored) |
 | WhatsApp templates | All templates and their approval status | |
 | Campaigns | Delivery/read/reply/booking funnel, recipients | Cancel |
 | Procedures | Every clinic's catalog | Activate/deactivate |
 | Knowledge base | Documents and website sources | Activate/deactivate documents |
+| Search benchmark | One clinic's Knowledge Retrieval Benchmark (pick the clinic in the header): case counts, latest scores (chunk/document Top-1/3/5, MRR, latency), manual cases, generations with rejected questions and n8n's raw reply, run history, per-run results and failed-case analysis | Generate test cases (n8n), stop generating, add/edit/review/delete cases, run the benchmark (all, generated, reviewed or one generation). Through the main app's benchmark API; JSON for the page at `/api/admin/knowledge-benchmark/{clinicId}` |
 | Event log / Admin audit log | The main app's `events`; this portal's own changes | |
 | Admin users | Portal accounts | Add, deactivate, set password |
 | Configuration | The main app's tunable settings by section and key: default, saved value, value in use | Save a value (the main app uses it at once), reset to the default. Through the main app's settings API (below) |

@@ -23,4 +23,7 @@ public interface IChannelAdminService
     Task SetCalendarSyncAsync(Guid id, bool enabled, CancellationToken ct = default);
 
     Task DisconnectTikTokAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Inspects an access token or embedded-signup code. Neither is stored or audited; only that a check was made.</summary>
+    Task<WhatsAppTokenDebugResult> DebugWhatsAppTokenAsync(string? accessToken, string? code, string? redirectUri, CancellationToken ct = default);
 }

@@ -125,10 +125,15 @@ This portal had its own hand-rolled CSS/JS before Aurora. Where the rest of this
   - The query key is the pages' existing **`clinicId`** (`ScopeOptions.QueryKey`), so the header selector, old links
     (dashboard tiles, clinic page tiles, tab links, `asp-route-clinicId`) and the pages share one parameter. Cookie:
     `admin.scope`. The selector resets the page number with `data-reset-params="p"`; the chip's ✕ links to `?clinicId=`.
-  - Scoped pages (all 12 whose queries already took `clinicId`): Leads, Conversations, Messages, Appointments, Staff,
+  - Scoped pages (the 12 whose queries already took `clinicId`, plus Search benchmark): Leads, Conversations, Messages, Appointments, Staff,
     Campaigns, Events, Audit, Knowledge, Channels, Procedures, Templates. Each has `[ScopeCapability(ScopeCapability.Clinic)]`,
     takes `ScopeContext`, and does `ClinicId ??= _scope.FilterGuid` before its query. Their old per-page clinic
     dropdown (`_ClinicFilter`) is gone: the header selector is the one place to pick a clinic (R10).
+  - **Search benchmark** (`Knowledge/Benchmark`, `Knowledge/BenchmarkGeneration`) needs one clinic: with none selected it shows an
+    empty state pointing at the header selector. It is a script page (`knowledge-benchmark-kit.js` + one script per page) that
+    calls `/api/admin/knowledge-benchmark/{clinicId}`; it builds only kit markup (`au-chip`, `au-alert`, `au-stat`, `au-table`,
+    `au-dialog` `#bm-dialog` from `_BenchmarkDialog`), writes server text with `textContent`, and re-reads the dashboard every
+    2 s only while a run or generation is in progress (shown by the progress bar and note, so it isn't hidden polling).
   - Adding a scoped page = the attribute + those two lines; a page whose query has no clinic filter stays unscoped
     (the selector hides, the chip and the selection stay).
   - `ClinicScopeLookup` reads the existing clinic options list (cached 2 minutes) for the chip's name and the
