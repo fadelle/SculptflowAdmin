@@ -18,4 +18,9 @@ public interface IClinicsApiClient
     Task<PlatformAdminChange> UpdateAsync(Guid id, ClinicUpdate update, CancellationToken ct);
 
     Task<PlatformAdminChange> SetActiveAsync(Guid id, bool active, CancellationToken ct);
+
+    /// <summary>Null when the clinic doesn't exist.</summary>
+    Task<InboxSettingsDto?> GetInboxSettingsAsync(Guid id, CancellationToken ct);
+
+    Task<PlatformAdminChange> UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct);
 }

@@ -19,4 +19,9 @@ public interface IClinicAdminService
     Task UpdateAsync(Guid id, ClinicUpdate update, CancellationToken ct = default);
 
     Task SetActiveAsync(Guid id, bool active, CancellationToken ct = default);
+
+    /// <summary>The clinic's AI bot switches and whether its plan includes the bot; null when the clinic doesn't exist.</summary>
+    Task<InboxSettingsDto?> GetInboxSettingsAsync(Guid id, CancellationToken ct = default);
+
+    Task UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct = default);
 }

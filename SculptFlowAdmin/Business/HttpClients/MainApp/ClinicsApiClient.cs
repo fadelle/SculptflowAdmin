@@ -33,4 +33,9 @@ public class ClinicsApiClient : MainAppApiClient, IClinicsApiClient
 
     public Task<PlatformAdminChange> SetActiveAsync(Guid id, bool active, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}/active", new ActiveBody(active), null, false, ct);
+
+    public Task<InboxSettingsDto?> GetInboxSettingsAsync(Guid id, CancellationToken ct) => GetAsync<InboxSettingsDto>($"/{id}/inbox-settings", ct);
+
+    public Task<PlatformAdminChange> UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct) =>
+        WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}/inbox-settings", request, null, false, ct);
 }

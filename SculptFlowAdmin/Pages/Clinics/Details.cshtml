@@ -142,6 +142,24 @@
                 }
             </section>
 
+            <form class="au-panel au-panel--round au-panel--pad" method="post" asp-page-handler="InboxSettings" asp-route-id="@c.Id">
+                <div class="au-panel__head"><h3 class="au-panel__title">Inbox settings</h3></div>
+                @if (Model.InboxSettings is { } bot)
+                {
+                    <dl class="au-detail-rows" style="margin-bottom:16px">
+                        <div class="au-detail-row"><dt>Plan includes the AI agent</dt><dd>@(bot.PlanIncludesAiBot ? "Yes" : "No: every conversation goes to staff")</dd></div>
+                        <div class="au-detail-row"><dt>New conversations</dt><dd>@(bot.AiBotAnswersNew ? "AI bot answers" : "Go to staff")</dd></div>
+                        <div class="au-detail-row"><dt>Reopened conversations</dt><dd>@(bot.AiBotAnswersReopened ? "AI bot keeps answering" : "Go to staff")</dd></div>
+                    </dl>
+                    <div class="au-form-grid">
+                        <label class="au-check au-span-2"><input type="checkbox" class="au-switch" role="switch" name="newConversations" value="true" checked="@bot.AiBotNewConversations" /> AI bot answers new conversations</label>
+                        <label class="au-check au-span-2"><input type="checkbox" class="au-switch" role="switch" name="reopenedConversations" value="true" checked="@bot.AiBotReopenedConversations" /> AI bot answers reopened conversations</label>
+                    </div>
+                    <span class="au-help">The clinic's own choice, also shown on its Clinic Info page. It only takes effect while the plan includes the AI agent.</span>
+                    <div class="au-form-actions"><button class="au-btn au-btn--primary" type="submit">Save inbox settings</button></div>
+                }
+            </form>
+
             <form class="au-panel au-panel--round au-panel--pad" method="post" asp-page-handler="SearchSettings" asp-route-id="@c.Id">
                 <div class="au-panel__head"><h3 class="au-panel__title">Knowledge search (AI retrieval)</h3></div>
                 @if (Model.SearchSettings is null)

@@ -13,7 +13,7 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 | Area | See | Change |
 |---|---|---|
 | Dashboard | Totals across clinics, messages per day, a "needs attention" list (broken channels/calendars, failing sends, stuck campaigns, failed website scrapes), newest clinics | |
-| Clinics | Every tenant with counts; per clinic: details, staff, channels, KB search settings, admin history | Edit details, activate/deactivate, tune KB retrieval |
+| Clinics | Every tenant with counts; per clinic: details, staff, channels, Inbox settings (AI bot switches), KB search settings, admin history | Edit details, activate/deactivate, turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
 | Staff accounts | All main-app users with clinic, membership, sign-in methods | Lock/unlock sign-in, deactivate/reactivate membership, set password, mark email confirmed |
 | Leads | All leads with filters; per lead: conversations, appointments, events | Status, qualification, marketing opt-in, notes |
 | Conversations | All threads; full message timeline | Hand to staff / return to AI, close/reopen |

@@ -41,4 +41,14 @@ public class ClinicAdminService : IClinicAdminService
         await _api.SetActiveAsync(id, active, ct);
         await _audit.LogAsync(active ? "clinic.activated" : "clinic.deactivated", "clinic", id, id, ct: ct);
     }
+
+    public Task<InboxSettingsDto?> GetInboxSettingsAsync(Guid id, CancellationToken ct = default) => _api.GetInboxSettingsAsync(id, ct);
+
+    public async Task UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct = default)
+    {
+        var before = await _api.GetInboxSettingsAsync(id, ct) ?? throw new KeyNotFoundException();
+        var change = await _api.UpdateInboxSettingsAsync(id, request, ct);
+        await _audit.LogAsync("clinic.inbox_settings_updated", "clinic", id, change.ClinicId,
+            new { before = new { before.AiBotNewConversations, before.AiBotReopenedConversations }, after = request }, ct);
+    }
 }

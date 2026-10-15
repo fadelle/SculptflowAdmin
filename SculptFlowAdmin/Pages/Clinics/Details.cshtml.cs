@@ -40,6 +40,7 @@ public class DetailsModel : AdminPageModel
     public List<CalendarRow> Calendars { get; private set; } = new();
     public List<TikTokRow> TikTok { get; private set; } = new();
     public SearchSettingsDetail? SearchSettings { get; private set; }
+    public InboxSettingsDto? InboxSettings { get; private set; }
     public IReadOnlyList<AdminAuditEntry> Audit { get; private set; } = [];
 
     [BindProperty] public ClinicUpdate Edit { get; set; } = new("", null, null, null, null, "UTC", null, null, null);
@@ -57,6 +58,7 @@ public class DetailsModel : AdminPageModel
         Calendars = await _channels.ListCalendarsAsync(Id, ct);
         TikTok = await _channels.ListTikTokAsync(Id, ct);
         SearchSettings = await _content.SearchSettingsAsync(Id, ct);
+        InboxSettings = await _clinics.GetInboxSettingsAsync(Id, ct);
         Audit = (await _overview.AuditAsync(Id, null, 1, ct)).Items.Take(15).ToList();
         return Page();
     }
@@ -66,6 +68,11 @@ public class DetailsModel : AdminPageModel
 
     public Task<IActionResult> OnPostSetActiveAsync(bool active, CancellationToken ct) =>
         RunAsync(() => _clinics.SetActiveAsync(Id, active, ct), active ? "Clinic activated." : "Clinic deactivated.", new { id = Id });
+
+    /// <summary>Unchecked switches aren't posted, so they bind as false.</summary>
+    public Task<IActionResult> OnPostInboxSettingsAsync(bool newConversations, bool reopenedConversations, CancellationToken ct) =>
+        RunAsync(() => _clinics.UpdateInboxSettingsAsync(Id, new UpdateInboxSettingsRequest(newConversations, reopenedConversations), ct),
+            "Inbox settings saved.", new { id = Id });
 
     public Task<IActionResult> OnPostSearchSettingsAsync(int topK, double minimumSimilarity, CancellationToken ct) =>
         RunAsync(() => _content.UpdateSearchSettingsAsync(Id, topK, minimumSimilarity, ct), "Knowledge search settings saved.", new { id = Id });
