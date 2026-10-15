@@ -83,6 +83,8 @@ builder.Services.AddScoped<ICacheAdminService, CacheAdminService>();
 // The main app's per-route API timings (read-only API timings page).
 builder.Services.AddHttpClient<IApiTimingsApiClient, ApiTimingsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddScoped<IApiTimingsAdminService, ApiTimingsAdminService>();
+builder.Services.AddHttpClient<IAppLogsApiClient, AppLogsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddScoped<IAppLogsAdminService, AppLogsAdminService>();
 // Clinics, channels, staff, leads, content and the dashboard: the main app's platform-admin APIs (reads and writes).
 builder.Services.AddHttpClient<IClinicsApiClient, ClinicsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<IChannelsApiClient, ChannelsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(60));
