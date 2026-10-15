@@ -12,11 +12,17 @@ public class IndexModel : AdminPageModel
     private readonly IOverviewAdminService _overview;
     private readonly IAppLogsAdminService _logs;
 
-    public IndexModel(IOverviewAdminService overview, IAppLogsAdminService logs)
+    private readonly IMessageTracesAdminService _traces;
+
+    public IndexModel(IOverviewAdminService overview, IAppLogsAdminService logs, IMessageTracesAdminService traces)
     {
         _overview = overview;
         _logs = logs;
+        _traces = traces;
     }
+
+    /// <summary>Message traces in the last 24 hours; null when the main app couldn't answer (the tile says so).</summary>
+    public MessageTraceSummary? Traces { get; private set; }
 
     public SystemTotals Totals { get; private set; } = null!;
     /// <summary>Saved warnings/errors in the last 24 hours; null when the main app couldn't answer (the tile says so).</summary>
@@ -32,5 +38,6 @@ public class IndexModel : AdminPageModel
         Problems = await _overview.ProblemsAsync(ct);
         RecentClinics = await _overview.RecentClinicsAsync(8, ct);
         Errors = await _logs.TrySummaryAsync(ct);
+        Traces = await _traces.TrySummaryAsync(ct);
     }
 }

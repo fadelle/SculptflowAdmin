@@ -13,7 +13,10 @@
     // App errors: a critical is "crit", errors are "warn" (one failed provider call is not an outage), warnings alone are ok.
     var errors = Model.Errors;
     var errorsLevel = errors is null || !errors.Enabled ? "idle" : errors.Criticals > 0 ? "crit" : errors.Errors > 0 ? "warn" : "ok";
-    var levels = new[] { channelLevel, deliveryLevel, problemsLevel, errorsLevel };
+    // Message flows: any failed flow is a warning (one patient affected), never the whole system down.
+    var traces = Model.Traces;
+    var flowsLevel = traces is null || !traces.Enabled ? "idle" : traces.FailedTraces > 0 ? "warn" : "ok";
+    var levels = new[] { channelLevel, deliveryLevel, problemsLevel, errorsLevel, flowsLevel };
     var (verdict, verdictTone) = levels.Contains("crit") ? ("Attention required", "au-chip--error")
         : levels.Contains("warn") ? ("Minor issues", "au-chip--warning") : ("All systems healthy", "au-chip--success");
 }
@@ -51,6 +54,11 @@
                 <div class="au-status__head"><span class="au-icon" aria-hidden="true">error</span><span class="au-eyebrow">App errors</span><span class="au-dot" aria-hidden="true"></span></div>
                 <div class="au-status__metric">@(errors is null ? "Unavailable" : Ui.Count(errors.Errors + errors.Criticals, "error", "errors"))</div>
                 <span class="au-status__sub">@(errors is null ? "the main app's error log didn't answer" : !errors.Enabled ? "saving is off" : $"and {Ui.Count(errors.Warnings, "warning", "warnings")} in the last 24 hours")</span>
+            </a>
+            <a class="au-status" data-level="@flowsLevel" href="/Traces?failed=@(traces is { FailedTraces: > 0 } ? "true" : "")">
+                <div class="au-status__head"><span class="au-icon" aria-hidden="true">route</span><span class="au-eyebrow">Message flows</span><span class="au-dot" aria-hidden="true"></span></div>
+                <div class="au-status__metric">@(traces is null ? "Unavailable" : Ui.Count(traces.FailedTraces, "failed flow", "failed flows"))</div>
+                <span class="au-status__sub">@(traces is null ? "the main app's message trace didn't answer" : !traces.Enabled ? "recording is off" : $"of {Ui.Count(traces.Traces, "message traced", "messages traced")} in the last 24 hours")</span>
             </a>
             <a class="au-status" data-level="idle" href="/Conversations?mode=human&status=active">
                 <div class="au-status__head"><span class="au-icon" aria-hidden="true">support_agent</span><span class="au-eyebrow">Open conversations with staff</span><span class="au-dot" aria-hidden="true"></span></div>

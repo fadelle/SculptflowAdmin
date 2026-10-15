@@ -70,6 +70,7 @@
                             @if (!string.IsNullOrEmpty(m.DeliveryStatus)) { <span>· @Ui.Badge(m.DeliveryStatus)</span> }
                             @if (m.FailedAt.HasValue) { <div class="au-text-error">Failed: @m.FailureCode @m.FailureReason</div> }
                             @if (m.CampaignId.HasValue) { <a href="/Campaigns/Details?id=@m.CampaignId">campaign</a> }
+                            · <a href="/Traces/Details?messageId=@m.Id" title="Every step this message took through the app">trace</a>
                         </div>
                     }
                 </div>

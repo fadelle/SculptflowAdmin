@@ -12,7 +12,11 @@
     </div>
     <div class="au-row au-row--wrap">
         <a class="au-btn au-btn--outlined" href="/Errors/List?fingerprint=@e.Fingerprint&hours=2160">All occurrences</a>
-        @if (e.TraceId is not null) { <a class="au-btn au-btn--outlined" href="/Errors/List?traceId=@e.TraceId&hours=2160">Same request</a> }
+        @if (e.TraceId is not null)
+        {
+            <a class="au-btn au-btn--outlined" href="/Errors/List?traceId=@e.TraceId&hours=2160">Same request</a>
+            <a class="au-btn au-btn--outlined" href="/Traces/Details?traceId=@e.TraceId">Message trace</a>
+        }
     </div>
 </div>
 

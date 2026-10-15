@@ -24,6 +24,7 @@ public static class NavTree
             }),
             new NavItem("Logs", "receipt_long", Children: new[]
             {
+                new NavItem("Message traces", "route", "/Traces"),
                 new NavItem("Errors", "error", "/Errors"),
                 new NavItem("Event log", "monitor_heart", "/Events"),
                 new NavItem("Admin audit log", "verified_user", "/Audit"),
