@@ -1,0 +1,98 @@
+@page
+@model Omni.Admin.Pages.Errors.ListModel
+@using Omni.Admin.Common.Statics
+@{
+    ViewData["Title"] = Model.TraceId is not null ? "Errors in one request" : "Error occurrences";
+    var r = Model.Result;
+}
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Errors?hours=@Model.Hours&level=@Model.Level" aria-label="Back to errors"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@ViewData["Title"]</h2>
+        <span class="au-back-header__sub">
+            @if (Model.Fingerprint is not null) { <text>Problem <span class="au-mono">@Model.Fingerprint</span></text> }
+            @if (Model.TraceId is not null) { <text>Trace <span class="au-mono">@Model.TraceId</span></text> }
+            @if (Model.Fingerprint is null && Model.TraceId is null) { <text>Every saved warning and error</text> }
+        </span>
+    </div>
+</div>
+
+<form class="filters au-toolbar" method="get" data-au-autosubmit>
+    <input type="hidden" name="fingerprint" value="@Model.Fingerprint" />
+    <input type="hidden" name="traceId" value="@Model.TraceId" />
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:170px">
+            <label class="au-label" for="f-hours">Period</label>
+            <select class="au-select" id="f-hours" name="hours">
+                @foreach (var p in AppLogOptions.Periods) { <option value="@p.Hours" selected="@(p.Hours == Model.Hours)">@p.Label</option> }
+            </select>
+        </div>
+        <div class="au-field" style="width:190px">
+            <label class="au-label" for="f-level">Level</label>
+            <select class="au-select" id="f-level" name="level">
+                @foreach (var l in AppLogOptions.Levels) { <option value="@l.Key" selected="@(l.Key == Model.Level)">@l.Label</option> }
+            </select>
+        </div>
+        <div class="au-field" style="width:240px">
+            <label class="au-label" for="f-q">Text contains</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" /></span>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        @if (r is not null) { <span class="au-toolbar__meta">@Ui.Count(r.Total, "row", "rows")</span> }
+        <partial name="_FilterActions" />
+    </div>
+</form>
+
+@if (Model.LoadError is not null)
+{
+    <div class="au-alert au-alert--error" role="alert">
+        <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
+        <div class="au-alert__body"><div class="au-alert__title">Couldn't load the error log</div>@Model.LoadError</div>
+    </div>
+}
+
+@if (r is not null)
+{
+    <div class="au-table-card">
+        @if (r.Items.Count == 0)
+        {
+            var empty = new EmptyStateModel("Nothing logged for this in this period (older rows may be past retention).", "check_circle");
+            <partial name="_EmptyState" model="empty" />
+        }
+        else
+        {
+            <div class="au-table-scroll" style="--au-table-max-h: calc(100vh - 360px)">
+                <table class="au-table">
+                    <thead><tr>
+                        <th>When</th>
+                        <th>Level</th>
+                        <th>Message</th>
+                        <th>Where</th>
+                        <th class="au-right">Times</th>
+                        <th>Links</th>
+                    </tr></thead>
+                    <tbody>
+                        @foreach (var row in r.Items)
+                        {
+                            <tr>
+                                <td><a href="/Errors/Details?id=@row.Id">@Ui.Time(row.OccurredAt)</a></td>
+                                <td>@AppLogDisplay.Level(row.Level)</td>
+                                <td style="--au-col-max:520px" title="@row.Message">@Ui.Truncate(row.Message, 180)
+                                    @if (row.ExceptionType is not null) { <div class="au-caption au-mono">@row.ExceptionType</div> }</td>
+                                <td class="au-mono" style="--au-col-max:280px">@(row.Route is null ? AppLogDisplay.Short(row.Category) : row.Method + " " + row.Route)</td>
+                                <td class="au-right">@(row.RepeatCount > 1 ? "×" + row.RepeatCount.ToString("N0") : "1")</td>
+                                <td>
+                                    @if (row.ClinicId.HasValue) { <a href="/Clinics/Details?id=@row.ClinicId">clinic</a> }
+                                    @if (row.ConversationId.HasValue) { <a href="/Conversations/Details?id=@row.ConversationId">conversation</a> }
+                                    @if (row.TraceId is not null && Model.TraceId is null) { <a href="/Errors/List?traceId=@row.TraceId&hours=@Model.Hours">same request</a> }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <partial name="_Pager" model="PagerModel.From(Model.Paged)" />
+        }
+    </div>
+}

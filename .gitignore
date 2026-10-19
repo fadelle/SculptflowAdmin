@@ -19,4 +19,4 @@ Thumbs.db
 
 # Logs
 *.log
-/SculptFlowAdmin/Properties/launchSettings.json
+/Omni.Admin/Properties/launchSettings.json

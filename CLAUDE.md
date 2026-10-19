@@ -1,4 +1,4 @@
-# SculptFlow Admin — instructions for AI assistants
+# Omni Admin — instructions for AI assistants
 
 ## How the portal talks to the main app (standing rule)
 
@@ -11,7 +11,7 @@ written to `admin_audit_log`, filed under the clinic the API's answer names.
 ## Code architecture (standing rule, agreed with Mohammad 2026-10-06)
 
 Same layout as the main app (its `CLAUDE.md` has the full table). The namespace always equals the folder path
-(`SculptFlowAdmin.Business.Services.Clinics`).
+(`Omni.Admin.Business.Services.Clinics`).
 
 | Folder | What goes there |
 |---|---|
@@ -56,3 +56,11 @@ UI: follow docs/UI_GUIDE.md for every page, partial and component; keep it up to
 
 `README.md` (coverage, setup), `MAIN_APP_SYNC.md` (last-checked main-app commit, how to sync).
 **Do not read the main app's `PROJECT_HANDOFF.md` unless Mohammad asks.**
+
+## Rename guard (Omni Milestone A)
+
+The product is being renamed (see the workspace `milestone-a-plan.md`). `scripts/check-leftover-names.ps1` scans tracked files
+for the old vocabulary: `sculptflow`, `plasticsurgery`, `surgeon`, `max_agents` are strict; the other words are pending and
+each portal session (P2, P3) removes its words from `$Pending`. Run it before every commit. New code uses the new names
+(`Omni.Admin.*` namespaces, "client"/"contact"/"service"/"booking"/"member" vocabulary). The `SculptFlowApp` / `SculptFlowAdmin`
+checkout folders keep their names until after the merge.

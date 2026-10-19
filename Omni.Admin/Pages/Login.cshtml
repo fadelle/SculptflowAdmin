@@ -1,0 +1,49 @@
+@page
+@model Omni.Admin.Pages.LoginModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Sign in";
+}
+<div class="au-auth__card">
+    <div class="au-auth__brand">
+        <span class="au-brand__mark"><partial name="_BrandMark" model="52" /></span>
+        <h1 class="au-auth__title">Welcome back</h1>
+        <p class="au-auth__sub">Sign in with your Omni admin account. Clinic staff accounts can't sign in here.</p>
+    </div>
+
+    @* data-au-no-busy: login.js shows its own "Signing in…" state on the button *@
+    <form class="au-auth__form" method="post" data-login-form data-au-no-busy>
+        @if (!string.IsNullOrEmpty(Model.Error))
+        {
+            <div class="au-alert au-alert--error" role="alert" style="margin:0">
+                <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
+                <div class="au-alert__body">@Model.Error</div>
+            </div>
+        }
+
+        <div class="au-form-field">
+            <label class="au-form-label" for="email">Email</label>
+            <input class="au-input" id="email" name="Email" type="email" value="@Model.Email" autocomplete="username" placeholder="you@example.com"
+                   required autofocus="@string.IsNullOrEmpty(Model.Email)" />
+        </div>
+        <div class="au-form-field">
+            <label class="au-form-label" for="pw">Password</label>
+            @* login.js finds the input through the toggle's parent: keep both inside .login-pw *@
+            <span class="login-pw">
+                <input class="au-input" id="pw" name="Password" type="password" autocomplete="current-password" required data-pw
+                       autofocus="@(!string.IsNullOrEmpty(Model.Email))" />
+                <button type="button" class="au-icon-btn au-icon-btn--sm login-eye" data-pw-toggle aria-label="Show password" title="Show password"><span class="au-icon" aria-hidden="true">visibility</span></button>
+            </span>
+            <div class="au-help au-text-warning" data-caps hidden>Caps Lock is on</div>
+        </div>
+
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+        <button class="au-btn au-btn--primary au-btn--lg au-btn--block" type="submit" data-busy-label="Signing in…">Sign in</button>
+    </form>
+
+    <p class="au-auth__legal">© @DateTime.UtcNow.Year Omni · Internal use only</p>
+</div>
+
+@section Scripts {
+    <script src="~/js/login.js" asp-append-version="true"></script>
+}

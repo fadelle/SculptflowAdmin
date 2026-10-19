@@ -5,11 +5,11 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Restore first so this layer is cached until the csproj changes.
-COPY SculptFlowAdmin/SculptFlowAdmin.csproj SculptFlowAdmin/
-RUN dotnet restore SculptFlowAdmin/SculptFlowAdmin.csproj
+COPY Omni.Admin/Omni.Admin.csproj Omni.Admin/
+RUN dotnet restore Omni.Admin/Omni.Admin.csproj
 
-COPY SculptFlowAdmin/ SculptFlowAdmin/
-RUN dotnet publish SculptFlowAdmin/SculptFlowAdmin.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false
+COPY Omni.Admin/ Omni.Admin/
+RUN dotnet publish Omni.Admin/Omni.Admin.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 # ---- Runtime ----
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
@@ -21,4 +21,4 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 # Render injects PORT and terminates TLS in front of the container, so listen on plain HTTP there.
 # Falls back to 8080 for local `docker run`.
 EXPOSE 8080
-CMD ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} exec dotnet SculptFlowAdmin.dll"]
+CMD ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} exec dotnet Omni.Admin.dll"]

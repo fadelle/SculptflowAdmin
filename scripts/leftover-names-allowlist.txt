@@ -1,0 +1,6 @@
+# Leftover-names guard allowlist (scripts/check-leftover-names.ps1).
+#   path: <glob>            file ignored entirely (PowerShell -like pattern on the repo-relative path, forward slashes)
+#   token: <literal>        text removed from every line before scanning (case-insensitive)
+# A single line can also carry the marker "leftover-ok: <reason>".
+token: SculptFlowApp
+token: sculptflowapp.onrender.com

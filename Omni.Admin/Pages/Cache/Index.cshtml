@@ -1,0 +1,94 @@
+@page
+@model Omni.Admin.Pages.Cache.IndexModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Cache";
+}
+<div class="au-page-head">
+    <p class="au-page-head__sub">What the main app keeps in memory to answer faster. Every change in the app clears what it affects, so
+        removing keys here is only needed after editing the database by hand. A removed key is loaded again on next use.
+        With more than one main-app server, this reaches only the server that answers.</p>
+    <div class="au-page-head__actions">
+        <form method="post" asp-page-handler="Clear" data-confirm="Clear the whole cache and reload settings?">
+            <button class="au-btn au-btn--danger-outlined" type="submit"><span class="au-icon" aria-hidden="true">delete_sweep</span>Clear all</button>
+        </form>
+    </div>
+</div>
+
+@if (Model.LoadError is null)
+{
+    <form class="filters au-toolbar" method="get">
+        <div class="au-toolbar__filters">
+            <div class="au-field" style="width:260px">
+                <label class="au-label" for="f-prefix">Key starts with</label>
+                <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-prefix" name="prefix" value="@Model.Prefix" placeholder="e.g. billing:" /></span>
+            </div>
+        </div>
+        <div class="au-toolbar__actions">
+            <span class="au-toolbar__meta">@Ui.Count(Model.Keys.Count, "key", "keys")</span>
+            <partial name="_FilterActions" />
+        </div>
+    </form>
+
+    <div class="au-stack">
+        @if (Model.Prefix is not null && Model.Keys.Count > 0)
+        {
+            <form method="post" asp-page-handler="RemovePrefix" data-confirm="Remove every key starting with @Model.Prefix?">
+                <input type="hidden" name="prefix" value="@Model.Prefix" />
+                <button class="au-btn au-btn--outlined au-btn--sm" type="submit"><span class="au-icon" aria-hidden="true">delete</span>Remove all @Model.Keys.Count matching</button>
+            </form>
+        }
+
+        @if (Model.SelectedKey is not null)
+        {
+            <section class="au-panel au-panel--round au-panel--pad">
+                <div class="au-panel__head">
+                    <h3 class="au-panel__title au-mono" style="word-break:break-all">@Model.SelectedKey</h3>
+                    <a class="au-btn au-btn--text au-btn--sm" asp-page="/Cache/Index" asp-route-prefix="@Model.Prefix">Close</a>
+                </div>
+                @if (Model.Selected is null)
+                {
+                    <p class="au-muted">Not cached (it may have expired or been removed).</p>
+                }
+                else
+                {
+                    <div class="au-caption">Expires @Model.Selected.ExpiresAt.ToString("yyyy-MM-dd HH:mm:ss") UTC · @Model.Selected.SizeBytes bytes</div>
+                    <pre class="au-code" style="max-height:420px;margin-top:10px">@JsonSerializer.Serialize(Model.Selected.Value, new JsonSerializerOptions { WriteIndented = true })</pre>
+                }
+            </section>
+        }
+
+        <div class="au-table-card">
+            @if (Model.Keys.Count == 0)
+            {
+                var empty = new EmptyStateModel(Model.Prefix is null ? "Nothing cached right now." : "Nothing cached with that prefix.", "storage");
+                <partial name="_EmptyState" model="empty" />
+            }
+            else
+            {
+                <div class="au-table-scroll">
+                    <table class="au-table">
+                        <thead><tr><th>Key</th><th>Expires (UTC)</th><th class="au-right">Size</th><th class="au-shrink"></th></tr></thead>
+                        <tbody>
+                            @foreach (var k in Model.Keys)
+                            {
+                                <tr>
+                                    <td style="--au-col-max:520px" title="@k.Key"><a class="au-mono" asp-page="/Cache/Index" asp-route-key="@k.Key" asp-route-prefix="@Model.Prefix">@k.Key</a></td>
+                                    <td class="au-num">@k.ExpiresAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td class="au-right">@k.SizeBytes B</td>
+                                    <td>
+                                        <form method="post" asp-page-handler="Remove">
+                                            <input type="hidden" name="key" value="@k.Key" />
+                                            <input type="hidden" name="prefix" value="@Model.Prefix" />
+                                            <button class="au-btn au-btn--outlined au-btn--sm" type="submit">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}

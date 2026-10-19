@@ -15,7 +15,7 @@ each API's request/response shapes. This file records how far that has been chec
 
 1. In `SculptFlowApp`: `git fetch`, then `git log --oneline <commit above>..origin/main` (also check feature branches),
    plus `git branch -a` and `git status` for work not merged yet.
-2. For each new commit, look at `PlasticSurgery/Controllers/Admin/*`, `PlasticSurgery/Entities/{Dtos,Requests,Responses}/`
+2. For each new commit, look at `Omni.App/Controllers/Admin/*`, `Omni.App/Entities/{Dtos,Requests,Responses}/`
    for the areas below, and new pages/features. `docs/system-design.html` §4 lists every platform-admin endpoint and §12
    summarises each change.
 3. Tell Mohammad what is new and which admin changes are suggested, before building.

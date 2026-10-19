@@ -1,0 +1,52 @@
+@page
+@model Omni.Admin.Pages.Procedures.IndexModel
+@{ ViewData["Title"] = "Procedures"; }
+<div class="au-page-head"><p class="au-page-head__sub">Each clinic's service catalog. Inactive procedures are hidden from the AI and from booking.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:240px">
+            <label class="au-label" for="f-find">Find on this page</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">filter_list</span><input class="au-input" type="search" id="f-find" data-filter="#rows" placeholder="Name, code or clinic" /></span>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Rows.Count, "procedure", "procedures")</span>
+        <partial name="_FilterActions" />
+    </div>
+</form>
+<div class="au-table-card">
+    @if (Model.Rows.Count == 0)
+    {
+        var empty = new EmptyStateModel(Request.EmptyMessage("procedures"), "medical_services");
+        <partial name="_EmptyState" model="empty" />
+    }
+    else
+    {
+        <div class="au-table-scroll">
+            <table class="au-table" id="rows">
+                <thead>
+                    <tr><th>Procedure</th><th>Clinic</th><th>Code</th><th class="au-right">Consultation (min)</th><th class="au-right">Leads interested</th><th>Status</th><th class="au-shrink"></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Rows)
+                    {
+                        <tr>
+                            <td class="au-strong">@p.Name</td>
+                            <td><a href="/Clinics/Details?id=@p.ClinicId">@p.ClinicName</a></td>
+                            <td><span class="au-mono">@p.Code</span></td>
+                            <td class="au-right">@p.ConsultationDuration</td>
+                            <td class="au-right">@p.Leads</td>
+                            <td>@Ui.Badge(p.IsActive ? "active" : "inactive")</td>
+                            <td>
+                                <form method="post" asp-page-handler="SetActive" asp-route-clinicId="@Model.ClinicId">
+                                    <input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="active" value="@(!p.IsActive ? "true" : "false")" />
+                                    <button class="au-btn au-btn--sm @(p.IsActive ? "au-btn--danger-outlined" : "au-btn--outlined")" type="submit">@(p.IsActive ? "Deactivate" : "Activate")</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

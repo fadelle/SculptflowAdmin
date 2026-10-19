@@ -1,0 +1,79 @@
+using Microsoft.AspNetCore.Mvc;
+using Omni.Admin.Business.Contracts.Services.Channels;
+using Omni.Admin.Business.Contracts.Services.Clinics;
+using Omni.Admin.Business.Contracts.Services.Content;
+using Omni.Admin.Business.Contracts.Services.Overview;
+using Omni.Admin.Business.Contracts.Services.Staff;
+using Omni.Admin.Entities.Dtos.Channels;
+using Omni.Admin.Entities.Dtos.Clinics;
+using Omni.Admin.Entities.Dtos.Staff;
+using Omni.Admin.Entities.Models;
+using Omni.Admin.Entities.Responses.PlatformAdmin;
+using Omni.Admin.Entities.Requests.Clinics;
+using Omni.Admin.Pages.Shared;
+
+namespace Omni.Admin.Pages.Clinics;
+
+public class DetailsModel : AdminPageModel
+{
+    private readonly IClinicAdminService _clinics;
+    private readonly IStaffAdminService _staff;
+    private readonly IChannelAdminService _channels;
+    private readonly IContentAdminService _content;
+    private readonly IOverviewAdminService _overview;
+
+    public DetailsModel(IClinicAdminService clinics, IStaffAdminService staff, IChannelAdminService channels,
+        IContentAdminService content, IOverviewAdminService overview)
+    {
+        _clinics = clinics;
+        _staff = staff;
+        _channels = channels;
+        _content = content;
+        _overview = overview;
+    }
+
+    [BindProperty(SupportsGet = true)] public Guid Id { get; set; }
+    public ClinicDetail Clinic { get; private set; } = null!;
+    public ClinicCounts Counts { get; private set; } = null!;
+    public IReadOnlyList<StaffRow> Staff { get; private set; } = [];
+    public List<ChannelRow> Channels { get; private set; } = new();
+    public List<CalendarRow> Calendars { get; private set; } = new();
+    public List<TikTokRow> TikTok { get; private set; } = new();
+    public SearchSettingsDetail? SearchSettings { get; private set; }
+    public InboxSettingsDto? InboxSettings { get; private set; }
+    public IReadOnlyList<AdminAuditEntry> Audit { get; private set; } = [];
+
+    [BindProperty] public ClinicUpdate Edit { get; set; } = new("", null, null, null, null, "UTC", null, null, null);
+
+    public async Task<IActionResult> OnGetAsync(CancellationToken ct)
+    {
+        var clinic = await _clinics.GetAsync(Id, ct);
+        if (clinic is null) return NotFound();
+        Clinic = clinic;
+        Edit = new ClinicUpdate(clinic.Name, clinic.Phone, clinic.Email, clinic.Website, clinic.CountryCode, clinic.Timezone,
+            clinic.Address, clinic.OperatingHours, clinic.ConsultationInfo);
+        Counts = await _clinics.CountsAsync(Id, ct);
+        Staff = (await _staff.ListAsync(Id, null, 1, ct)).Items;
+        Channels = await _channels.ListChannelsAsync(Id, null, false, ct);
+        Calendars = await _channels.ListCalendarsAsync(Id, ct);
+        TikTok = await _channels.ListTikTokAsync(Id, ct);
+        SearchSettings = await _content.SearchSettingsAsync(Id, ct);
+        InboxSettings = await _clinics.GetInboxSettingsAsync(Id, ct);
+        Audit = (await _overview.AuditAsync(Id, null, 1, ct)).Items.Take(15).ToList();
+        return Page();
+    }
+
+    public Task<IActionResult> OnPostUpdateAsync(CancellationToken ct) =>
+        RunAsync(() => _clinics.UpdateAsync(Id, Edit, ct), "Clinic details saved.", new { id = Id });
+
+    public Task<IActionResult> OnPostSetActiveAsync(bool active, CancellationToken ct) =>
+        RunAsync(() => _clinics.SetActiveAsync(Id, active, ct), active ? "Clinic activated." : "Clinic deactivated.", new { id = Id });
+
+    /// <summary>Unchecked switches aren't posted, so they bind as false.</summary>
+    public Task<IActionResult> OnPostInboxSettingsAsync(bool newConversations, bool reopenedConversations, CancellationToken ct) =>
+        RunAsync(() => _clinics.UpdateInboxSettingsAsync(Id, new UpdateInboxSettingsRequest(newConversations, reopenedConversations), ct),
+            "Inbox settings saved.", new { id = Id });
+
+    public Task<IActionResult> OnPostSearchSettingsAsync(int topK, double minimumSimilarity, CancellationToken ct) =>
+        RunAsync(() => _content.UpdateSearchSettingsAsync(Id, topK, minimumSimilarity, ct), "Knowledge search settings saved.", new { id = Id });
+}

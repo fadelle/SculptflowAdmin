@@ -1,0 +1,22 @@
+@page
+@model Omni.Admin.Pages.Events.IndexModel
+@{ ViewData["Title"] = "Event log"; }
+<div class="au-page-head"><p class="au-page-head__sub">The main app's activity log (the events table): leads, bookings, handoffs, sends, webhook events.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:220px">
+            <label class="au-label" for="f-type">Event</label>
+            <select class="au-select" id="f-type" name="type"><option value="">All</option>
+                @foreach (var t in Model.Types) { <option value="@t" selected="@(t == Model.Type)">@t.Replace('_', ' ')</option> }
+            </select>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "event", "events")</span>
+        <partial name="_FilterActions" />
+    </div>
+</form>
+<div class="au-table-card">
+    <partial name="_EventTable" model="Model.Result.Items" />
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
+</div>

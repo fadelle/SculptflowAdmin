@@ -1,0 +1,95 @@
+/* Omni Admin — project styles on top of the Aurora kit (aurora.css loads AFTER this file; docs/UI_GUIDE.md).
+   Only what the kit doesn't have: glue for site.js / login.js hooks, a few project patterns built from kit parts, and
+   page-specific bits (conversation timeline, message chart, plan entitlements, knowledge text, search benchmark, sign-in password box).
+   Tokens only: every colour is a var(--au-*). */
+
+/* ---------- Base ---------- */
+form { margin: 0; }
+.nowrap { white-space: nowrap; } /* Ui.Time */
+[hidden] { display: none !important; } /* site.js and aurora.js show/hide with [hidden] */
+/* Focus ring for plain links and controls in page content the kit doesn't style itself (zero specificity: never wins). */
+:where(.au-main, .au-auth) :where(:focus-visible) { outline: none; box-shadow: var(--au-focus-ring); }
+
+/* ---------- site.js hooks inside kit tables ---------- */
+/* Every table's headers sort the rows on the current page. */
+.au-table th.sortable { cursor: pointer; user-select: none; }
+.au-table th.sortable:hover { color: var(--au-text); }
+.au-table th.sortable:focus-visible { outline: 2px solid var(--au-primary); outline-offset: -2px; }
+.au-table th.sortable::after { content: "unfold_more"; margin-left: 2px; vertical-align: -3px; opacity: .55; color: inherit; font-family: var(--au-font-icons); font-size: 16px; font-weight: normal; letter-spacing: normal; text-transform: none; font-feature-settings: 'liga'; }
+.au-table th.sortable[aria-sort="ascending"]::after { content: "arrow_upward"; opacity: 1; color: var(--au-primary); }
+.au-table th.sortable[aria-sort="descending"]::after { content: "arrow_downward"; opacity: 1; color: var(--au-primary); }
+/* <input data-filter="#rows"> adds this row when nothing on the page matches. */
+.au-table .no-match td { padding: 24px; text-align: center; color: var(--au-text-2); white-space: normal; }
+/* Totals row (site.js keeps it last when sorting). */
+.au-table tfoot th { height: 44px; padding: 6px 10px; border-top: 1px solid var(--au-divider); background: var(--au-table-head-bg); font-weight: 700; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ---------- Project patterns (kit parts, combined) ---------- */
+/* A KPI tile that links to the list behind it (same hover as the kit's a.au-status). */
+a.au-stat { display: block; color: inherit; text-decoration: none; transition: border-color var(--au-t) ease, transform var(--au-t) ease, box-shadow var(--au-t) ease; }
+a.au-stat:hover { border-color: var(--au-primary-light); transform: translateY(-2px); box-shadow: 0 12px 30px -22px color-mix(in srgb, var(--au-primary) 50%, transparent); text-decoration: none; }
+.au-stat__value .au-stat__hint { font-weight: 600; }
+/* Detail pages: back header with the page's actions on the right. */
+.au-back-header > .au-row:last-child { margin-left: auto; }
+@media (max-width: 640px) { .au-back-header { flex-wrap: wrap; } .au-back-header > .au-row:last-child { margin-left: 0; } }
+/* A table card with a title row (detail pages): <section class="au-table-card"><div class="au-panel__head">… */
+.au-table-card > .au-panel__head { margin: 0; padding: 14px 16px 12px; }
+.au-table-card:has(> .au-panel__head) .au-empty { min-height: 0; padding: 20px 16px 24px; }
+/* Theme toggle on the sign-in / signed-out pages. */
+.au-auth-theme { position: fixed; top: 16px; right: 16px; z-index: 5; }
+
+/* ---------- Conversation timeline (Conversations/Details) ---------- */
+.timeline { display: flex; flex-direction: column; gap: 8px; }
+.msg { max-width: 72%; padding: 9px 13px; border-radius: 14px 14px 14px 4px; background: color-mix(in srgb, var(--au-text) 4%, var(--au-paper)); border: 1px solid var(--au-divider); word-break: break-word; }
+.msg__text { white-space: pre-wrap; } /* only the message keeps its line breaks, not the markup around it */
+.msg.out { align-self: flex-end; background: color-mix(in srgb, var(--au-primary) 12%, var(--au-paper)); border-radius: 14px 14px 4px 14px; }
+.msg.ai { background: color-mix(in srgb, var(--au-secondary) 14%, var(--au-paper)); }
+.msg.system { align-self: center; background: transparent; border: 0; color: var(--au-text-2); font-size: 12px; }
+.msg .meta { margin-top: 4px; color: var(--au-text-2); font-size: 11px; }
+
+/* ---------- Messages-per-day chart (Dashboard) ---------- */
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-top: 8px; }
+.bars .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 2px; height: 100%; }
+.bars .bar { width: 100%; max-width: 28px; min-height: 1px; border-radius: 4px 4px 0 0; background: var(--au-primary); opacity: .9; }
+.bars .bar.ai { background: var(--au-info); }
+.bars .col:hover .bar { opacity: 1; }
+.bars .lbl { margin-top: 4px; color: var(--au-text-2); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+.legend { display: flex; gap: 14px; margin-top: 10px; color: var(--au-text-2); font-size: 12.5px; }
+.legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 3px; vertical-align: -1px; background: var(--au-primary); }
+.legend i.ai { background: var(--au-info); }
+
+/* ---------- Plan features & limits (Billing/Plans popup) ---------- */
+.ent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 16px; align-items: end; }
+
+/* ---------- Knowledge document text (Knowledge/Details) ---------- */
+.doc-text { max-width: 860px; padding: 14px 16px; border: 1px solid var(--au-divider); border-radius: var(--au-r-md); background: var(--au-code-bg); line-height: 1.65; white-space: pre-wrap; }
+
+/* ---------- Search benchmark (knowledge-benchmark*.js, Pages/Knowledge/Benchmark*) ---------- */
+.bm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.bm-progress { display: grid; gap: 6px; margin-top: 12px; }
+.bm-add-form { max-width: 760px; margin: 0 16px 16px; }
+.bm-pager { padding: 10px 16px 14px; }
+.bm-run-gens { padding: 0 16px 12px; }
+.bm-run-gens .au-table-scroll { margin-top: 6px; border: 1px solid var(--au-divider); border-radius: var(--au-r-md); }
+.bm-empty td { padding: 24px; text-align: center; color: var(--au-text-2); white-space: normal; }
+.au-table td.bm-question { min-width: 240px; max-width: 380px; white-space: normal; }
+.au-table td.bm-clip { max-width: 300px; }
+.bm-block { margin-top: 4px; padding: 10px 12px; border: 1px solid var(--au-divider); border-radius: var(--au-r-md); background: var(--au-code-bg); font-size: 0.875rem; white-space: pre-wrap; word-break: break-word; }
+.bm-retrieved td { vertical-align: top; white-space: normal; }
+.bm-retrieved tr.expected-chunk td { background: color-mix(in srgb, var(--au-success) 10%, transparent); }
+.bm-retrieved tr.expected-doc td { background: color-mix(in srgb, var(--au-warning) 10%, transparent); }
+.bm-retrieved tr.dropped td { color: var(--au-text-2); }
+.bm-summary-toggle { color: var(--au-text-2); font-size: 0.875rem; cursor: pointer; }
+.bm-chunks-list { margin: 6px 0 0 18px; padding: 0; font-size: 0.8125rem; }
+.bm-details-list { margin: 6px 0 0 18px; padding: 0; font-size: 0.8125rem; }
+
+/* ---------- Sign-in (login.js hooks) ---------- */
+.login-pw { position: relative; display: block; }
+.login-pw .au-input { padding-right: 44px; }
+.login-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+/* login.js disables the button while signing in: keep it looking like the primary action. */
+.au-auth__form .au-btn--primary:disabled { color: var(--au-on-primary); background-color: var(--au-primary); background-image: var(--au-gradient); opacity: .85; }
+.login-spin { width: 14px; height: 14px; border: 2px solid color-mix(in srgb, var(--au-on-primary) 45%, transparent); border-top-color: var(--au-on-primary); border-radius: 50%; animation: auSpin .7s linear infinite; }
+
+@media (max-width: 640px) {
+  .msg { max-width: 90%; }
+}

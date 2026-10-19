@@ -1,5 +1,5 @@
 -- =====================================================================
--- SculptFlow Admin Portal — admin-only tables.
+-- Omni Admin Portal — admin-only tables.
 --
 -- These live in the SAME database as the main app (Supabase Postgres) but are owned by this repo.
 -- The main app never reads them, and clinic staff accounts (identity_users) can never sign in to the

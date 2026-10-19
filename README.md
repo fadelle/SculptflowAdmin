@@ -1,6 +1,6 @@
-# SculptFlow Admin
+# Omni Admin
 
-Internal admin portal for SculptFlow. A separate .NET 10 Razor Pages app (own repo, own deploy) that reads and
+Internal admin portal for Omni. A separate .NET 10 Razor Pages app (own repo, own deploy) that reads and
 writes the **same Supabase Postgres database** as the main app (`..\SculptFlowApp`).
 
 - Admins are their own user list (`admin_users`). Clinic staff accounts can never sign in here, and admin accounts are
@@ -43,7 +43,7 @@ need a signed-in admin.
 3. Optional config: `MainApp:PublicBaseUrl` (the main app's public URL). For the Billing pages: `MainApp:PlatformAdminApiKey` (a SECRET, user-secrets or `MainApp__PlatformAdminApiKey`) equal
    to the main app's `PlatformAdmin:ApiKey`, and optionally `MainApp:ApiBaseUrl` (where to call the main app; blank =
    `PublicBaseUrl`). Without them the Billing and Configuration pages say they aren't connected; the rest of the portal works.
-4. Create the first admin: `cd SculptFlowAdmin` then `dotnet run -- create-admin you@example.com "Your Name"` (type the
+4. Create the first admin: `cd Omni.Admin` then `dotnet run -- create-admin you@example.com "Your Name"` (type the
    password when asked, or pass it in `ADMIN_PASSWORD`). Add more admins from the Admin users page.
 5. `dotnet run` and sign in.
 

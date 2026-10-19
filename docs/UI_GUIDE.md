@@ -65,7 +65,7 @@ of them (put those in the page's `.cshtml.css` isolation file or `site.css`).
 4. **Clinic scope** (§7) — only on pages the user approves.
 5. Keep this guide true: if you change a rule or the kit, update this file in the same change.
 
-### 0.4 SculptFlow Admin — how this project applies the guide
+### 0.4 Omni Admin — how this project applies the guide
 This portal had its own hand-rolled CSS/JS before Aurora. Where the rest of this guide is generic, **this section wins**.
 
 - **No Bootstrap, jQuery or unobtrusive validation.** Appendix B is *not* installed: `aurora-bootstrap.css` targets

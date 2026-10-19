@@ -1,0 +1,20 @@
+@page
+@model Omni.Admin.Pages.Audit.IndexModel
+@{ ViewData["Title"] = "Admin audit log"; }
+<div class="au-page-head"><p class="au-page-head__sub">Every sign-in and every change made from this portal.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:300px">
+            <label class="au-label" for="f-q">Search</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" placeholder="Action, admin email or record id" /></span>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "entry", "entries")</span>
+        <partial name="_FilterActions" />
+    </div>
+</form>
+<div class="au-table-card">
+    <partial name="_AuditTable" model="Model.Result.Items" />
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
+</div>

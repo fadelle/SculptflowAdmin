@@ -1,0 +1,105 @@
+@page
+@model Omni.Admin.Pages.Errors.IndexModel
+@using Omni.Admin.Common.Statics
+@{
+    ViewData["Title"] = "Errors";
+    var r = Model.Report;
+}
+<div class="au-page-head">
+    <p class="au-page-head__sub">Warnings and errors the main app logged, grouped by problem (same place, message and exception).
+        Open a problem to see each time it happened, its stack trace and the request it belonged to.</p>
+</div>
+
+<form class="filters au-toolbar" method="get" data-au-autosubmit>
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:170px">
+            <label class="au-label" for="f-hours">Period</label>
+            <select class="au-select" id="f-hours" name="hours">
+                @foreach (var p in AppLogOptions.Periods) { <option value="@p.Hours" selected="@(p.Hours == Model.Hours)">@p.Label</option> }
+            </select>
+        </div>
+        <div class="au-field" style="width:190px">
+            <label class="au-label" for="f-level">Level</label>
+            <select class="au-select" id="f-level" name="level">
+                @foreach (var l in AppLogOptions.Levels) { <option value="@l.Key" selected="@(l.Key == Model.Level)">@l.Label</option> }
+            </select>
+        </div>
+        <div class="au-field" style="width:160px">
+            <label class="au-label" for="f-sort">Sort by</label>
+            <select class="au-select" id="f-sort" name="sort">
+                @foreach (var s in AppLogOptions.Sorts) { <option value="@s.Key" selected="@(s.Key == Model.Sort)">@s.Label</option> }
+            </select>
+        </div>
+        <div class="au-field" style="width:240px">
+            <label class="au-label" for="f-q">Text contains</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" /></span>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        @if (r is not null) { <span class="au-toolbar__meta">@Ui.Count(r.GroupCount, "problem", "problems")</span> }
+        <partial name="_FilterActions" />
+    </div>
+</form>
+
+@if (Model.LoadError is not null)
+{
+    <div class="au-alert au-alert--error" role="alert">
+        <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
+        <div class="au-alert__body"><div class="au-alert__title">Couldn't load the error log</div>@Model.LoadError</div>
+    </div>
+}
+
+@if (r is not null)
+{
+    <div class="au-stack">
+        @if (!r.Enabled)
+        {
+            <div class="au-alert au-alert--warning" role="status">
+                <span class="au-icon au-alert__icon" aria-hidden="true">pause_circle</span>
+                <div class="au-alert__body"><div class="au-alert__title">Saving is off</div>
+                    New warnings and errors only go to the main app's console log. Turn on ErrorLog → Enabled on the <a asp-page="/Configuration/Index">Configuration</a> page.</div>
+            </div>
+        }
+
+        <div class="au-table-card">
+            @if (r.Groups.Count == 0)
+            {
+                var empty = new EmptyStateModel(string.IsNullOrWhiteSpace(Model.Q) && Model.ClinicId is null
+                    ? "Nothing logged at this level in this period." : "No problems match your filters.", "check_circle");
+                <partial name="_EmptyState" model="empty" />
+            }
+            else
+            {
+                <div class="au-table-scroll" style="--au-table-max-h: calc(100vh - 320px)">
+                    <table class="au-table">
+                        <thead><tr>
+                            <th>Level</th>
+                            <th>Problem</th>
+                            <th class="au-right">Times</th>
+                            <th>Last seen</th>
+                            <th>First seen</th>
+                        </tr></thead>
+                        <tbody>
+                            @foreach (var g in r.Groups)
+                            {
+                                <tr>
+                                    <td>@AppLogDisplay.Level(g.Level)</td>
+                                    <td style="--au-col-max:640px">
+                                        <a href="/Errors/List?fingerprint=@g.Fingerprint&hours=@r.Hours&level=@r.Level" title="@g.LatestMessage">@Ui.Truncate(g.LatestMessage, 160)</a>
+                                        <div class="au-caption au-mono">@AppLogDisplay.Short(g.Category)@(g.ExceptionType is null ? "" : " · " + AppLogDisplay.Short(g.ExceptionType))</div>
+                                    </td>
+                                    <td class="au-right">@g.Occurrences.ToString("N0")</td>
+                                    <td>@Ui.Time(g.LastSeenAt)</td>
+                                    <td>@Ui.Time(g.FirstSeenAt)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        <p class="au-caption">@Ui.Count(r.TotalOccurrences, "occurrence", "occurrences") in @Ui.Count(r.GroupCount, "problem", "problems").
+            Saving @r.MinimumLevel and above; warnings are kept @r.WarningRetentionDays days, errors @r.ErrorRetentionDays days.
+            @if (r.GroupCount > r.Groups.Count) { <text>Showing the first @r.Groups.Count.</text> }</p>
+    </div>
+}

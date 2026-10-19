@@ -1,0 +1,94 @@
+@page
+@model Omni.Admin.Pages.Channels.DetailsModel
+@{
+    var r = Model.Row;
+    ViewData["Title"] = r.Channel + " · " + r.Clinic?.Name;
+    var problem = string.Join(" ", new[] { r.LastProblemCode, r.LastProblemMessage }.Where(x => !string.IsNullOrWhiteSpace(x)));
+}
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Channels" aria-label="Back to channels"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@r.Channel</h2>
+        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@r.ClinicId">@r.Clinic?.Name</a></span>
+    </div>
+    @if (r.Status != ChannelIntegrationStatus.Disconnected)
+    {
+        <div class="au-row au-row--wrap">
+            <form method="post" asp-page-handler="Disconnect" asp-route-id="@r.Id">
+                <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Disconnect @r.Channel for @r.Clinic?.Name? Messages stop flowing until it's reconnected.">Disconnect</button>
+            </form>
+        </div>
+    }
+</div>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">
+    @Ui.Badge(r.Status)
+    <span class="au-copy"><span class="au-mono">@r.Id</span><button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@r.Id" data-au-copy-message="Connection id copied" aria-label="Copy connection id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span>
+</div>
+
+<div class="au-stack">
+    <div class="au-grid au-grid--2" style="align-items:start">
+        <section class="au-panel au-panel--round au-panel--pad">
+            <div class="au-panel__head"><h3 class="au-panel__title">Connection</h3></div>
+            <dl class="au-detail-rows">
+                <div class="au-detail-row"><dt>Display name</dt><dd>@Ui.OrDash(r.DisplayName)</dd></div>
+                <div class="au-detail-row"><dt>Verified name</dt><dd>@Ui.OrDash(r.VerifiedName)</dd></div>
+                @if (r.PhoneNumberId is not null) { <div class="au-detail-row"><dt>Meta phone number id</dt><dd class="au-mono">@r.PhoneNumberId</dd></div> }
+                @if (r.WhatsAppBusinessId is not null) { <div class="au-detail-row"><dt>WABA id</dt><dd class="au-mono">@r.WhatsAppBusinessId</dd></div> }
+                @if (r.MetaBusinessId is not null) { <div class="au-detail-row"><dt>Meta business id</dt><dd class="au-mono">@r.MetaBusinessId</dd></div> }
+                @if (r.PageId is not null) { <div class="au-detail-row"><dt>Page id</dt><dd class="au-mono">@r.PageId</dd></div> }
+                @if (r.InstagramBusinessId is not null) { <div class="au-detail-row"><dt>Instagram business id</dt><dd class="au-mono">@r.InstagramBusinessId</dd></div> }
+                @if (r.TelegramBotUsername is not null) { <div class="au-detail-row"><dt>Telegram bot</dt><dd>@@@r.TelegramBotUsername <span class="au-mono">@r.TelegramBotId</span></dd></div> }
+                @if (r.WebhookStatus is not null) { <div class="au-detail-row"><dt>Webhook</dt><dd>@Ui.Badge(r.WebhookStatus) @Ui.Time(r.WebhookRegisteredAt)</dd></div> }
+                <div class="au-detail-row"><dt>Has access token</dt><dd>@Ui.YesNo(r.HasAccessToken)</dd></div>
+                <div class="au-detail-row"><dt>Last verified</dt><dd>@Ui.Time(r.LastVerifiedAt)</dd></div>
+                <div class="au-detail-row"><dt>Last error</dt><dd>@Ui.OrDash(r.LastError)</dd></div>
+                <div class="au-detail-row"><dt>Connected since</dt><dd>@Ui.Time(r.CreatedAt)</dd></div>
+                <div class="au-detail-row"><dt>Updated</dt><dd>@Ui.Time(r.UpdatedAt)</dd></div>
+            </dl>
+        </section>
+        <section class="au-panel au-panel--round au-panel--pad">
+            <div class="au-panel__head"><h3 class="au-panel__title">Health</h3></div>
+            <dl class="au-detail-rows">
+                <div class="au-detail-row"><dt>Healthy</dt><dd>@Ui.YesNo(r.IsHealthy)</dd></div>
+                <div class="au-detail-row"><dt>Health level</dt><dd>@Ui.Badge(r.HealthLevel)</dd></div>
+                <div class="au-detail-row"><dt>Account status</dt><dd>@Ui.OrDash(r.AccountStatus)</dd></div>
+                <div class="au-detail-row"><dt>Account review</dt><dd>@Ui.OrDash(r.AccountReviewStatus)</dd></div>
+                <div class="au-detail-row"><dt>Phone quality</dt><dd>@Ui.OrDash(r.PhoneQualityRating)</dd></div>
+                <div class="au-detail-row"><dt>Phone status</dt><dd>@Ui.OrDash(r.PhoneStatus)</dd></div>
+                <div class="au-detail-row"><dt>Name status</dt><dd>@Ui.OrDash(r.NameStatus)</dd></div>
+                <div class="au-detail-row"><dt>Last problem</dt><dd>@Ui.OrDash(problem)</dd></div>
+                <div class="au-detail-row"><dt>Last webhook</dt><dd>@Ui.Time(r.LastWebhookAt)</dd></div>
+                <div class="au-detail-row"><dt>Last health event</dt><dd>@Ui.Time(r.LastHealthEventAt)</dd></div>
+            </dl>
+        </section>
+    </div>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Health events (latest 100)</h3></div>
+        @if (Model.Events.Count == 0)
+        {
+            var empty = new EmptyStateModel("No health events yet.", "monitor_heart");
+            <partial name="_EmptyState" model="empty" />
+        }
+        else
+        {
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead><tr><th>When</th><th>Type</th><th>Severity</th><th>Status</th><th>Message</th></tr></thead>
+                    <tbody>
+                        @foreach (var e in Model.Events)
+                        {
+                            <tr>
+                                <td>@Ui.Time(e.OccurredAt)</td>
+                                <td>@e.EventType.Replace('_', ' ')</td>
+                                <td>@Ui.Badge(e.Severity)</td>
+                                <td>@Ui.OrDash(e.Status)</td>
+                                <td class="au-wrap">@e.Code @e.Message</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
