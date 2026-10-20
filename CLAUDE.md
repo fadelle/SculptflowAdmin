@@ -56,7 +56,8 @@ own `omni.admin` cookie (id, name, email), and re-checks `GET /auth/admins/{id}`
 `OnValidatePrincipal`, a "yes" remembered for one minute; deactivating from the Admins page forgets it at once). A "no" signs
 the admin out; a main app that can't answer keeps the cookie. Admin accounts: `AdminAccountService` → `/api/platform-admin/admins`.
 `Database/admin-schema.sql` must define `admin.admin_audit_log` exactly as the main app's
-`Database/migrations/2026-10-generic/copy-from-old.sql` does.
+`Database/migrations/2026-10-generic/copy-from-old.sql` does. It runs only on a database that already has the main app's
+`identity.users` (a new Omni project), never on the old live one; deploy order: the main app's `docs/deploy-runbook.md`.
 
 ## Tests
 

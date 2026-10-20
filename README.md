@@ -41,13 +41,16 @@ need a signed-in admin.
 
 1. After the main app's `Database/schema.sql`, run `Database/admin-schema.sql` against the same database (Supabase SQL
    editor). It only adds `admin.admin_audit_log` (its `user_id` references the main app's `identity.users`). A project filled
-   by the main app's data copy already has it, so the file changes nothing there.
+   by the main app's data copy already has it, so the file changes nothing there. **Never run it on the old (pre-Omni) live
+   database**: the old portal and the data copy read the old columns. The full order of database, Render and n8n steps for
+   both apps is the main app's `docs/deploy-runbook.md`.
 2. Connection string, same key as the main app:
    `dotnet user-secrets set ConnectionStrings:Postgres "<connection string>"` (hosted: `ConnectionStrings__Postgres`).
 3. Main app connection (required, sign-in goes through it): `MainApp:PublicBaseUrl` (the main app's public URL),
    `MainApp:PlatformAdminApiKey` (a SECRET, user-secrets or `MainApp__PlatformAdminApiKey`) equal to the main app's
    `PlatformAdmin:ApiKey`, and optionally `MainApp:ApiBaseUrl` (where to call the main app; blank = `PublicBaseUrl`).
-   Without them the sign-in page says sign-in isn't available.
+   Without them the sign-in page says sign-in isn't available. `appsettings.json` points `PublicBaseUrl` at the live main
+   app, so a staging portal must set `MainApp__PublicBaseUrl` to the staging main app.
 4. The first admin is made in the main app: `dotnet Omni.App.dll create-admin you@example.com "Your Name"` (password from
    `ADMIN_PASSWORD`; see the main app's README). Add more admins from the Admin users page.
 5. `dotnet run` and sign in. Tests: `dotnet test Omni.Admin.slnx` (no database needed).
