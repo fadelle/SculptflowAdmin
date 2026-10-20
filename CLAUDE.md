@@ -18,11 +18,11 @@ Same layout as the main app (its `CLAUDE.md` has the full table). The namespace 
 | `Controllers/Admin` | The portal's JSON API (`/api/admin/*`, signed-in admin) |
 | `Pages/` | Razor Pages. `Pages/Shared` holds the base PageModels (`AdminPageModel`, `MainAppPageModel`) and partials |
 | `Business/Services/<Feature>` | What controllers and PageModels call |
-| `Business/Engines/<Feature>` | Backend logic that isn't called by a page (e.g. the `create-admin` CLI) |
+| `Business/Engines/<Feature>` | Backend logic that isn't called by a page (none today; admins are created in the main app) |
 | `Business/Managers` | Cross-cutting helpers (`AdminAudit`) |
 | `Business/HttpClients/MainApp` | Clients for the main app's platform-admin APIs |
 | `Business/Contracts/<same path>` | Interfaces of the classes above |
-| `Entities/Models` | The portal's own tables only: `AdminUser`, `AdminAuditEntry` |
+| `Entities/Models` | The portal's own table only: `AdminAuditEntry` (admins are the main app's users, role `admin`) |
 | `Entities/Requests`, `Entities/Responses`, `Entities/Dtos` (`/<Feature>`) | Copies of the main app's API shapes (see `MAIN_APP_SYNC.md`) and the portal's own |
 | `Common/Enums`, `Common/Statics`, `Common/Configs`, `Common/Helpers` (static only), `Common/Exceptions` | As in the main app |
 | `Persistence/Contexts` | `AdminDbContext` (schema `admin`) only |
@@ -33,7 +33,7 @@ Rules:
 
 1. **One top-level type per file**, named after the type. Only private nested helper types may stay inside a class.
 2. **Request flow: Controller or PageModel → Service → main-app API client** for everything about clients, and
-   **→ Service → Repository** only for the portal's own tables (admins, audit log). Pages never call an API client
+   **→ Service → Repository** only for the portal's own table (the audit log). Pages never call an API client
    directly; the service audits each write with the `clientId` the API answered. API clients derive from
    `Business/HttpClients/MainApp/MainAppApiClient` (key, actor, idempotency, query strings, readable errors as
    `MainAppApiException`). A GET that can't reach the main app lands on the Unavailable page (`AdminPageModel`); pages
@@ -41,12 +41,27 @@ Rules:
    contain no logic and never touch a DbContext.
 3. **Database access only in repositories** (portal tables only), one per area with intent-named methods, never a generic
    `Repository<T>` or an `IQueryable` handed out. Repositories never save.
-4. **Services save through `IAdminUnitOfWork`** (`admin_users`, `admin_audit_log`). Every change is followed by
-   `IAdminAudit.LogAsync`.
+4. **Services save through `IAdminUnitOfWork`** (`admin_audit_log` only). Every change is followed by
+   `IAdminAudit.LogAsync`; its `user_id` is the admin's `identity.users` id (text).
 5. Non-static Services, Engines, Managers, HttpClients and Repositories have an interface in the mirrored `Contracts`
    path and are registered against it in DI; pages and controllers inject the interface.
 6. **A new admin feature** = an endpoint in the main app's `/api/platform-admin/{domain}` (its CLAUDE.md, "Platform-admin
    APIs") + a client, service and page here, with the request/response shapes copied (see `MAIN_APP_SYNC.md`).
+
+## Admin sign-in (standing rule, Milestone A P3)
+
+Admins are the main app's users with role `admin`. `AdminAuthService` signs in through `POST /api/platform-admin/auth/login`
+(one generic message for every refusal; an inline "unavailable" message when the main app can't answer), issues the portal's
+own `omni.admin` cookie (id, name, email), and re-checks `GET /auth/admins/{id}` on every request (cookie
+`OnValidatePrincipal`, a "yes" remembered for one minute; deactivating from the Admins page forgets it at once). A "no" signs
+the admin out; a main app that can't answer keeps the cookie. Admin accounts: `AdminAccountService` → `/api/platform-admin/admins`.
+`Database/admin-schema.sql` must define `admin.admin_audit_log` exactly as the main app's
+`Database/migrations/2026-10-generic/copy-from-old.sql` does.
+
+## Tests
+
+`Omni.Admin.Tests` (xUnit + Moq, no database): `dotnet test Omni.Admin.slnx`. Folders mirror the code (`HttpClients/`,
+`Services/`, `Managers/`, `Pages/`, `Support/` with `FakeHttpHandler` and `TestKit`).
 
 ## UI (standing rule)
 

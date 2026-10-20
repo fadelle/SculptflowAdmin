@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Managers;
+using Omni.Admin.Business.Contracts.Services.Admins;
 using Omni.Admin.Business.Contracts.Services.Auth;
 using Omni.Admin.Business.Contracts.Services.Channels;
 using Omni.Admin.Business.Contracts.Services.BusinessTypes;
@@ -12,7 +12,6 @@ using Omni.Admin.Business.Contracts.Services.KnowledgeBenchmark;
 using Omni.Admin.Business.Contracts.Services.Contacts;
 using Omni.Admin.Business.Contracts.Services.Overview;
 using Omni.Admin.Business.Contracts.Services.Members;
-using Omni.Admin.Business.Engines.Admins;
 using Omni.Admin.Business.HttpClients.MainApp;
 using Omni.Admin.Business.Services.Billing;
 using Omni.Admin.Business.Services.Configuration;
@@ -23,6 +22,7 @@ using Omni.Admin.Business.Services.Monitoring;
 using Omni.Admin.Business.Contracts.Services.Configuration;
 using Omni.Admin.Business.Contracts.Services.Billing;
 using Omni.Admin.Business.Managers;
+using Omni.Admin.Business.Services.Admins;
 using Omni.Admin.Business.Services.Auth;
 using Omni.Admin.Business.Services.Channels;
 using Omni.Admin.Business.Services.BusinessTypes;
@@ -33,7 +33,6 @@ using Omni.Admin.Business.Services.Contacts;
 using Omni.Admin.Business.Services.Overview;
 using Omni.Admin.Business.Services.Members;
 using Omni.Admin.Common.Configs;
-using Omni.Admin.Entities.Models;
 using Omni.Admin.Persistence.Contexts;
 using Omni.Admin.Persistence.Contracts;
 using Omni.Admin.Persistence.Contracts.Admins;
@@ -43,7 +42,7 @@ using Omni.Admin.Pages.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// The portal's own tables (schema admin) live in the same database as the main app (ConnectionStrings:Postgres, same key
+// The portal's own table (admin.admin_audit_log) lives in the same database as the main app (ConnectionStrings:Postgres, same key
 // name as SculptFlowApp); it never touches the main app's tables, only the main app's platform-admin APIs.
 var connectionString = builder.Configuration.GetConnectionString("Postgres");
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -56,13 +55,11 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<AdminDbContext>(o => o.UseNpgsql(connectionString));
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
-// Persistence: only the portal's own tables (schema admin). Everything about clients goes through the main app's APIs.
+// Persistence: only the portal's own table (admin.admin_audit_log). Everything else, admin users included, goes through the
+// main app's APIs.
 builder.Services.AddScoped<IAdminUnitOfWork, AdminUnitOfWork>();
-builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 builder.Services.AddScoped<IAdminAuditRepository, AdminAuditRepository>();
 
-builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
 builder.Services.AddScoped<IAdminAudit, AdminAudit>();
 builder.Services.AddScoped<IClientAdminService, ClientAdminService>();
 builder.Services.AddScoped<IBusinessTypeAdminService, BusinessTypeAdminService>();
@@ -101,6 +98,11 @@ builder.Services.AddHttpClient<IOverviewApiClient, OverviewApiClient>(c => c.Tim
 // A client's Knowledge Retrieval Benchmark (Search benchmark page). Generate waits for the main app to hand the chunks to n8n.
 builder.Services.AddHttpClient<IKnowledgeBenchmarkApiClient, KnowledgeBenchmarkApiClient>(c => c.Timeout = TimeSpan.FromSeconds(120));
 builder.Services.AddScoped<IKnowledgeBenchmarkAdminService, KnowledgeBenchmarkAdminService>();
+// Admins are the main app's users (role admin): it checks sign-ins (auth) and keeps the accounts (admins).
+builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(c => c.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddHttpClient<IAdminsApiClient, AdminsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
+builder.Services.AddScoped<IAdminAccountService, AdminAccountService>();
 
 // The header's global client scope (docs/UI_GUIDE.md §7): ScopePageFilter resolves it for every page (?clientId=, else
 // the cookie); ClientScopeLookup names it from the client list, cached briefly.
@@ -122,6 +124,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         o.LoginPath = "/Login";
         o.LogoutPath = "/Logout";
         o.AccessDeniedPath = "/Login";
+        // Asks the main app (remembered for a minute) whether the admin is still an active admin; signs out if not.
         o.Events.OnValidatePrincipal = AdminAuthService.ValidatePrincipalAsync;
         // The admin API answers 401 instead of redirecting to the login page.
         o.Events.OnRedirectToLogin = ctx =>
@@ -141,14 +144,6 @@ builder.Services.AddRazorPages().AddMvcOptions(o => o.Filters.Add<ScopePageFilte
 builder.Services.AddControllers();
 
 var app = builder.Build();
-
-// `dotnet run -- create-admin <email> "<full name>"` creates an admin (password from ADMIN_PASSWORD or typed in).
-// The only way to make the first admin; later ones can be added from the Admins page.
-if (args.Length > 0 && args[0] == "create-admin")
-{
-    await AdminCli.CreateAdminAsync(app.Services, args);
-    return;
-}
 
 if (!app.Environment.IsDevelopment())
 {

@@ -30,17 +30,17 @@ public class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
     {
-        var (user, error) = await _auth.ValidateAsync(Email, Password, ct);
-        if (user is null)
+        var result = await _auth.SignInAsync(Email, Password, ct);
+        if (result.Admin is null)
         {
-            Error = error;
+            Error = result.Error;
             return Page();
         }
 
-        var principal = AdminAuthService.ToPrincipal(user);
+        var principal = AdminAuthService.ToPrincipal(result.Admin);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
         HttpContext.User = principal;
-        await _audit.LogAsync("admin.signed_in", "admin_user", user.Id, ct: ct);
+        await _audit.LogAsync("admin.signed_in", "admin_user", result.Admin.Id, ct: ct);
         return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "/");
     }
 }

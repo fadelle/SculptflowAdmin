@@ -1,46 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
-using Omni.Admin.Business.Contracts.Managers;
-using Omni.Admin.Business.Contracts.Services.Auth;
+using Omni.Admin.Business.Contracts.Services.Admins;
 using Omni.Admin.Common.Statics;
-using Omni.Admin.Entities.Models;
+using Omni.Admin.Entities.Dtos.Admins;
 using Omni.Admin.Pages.Shared;
 
 namespace Omni.Admin.Pages.Admins;
 
+/// <summary>Admin users, kept by the main app (identity.users with role admin) through its platform-admin admins API.</summary>
 public class IndexModel : AdminPageModel
 {
-    private readonly IAdminAuthService _auth;
-    private readonly IAdminAudit _audit;
+    private readonly IAdminAccountService _admins;
 
-    public IndexModel(IAdminAuthService auth, IAdminAudit audit)
+    public IndexModel(IAdminAccountService admins)
     {
-        _auth = auth;
-        _audit = audit;
+        _admins = admins;
     }
 
-    public List<AdminUser> Admins { get; private set; } = new();
-    public Guid? Me => AdminClaims.Id(User);
+    public IReadOnlyList<AdminRow> Admins { get; private set; } = [];
+    public string? Me => AdminClaims.Id(User);
 
-    public async Task OnGetAsync(CancellationToken ct) => Admins = await _auth.ListAsync(ct);
+    public async Task OnGetAsync(CancellationToken ct) => Admins = await _admins.ListAsync(ct);
 
-    public Task<IActionResult> OnPostCreateAsync(string email, string fullName, string password, CancellationToken ct) =>
-        RunAsync(async () =>
-        {
-            var user = await _auth.CreateAsync(email, fullName, password, ct);
-            await _audit.LogAsync("admin.created", "admin_user", user.Id, details: new { user.Email }, ct: ct);
-        }, "Admin added.");
+    public Task<IActionResult> OnPostCreateAsync(string? email, string? fullName, string? password, CancellationToken ct) =>
+        RunAsync(() => _admins.CreateAsync(email, fullName, password, ct), "Admin added.");
 
-    public Task<IActionResult> OnPostSetActiveAsync(Guid id, bool active, CancellationToken ct) =>
-        RunAsync(async () =>
-        {
-            await _auth.SetActiveAsync(id, active, Me, ct);
-            await _audit.LogAsync(active ? "admin.activated" : "admin.deactivated", "admin_user", id, ct: ct);
-        }, active ? "Admin activated." : "Admin deactivated. They are signed out on their next click.");
+    public Task<IActionResult> OnPostSetActiveAsync(string id, bool active, CancellationToken ct) =>
+        RunAsync(() => _admins.SetActiveAsync(id, active, Me, ct),
+            active ? "Admin activated." : "Admin deactivated. They are signed out on their next click.");
 
-    public Task<IActionResult> OnPostPasswordAsync(Guid id, string password, CancellationToken ct) =>
-        RunAsync(async () =>
-        {
-            await _auth.SetPasswordAsync(id, password, ct);
-            await _audit.LogAsync("admin.password_set", "admin_user", id, ct: ct);
-        }, "Password changed.");
+    public Task<IActionResult> OnPostPasswordAsync(string id, string? password, CancellationToken ct) =>
+        RunAsync(() => _admins.SetPasswordAsync(id, password, ct), "Password changed.");
 }

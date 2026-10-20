@@ -16,6 +16,7 @@ namespace Omni.Admin.Business.HttpClients.MainApp;
 public abstract class MainAppApiClient
 {
     protected static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private const string KeyHeader = "X-Platform-Admin-Key";
 
     private readonly HttpClient _http;
     private readonly MainAppApiOptions _options;
@@ -68,6 +69,19 @@ public abstract class MainAppApiClient
             ?? throw new MainAppApiException("The main app answered with an empty body.");
     }
 
+    /// <summary>A POST where 401 is the answer, not a key problem (the admin sign-in): null when the main app refuses it.
+    /// The key filter's own 401 names its header, so a wrong portal key still reads as a configuration error.</summary>
+    protected async Task<T?> PostOrRefusedAsync<T>(string path, object body, CancellationToken ct) where T : class
+    {
+        using var response = await SendAsync(HttpMethod.Post, path, body, null, ct);
+        if (response.StatusCode == HttpStatusCode.Unauthorized
+            && !(await response.Content.ReadAsStringAsync(ct)).Contains(KeyHeader, StringComparison.Ordinal)) return null;
+        if (response.StatusCode == HttpStatusCode.NotFound) throw ApiOff();
+        await EnsureSuccessAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<T>(Json, ct)
+            ?? throw new MainAppApiException("The main app answered with an empty body.");
+    }
+
     private async Task<HttpResponseMessage> SendWriteAsync(HttpMethod method, string path, object? body, string? opId, bool isCreate, CancellationToken ct)
     {
         string? key = null;
@@ -103,7 +117,7 @@ public abstract class MainAppApiClient
         }
 
         var request = new HttpRequestMessage(method, new Uri(new Uri(_options.BaseUrl + "/"), _prefix + path));
-        request.Headers.Add("X-Platform-Admin-Key", _options.PlatformAdminApiKey);
+        request.Headers.Add(KeyHeader, _options.PlatformAdminApiKey);
         var user = _context.HttpContext?.User;
         request.Headers.Add("X-Admin-Actor", user?.Identity?.IsAuthenticated == true ? AdminClaims.Email(user) : "admin-portal");
         if (idempotencyKey is not null) request.Headers.Add("Idempotency-Key", idempotencyKey);

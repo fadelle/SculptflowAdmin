@@ -1,16 +1,13 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
 
 namespace Omni.Admin.Common.Statics;
 
-/// <summary>Who is acting, read from the admin cookie.</summary>
+/// <summary>Who is acting, read from the admin cookie. The id is the main app's identity.users id (text).</summary>
 public static class AdminClaims
 {
-    public static Guid? Id(ClaimsPrincipal user) =>
-        Guid.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+    public static string? Id(ClaimsPrincipal user) =>
+        user.FindFirstValue(ClaimTypes.NameIdentifier) is { Length: > 0 } id ? id : null;
 
-    public static string Email(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.Email) ?? "unknown";
-    public static string Name(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.Name) ?? Email(user);
+    public static string Email(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.Email) is { Length: > 0 } e ? e : "unknown";
+    public static string Name(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.Name) is { Length: > 0 } n ? n : Email(user);
 }

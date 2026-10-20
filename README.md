@@ -3,8 +3,10 @@
 Internal admin portal for Omni. A separate .NET 10 Razor Pages app (own repo, own deploy) that reads and
 writes the **same Supabase Postgres database** as the main app (`..\SculptFlowApp`).
 
-- Admins are their own user list (`admin_users`). Client member accounts can never sign in here, and admin accounts are
-  not client users.
+- Admins are users of the main app with role `admin` (`identity.users`). The main app checks their sign-in
+  (`/api/platform-admin/auth`) and keeps their accounts (`/api/platform-admin/admins`); this portal issues its own cookie and
+  asks the main app on every request (remembered for a minute) whether the admin is still active. Client and member accounts
+  can never sign in here, and admin accounts can never sign in to the client app.
 - Every change made here is recorded in `admin_audit_log` (who, what, when, before/after).
 - Internal only: it shows provider details (Meta ids) that client-facing pages never show.
 
@@ -29,7 +31,7 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 | Knowledge base | Documents and website sources | Activate/deactivate documents |
 | Search benchmark | One client's Knowledge Retrieval Benchmark (pick the client in the header): case counts, latest scores (chunk/document Top-1/3/5, MRR, latency), manual cases, generations with rejected questions and n8n's raw reply, run history, per-run results and failed-case analysis | Generate test cases (n8n), stop generating, add/edit/review/delete cases, run the benchmark (all, generated, reviewed or one generation). Through the main app's benchmark API; JSON for the page at `/api/admin/knowledge-benchmark/{clientId}` |
 | Event log / Admin audit log | The main app's `events`; this portal's own changes | |
-| Admin users | Portal accounts | Add, deactivate, set password |
+| Admin users | Admin accounts (the main app's users with role `admin`) | Add, deactivate (signed out on their next click), set password (also unlocks). Through the main app's admins API |
 | Configuration | The main app's tunable settings by section and key: default, saved value, value in use | Save a value (the main app uses it at once), reset to the default. Through the main app's settings API (below) |
 
 The same data and actions are available as JSON under `/api/admin/*` (see `Controllers/Admin/AdminApiController.cs`); they
@@ -37,16 +39,18 @@ need a signed-in admin.
 
 ## Setup
 
-1. Run `Database/admin-schema.sql` once against the database (Supabase SQL editor). It only adds `admin_users` and
-   `admin_audit_log`; it never touches the main app's tables.
+1. After the main app's `Database/schema.sql`, run `Database/admin-schema.sql` against the same database (Supabase SQL
+   editor). It only adds `admin.admin_audit_log` (its `user_id` references the main app's `identity.users`). A project filled
+   by the main app's data copy already has it, so the file changes nothing there.
 2. Connection string, same key as the main app:
    `dotnet user-secrets set ConnectionStrings:Postgres "<connection string>"` (hosted: `ConnectionStrings__Postgres`).
-3. Optional config: `MainApp:PublicBaseUrl` (the main app's public URL). For the Billing pages: `MainApp:PlatformAdminApiKey` (a SECRET, user-secrets or `MainApp__PlatformAdminApiKey`) equal
-   to the main app's `PlatformAdmin:ApiKey`, and optionally `MainApp:ApiBaseUrl` (where to call the main app; blank =
-   `PublicBaseUrl`). Without them the Billing and Configuration pages say they aren't connected; the rest of the portal works.
-4. Create the first admin: `cd Omni.Admin` then `dotnet run -- create-admin you@example.com "Your Name"` (type the
-   password when asked, or pass it in `ADMIN_PASSWORD`). Add more admins from the Admin users page.
-5. `dotnet run` and sign in.
+3. Main app connection (required, sign-in goes through it): `MainApp:PublicBaseUrl` (the main app's public URL),
+   `MainApp:PlatformAdminApiKey` (a SECRET, user-secrets or `MainApp__PlatformAdminApiKey`) equal to the main app's
+   `PlatformAdmin:ApiKey`, and optionally `MainApp:ApiBaseUrl` (where to call the main app; blank = `PublicBaseUrl`).
+   Without them the sign-in page says sign-in isn't available.
+4. The first admin is made in the main app: `dotnet Omni.App.dll create-admin you@example.com "Your Name"` (password from
+   `ADMIN_PASSWORD`; see the main app's README). Add more admins from the Admin users page.
+5. `dotnet run` and sign in. Tests: `dotnet test Omni.Admin.slnx` (no database needed).
 
 ## Billing and Configuration go through the main app
 

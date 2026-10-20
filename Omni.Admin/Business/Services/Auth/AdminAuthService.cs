@@ -1,152 +1,126 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Memory;
+using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Services.Auth;
-using Omni.Admin.Entities.Models;
-using Omni.Admin.Persistence.Contracts;
-using Omni.Admin.Persistence.Contracts.Admins;
+using Omni.Admin.Common.Exceptions;
+using Omni.Admin.Entities.Dtos.Admins;
 
 namespace Omni.Admin.Business.Services.Auth;
 
 /// <summary>
-/// Sign-in for admin users (admin_users table). Deliberately separate from the main app's ASP.NET Identity
-/// users: a client member account can never authenticate here, and an admin account is not a client user.
-/// Passwords use Identity's PasswordHasher (PBKDF2), the same format the main app uses for member.
+/// Admin sign-in. Admins are users of the main app (identity.users, role admin): the main app checks the password, the
+/// lockout, the role and the active flag (POST /api/platform-admin/auth/login), and this portal issues its own cookie
+/// (omni.admin) with the admin's id, name and email. Every request asks the main app again whether that admin is still an
+/// active admin (GET .../auth/admins/{id}, remembered for <see cref="RecheckAfter"/>), so a deactivated or demoted admin is
+/// signed out on their next click. A client or member account can never sign in here.
 /// </summary>
 public class AdminAuthService : IAdminAuthService
 {
-    public const int MaxFailedLogins = 5;
-    public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
-    public const int MinPasswordLength = 10;
+    /// <summary>The one message for every refused sign-in (the main app's wording; it answers one 401 for all of them).</summary>
+    public const string SignInFailed = "Wrong email or password, or the account is locked for a few minutes.";
 
-    private readonly IAdminUserRepository _users;
-    private readonly IAdminUnitOfWork _adminUnitOfWork;
-    private readonly IPasswordHasher<AdminUser> _hasher;
+    public const string SignInUnavailable = "Sign-in isn't available right now: the portal couldn't use the main app's admin API. " +
+        "Try again in a moment; if it keeps failing, check the portal's MainApp settings.";
 
-    public AdminAuthService(IAdminUserRepository users, IAdminUnitOfWork adminUnitOfWork, IPasswordHasher<AdminUser> hasher)
+    /// <summary>How long the main app's "still an active admin" answer is trusted before it is asked again.</summary>
+    public static readonly TimeSpan RecheckAfter = TimeSpan.FromMinutes(1);
+
+    private readonly IAuthApiClient _api;
+    private readonly IMemoryCache _cache;
+    private readonly ILogger<AdminAuthService> _logger;
+
+    public AdminAuthService(IAuthApiClient api, IMemoryCache cache, ILogger<AdminAuthService> logger)
     {
-        _users = users;
-        _adminUnitOfWork = adminUnitOfWork;
-        _hasher = hasher;
+        _api = api;
+        _cache = cache;
+        _logger = logger;
     }
 
-    public async Task<(AdminUser? User, string? Error)> ValidateAsync(string email, string password, CancellationToken ct = default)
+    public async Task<AdminSignInResult> SignInAsync(string? email, string? password, CancellationToken ct = default)
     {
-        const string invalid = "Wrong email or password.";
-        var normalized = email.Trim().ToLowerInvariant();
-        var user = await _users.FindByEmailAsync(normalized, ct);
-        if (user is null)
+        email = (email ?? string.Empty).Trim();
+        if (email.Length == 0 || string.IsNullOrEmpty(password)) return new(null, SignInFailed);
+        try
         {
-            // Hash anyway so a missing account takes as long as a wrong password.
-            _hasher.HashPassword(new AdminUser(), password);
-            return (null, invalid);
+            var admin = await _api.LoginAsync(email, password, ct);
+            if (admin is null) return new(null, SignInFailed);
+            _cache.Set(CacheKey(admin.Id), admin, RecheckAfter);
+            return new(admin, null);
         }
-
-        var now = DateTimeOffset.UtcNow;
-        if (user.LockedUntil > now) return (null, "Too many failed attempts. Try again in a few minutes.");
-        if (!user.IsActive) return (null, invalid);
-
-        var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, password);
-        if (result == PasswordVerificationResult.Failed)
+        catch (MainAppApiException ex)
         {
-            user.FailedLogins++;
-            if (user.FailedLogins >= MaxFailedLogins)
-            {
-                user.LockedUntil = now.Add(LockoutDuration);
-                user.FailedLogins = 0;
-            }
-            await _adminUnitOfWork.SaveChangesAsync(ct);
-            return (null, invalid);
+            _logger.LogWarning("Admin sign-in couldn't use the main app: {Reason}", ex.Message);
+            return new(null, SignInUnavailable);
         }
-
-        if (result == PasswordVerificationResult.SuccessRehashNeeded)
-        {
-            user.PasswordHash = _hasher.HashPassword(user, password);
-        }
-        user.FailedLogins = 0;
-        user.LockedUntil = null;
-        user.LastLoginAt = now;
-        await _adminUnitOfWork.SaveChangesAsync(ct);
-        return (user, null);
     }
 
-    public static string? CheckPassword(string? password) =>
-        string.IsNullOrEmpty(password) || password.Length < MinPasswordLength
-            ? $"Password must be at least {MinPasswordLength} characters."
-            : null;
-
-    public async Task<AdminUser> CreateAsync(string email, string fullName, string password, CancellationToken ct = default)
+    public async Task<AdminIdentity?> GetActiveAdminAsync(string id, CancellationToken ct = default)
     {
-        email = email.Trim();
-        fullName = fullName.Trim();
-        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@')) throw new ArgumentException("Enter a valid email.");
-        if (string.IsNullOrWhiteSpace(fullName)) throw new ArgumentException("Enter a name.");
-        var pwError = CheckPassword(password);
-        if (pwError is not null) throw new ArgumentException(pwError);
-
-        var lower = email.ToLowerInvariant();
-        if (await _users.EmailExistsAsync(lower, ct))
-            throw new ArgumentException("An admin with this email already exists.");
-
-        var now = DateTimeOffset.UtcNow;
-        var user = new AdminUser { Id = Guid.NewGuid(), Email = email, FullName = fullName, IsActive = true, CreatedAt = now, UpdatedAt = now };
-        user.PasswordHash = _hasher.HashPassword(user, password);
-        _users.Add(user);
-        await _adminUnitOfWork.SaveChangesAsync(ct);
-        return user;
+        if (_cache.TryGetValue(CacheKey(id), out AdminIdentity? known) && known is not null) return known;
+        var admin = await _api.GetActiveAdminAsync(id, ct);
+        // Only a "yes" is remembered: a refused admin is signed out, and a later sign-in starts fresh.
+        if (admin is not null) _cache.Set(CacheKey(id), admin, RecheckAfter);
+        return admin;
     }
 
-    public async Task SetPasswordAsync(Guid id, string password, CancellationToken ct = default)
-    {
-        var pwError = CheckPassword(password);
-        if (pwError is not null) throw new ArgumentException(pwError);
-        var user = await _users.GetAsync(id, ct) ?? throw new KeyNotFoundException();
-        user.PasswordHash = _hasher.HashPassword(user, password);
-        user.FailedLogins = 0;
-        user.LockedUntil = null;
-        user.UpdatedAt = DateTimeOffset.UtcNow;
-        await _adminUnitOfWork.SaveChangesAsync(ct);
-    }
+    public void Forget(string id) => _cache.Remove(CacheKey(id));
 
-    public Task<List<AdminUser>> ListAsync(CancellationToken ct = default) =>
-        _users.ListReadOnlyAsync(ct);
-
-    public async Task SetActiveAsync(Guid id, bool active, Guid? actingAdminId, CancellationToken ct = default)
-    {
-        if (!active && id == actingAdminId) throw new ArgumentException("You can't deactivate your own account.");
-        var user = await _users.GetAsync(id, ct) ?? throw new KeyNotFoundException();
-        if (!active && user.IsActive && await _users.CountActiveAsync(ct) <= 1)
-            throw new ArgumentException("At least one admin must stay active.");
-        user.IsActive = active;
-        user.UpdatedAt = DateTimeOffset.UtcNow;
-        await _adminUnitOfWork.SaveChangesAsync(ct);
-    }
-
-    public static ClaimsPrincipal ToPrincipal(AdminUser user)
+    public static ClaimsPrincipal ToPrincipal(AdminIdentity admin)
     {
         var identity = new ClaimsIdentity(new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.FullName),
+            new Claim(ClaimTypes.NameIdentifier, admin.Id),
+            new Claim(ClaimTypes.Email, admin.Email ?? string.Empty),
+            new Claim(ClaimTypes.Name, DisplayName(admin)),
         }, CookieAuthenticationDefaults.AuthenticationScheme);
         return new ClaimsPrincipal(identity);
     }
 
     /// <summary>
-    /// Runs on every request with an admin cookie: an admin who was deactivated (or deleted) is signed out
-    /// at once instead of keeping access until the cookie expires.
+    /// Runs on every request with an admin cookie. The main app says no (deactivated, no longer an admin, gone) → the cookie
+    /// is rejected and removed. A changed name or email is written into a renewed cookie. When the main app can't answer, the
+    /// cookie is kept: every page except the audit log reads through the main app anyway (so it shows the Unavailable page),
+    /// and a short outage doesn't sign everyone out.
     /// </summary>
     public static async Task ValidatePrincipalAsync(CookieValidatePrincipalContext context)
     {
+        var services = context.HttpContext.RequestServices;
         var id = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-        var users = context.HttpContext.RequestServices.GetRequiredService<IAdminUserRepository>();
-        var active = Guid.TryParse(id, out var guid) && await users.IsActiveAsync(guid);
-        if (!active)
+        AdminIdentity? admin = null;
+        if (!string.IsNullOrEmpty(id))
+        {
+            try
+            {
+                admin = await services.GetRequiredService<IAdminAuthService>().GetActiveAdminAsync(id, context.HttpContext.RequestAborted);
+            }
+            catch (MainAppApiException ex)
+            {
+                services.GetRequiredService<ILogger<AdminAuthService>>()
+                    .LogWarning("Couldn't recheck admin {AdminId} with the main app; the cookie is kept: {Reason}", id, ex.Message);
+                return;
+            }
+        }
+
+        if (admin is null)
         {
             context.RejectPrincipal();
             await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return;
+        }
+
+        var current = context.Principal!;
+        if (current.FindFirstValue(ClaimTypes.Email) != (admin.Email ?? string.Empty)
+            || current.FindFirstValue(ClaimTypes.Name) != DisplayName(admin))
+        {
+            context.ReplacePrincipal(ToPrincipal(admin));
+            context.ShouldRenew = true;
         }
     }
+
+    private static string DisplayName(AdminIdentity admin) =>
+        string.IsNullOrWhiteSpace(admin.FullName) ? admin.Email ?? string.Empty : admin.FullName;
+
+    private static string CacheKey(string id) => "admin-portal:active-admin:" + id;
 }

@@ -31,7 +31,7 @@ public class AdminAudit : IAdminAudit
         _auditLog.Add(new AdminAuditEntry
         {
             Id = Guid.NewGuid(),
-            AdminUserId = user is null ? null : AdminClaims.Id(user),
+            UserId = user is null ? null : AdminClaims.Id(user),
             AdminEmail = user is null ? "system" : AdminClaims.Email(user),
             Action = action,
             EntityType = entityType,

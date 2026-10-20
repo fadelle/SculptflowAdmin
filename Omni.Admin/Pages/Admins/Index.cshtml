@@ -1,8 +1,9 @@
 @page
+@using Omni.Admin.Business.Services.Admins
 @model Omni.Admin.Pages.Admins.IndexModel
 @{ ViewData["Title"] = "Admin users"; }
 <div class="au-page-head">
-    <p class="au-page-head__sub">People who can sign in to this portal. Separate from client member accounts.</p>
+    <p class="au-page-head__sub">People who can sign in to this portal. Admin accounts never sign in to the client app, and client or member accounts never sign in here.</p>
     <div class="au-page-head__actions"><button class="au-btn au-btn--primary" type="button" data-open="add-admin"><span class="au-icon" aria-hidden="true">person_add</span>Add admin</button></div>
 </div>
 
@@ -14,9 +15,9 @@
                 @foreach (var a in Model.Admins)
                 {
                     <tr>
-                        <td><span class="au-row" style="--au-gap:8px"><span class="au-avatar" aria-hidden="true">@Ui.Initials(a.FullName)</span><span class="au-strong">@a.FullName</span> @if (a.Id == Model.Me) { <span class="au-chip au-chip--outlined au-chip--primary">you</span> }</span></td>
+                        <td><span class="au-row" style="--au-gap:8px"><span class="au-avatar" aria-hidden="true">@Ui.Initials(a.FullName ?? a.Email ?? "?")</span><span class="au-strong">@(a.FullName ?? a.Email)</span> @if (a.Id == Model.Me) { <span class="au-chip au-chip--outlined au-chip--primary">you</span> }</span></td>
                         <td>@a.Email</td>
-                        <td>@Ui.Badge(a.IsActive ? "active" : "inactive") @if (a.LockedUntil > DateTimeOffset.UtcNow) { @Ui.Badge("locked", "locked out") }</td>
+                        <td>@Ui.Badge(a.IsActive ? "active" : "inactive") @if (a.LoginLocked) { @Ui.Badge("locked", "locked out") }</td>
                         <td>@Ui.Time(a.LastLoginAt)</td>
                         <td>
                             <span class="au-row-actions">
@@ -35,7 +36,7 @@
                                     <input type="hidden" name="id" value="@a.Id" />
                                     <h2 class="au-dialog__title" id="pw-title-@a.Id">Set password for @a.Email<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
                                     <div class="au-dialog__content">
-                                        <div class="au-form-field"><label class="au-form-label" for="pw-input-@a.Id">New password<span class="au-required">*</span></label><input class="au-input" id="pw-input-@a.Id" type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /><span class="au-help">At least @AdminAuthService.MinPasswordLength characters.</span></div>
+                                        <div class="au-form-field"><label class="au-form-label" for="pw-input-@a.Id">New password<span class="au-required">*</span></label><input class="au-input" id="pw-input-@a.Id" type="password" name="password" minlength="@AdminAccountService.MinPasswordLength" autocomplete="new-password" required /><span class="au-help">At least @AdminAccountService.MinPasswordLength characters.</span></div>
                                     </div>
                                     <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Set password</button></div>
                                 </form>
@@ -55,7 +56,7 @@
             <div class="au-stack" style="--au-gap:16px">
                 <div class="au-form-field"><label class="au-form-label" for="aa-name">Full name<span class="au-required">*</span></label><input class="au-input" id="aa-name" name="fullName" required /></div>
                 <div class="au-form-field"><label class="au-form-label" for="aa-email">Email<span class="au-required">*</span></label><input class="au-input" id="aa-email" type="email" name="email" required /></div>
-                <div class="au-form-field"><label class="au-form-label" for="aa-pw">Password<span class="au-required">*</span></label><input class="au-input" id="aa-pw" type="password" name="password" minlength="@AdminAuthService.MinPasswordLength" autocomplete="new-password" required /><span class="au-help">At least @AdminAuthService.MinPasswordLength characters.</span></div>
+                <div class="au-form-field"><label class="au-form-label" for="aa-pw">Password<span class="au-required">*</span></label><input class="au-input" id="aa-pw" type="password" name="password" minlength="@AdminAccountService.MinPasswordLength" autocomplete="new-password" required /><span class="au-help">At least @AdminAccountService.MinPasswordLength characters.</span></div>
             </div>
         </div>
         <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Add admin</button></div>
