@@ -8,8 +8,8 @@ each API's request/response shapes. This file records how far that has been chec
 
 | | |
 |---|---|
-| Synced on | 2026-10-20 (P3: admin sign-in and admins; P2: the rest) |
-| Main app commit | `bb95a8c` on branch `refactor/generic-platform` (the Omni rename, business types, one users table); the portal's copies match its `Omni.App/Entities/{Dtos,Requests,Responses}/PlatformAdmin` and `BusinessTypes` |
+| Synced on | 2026-10-20 (P3: admin sign-in and admins; P2: the rest; plan fixes: `bookings` entitlement, `ai_reply` usage) |
+| Main app commit | `bb95a8c` on branch `refactor/generic-platform` (the Omni rename, business types, one users table); the portal's copies match its `Omni.App/Entities/{Dtos,Requests,Responses}/PlatformAdmin` and `BusinessTypes`. Checked again against the uncommitted plan fixes on top of `2b72d25` (no shape change: the new `bookings` feature comes through `GET billing/entitlements` into the plan editor by itself; `ai_reply` added to `BillingVocab.EventTypes` and labelled "AI reply") |
 
 ## How to update the portal ("update the admin portal")
 
@@ -40,8 +40,10 @@ Writes outside billing answer `{ clientId }` (`PlatformAdminChange`) so the port
 | Clients, channels (incl. `whatsapp/debug-token` → `DebugTokenRequest`, `WhatsAppTokenDebugResult`), member, contacts, content, overview | `/api/platform-admin/{clients,channels,member,contacts,content,overview}` | List rows: `Entities/Dtos/{Clients,Channels,Member,Contacts,Content,Overview}` (main app: `Entities/Dtos/PlatformAdmin`). Details and `PlatformAdminChange`: `Entities/Responses/PlatformAdmin`. Bodies: `Entities/Requests/{Clients,Channels,Contacts,Content,Member,PlatformAdmin}`. Client Inbox settings (added 2026-10-15, `GET`/`PUT clients/{id}/inbox-settings`): `Entities/Responses/PlatformAdmin/InboxSettingsDto` (main app: `Entities/Dtos/Inbox`, its computed `AiBotAnswers*` included) and `Entities/Requests/Clients/UpdateInboxSettingsRequest` (main app: `Entities/Requests/Inbox`) |
 | Knowledge benchmark | `/api/platform-admin/knowledge-benchmark/clients/{clientId}/*` | Bodies: `Entities/Requests/KnowledgeBenchmark` (main app: `Entities/Requests/KnowledgeBenchmark`). Answers are passed through as JSON to the Search benchmark scripts, so the copy of the response shapes (main app: `Entities/Responses/KnowledgeBenchmark`, `Entities/Dtos/KnowledgeBenchmark`) is the field names those scripts read (`wwwroot/js/knowledge-benchmark*.js`). Writes answer the changed record, not `{ clientId }`; the portal audits under the route's client |
 
-The value vocabularies in `Common/Enums` (statuses, channels, modes) are still copies the pages use for filters and
-badges; refresh them when the main app adds a value.
+The value vocabularies in `Common/Enums` (statuses, channels, modes) and the billable event types the rate forms suggest
+(`Common/Statics/BillingVocab.EventTypes`, main app `BillableEventTypes`) are still copies the pages use for filters,
+suggestions and badges; refresh them when the main app adds a value. Plan features and limits are not copied: the plan
+editor reads the main app's catalog (`GET billing/entitlements`).
 
 ## Known gaps in the main app that limit admin control
 

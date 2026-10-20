@@ -19,11 +19,12 @@ public static class BillingUi
     /// <summary>Invariant decimal for an input's value attribute.</summary>
     public static string Input(decimal value) => value.ToString(CultureInfo.InvariantCulture);
 
-    /// <summary>"whatsapp_marketing_message" → "WhatsApp marketing message".</summary>
+    /// <summary>"whatsapp_marketing_message" → "WhatsApp marketing message", "ai_reply" → "AI reply".</summary>
     public static string EventLabel(string eventType)
     {
         var text = eventType.Replace('_', ' ');
         text = text.StartsWith("whatsapp", StringComparison.Ordinal) ? "WhatsApp" + text["whatsapp".Length..] : text;
+        text = text.StartsWith("ai ", StringComparison.Ordinal) ? "AI" + text[2..] : text;
         text = text.Replace(" ai ", " AI ").Replace("sms", "SMS");
         return text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
     }
