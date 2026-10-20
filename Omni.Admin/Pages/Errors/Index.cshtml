@@ -64,7 +64,7 @@
         <div class="au-table-card">
             @if (r.Groups.Count == 0)
             {
-                var empty = new EmptyStateModel(string.IsNullOrWhiteSpace(Model.Q) && Model.ClinicId is null
+                var empty = new EmptyStateModel(string.IsNullOrWhiteSpace(Model.Q) && Model.ClientId is null
                     ? "Nothing logged at this level in this period." : "No problems match your filters.", "check_circle");
                 <partial name="_EmptyState" model="empty" />
             }

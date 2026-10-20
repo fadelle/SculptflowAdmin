@@ -8,5 +8,5 @@ public interface IAdminAuditRepository
     void Add(AdminAuditEntry entry);
 
     /// <summary>Newest first; search matches action, admin email or entity id.</summary>
-    Task<PagedResult<AdminAuditEntry>> ListAsync(Guid? clinicId, string? search, int page, CancellationToken ct = default);
+    Task<PagedResult<AdminAuditEntry>> ListAsync(Guid? clientId, string? search, int page, CancellationToken ct = default);
 }

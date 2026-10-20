@@ -3,17 +3,17 @@
 @{
     ViewData["Title"] = "Dashboard";
     var t = Model.Totals;
-    var max = Math.Max(1, Model.Daily.Max(d => d.Inbound + d.Ai + d.Staff));
+    var max = Math.Max(1, Model.Daily.Max(d => d.Inbound + d.Ai + d.Members));
     // Status board levels: the same conditions the old tiles flagged as "warn".
     var channelProblems = t.UnhealthyChannels + t.CalendarProblems;
     var channelLevel = channelProblems > 0 ? "crit" : t.ConnectedChannels > 0 ? "ok" : "idle";
     var deliveryLevel = t.FailedMessagesLast7Days > 0 ? "warn" : "ok";
     var problemsLevel = Model.Problems.Count > 0 ? "crit" : "ok";
-    // Handoffs to staff are normal work, not a health signal (the old tile never flagged them): neutral, not in the verdict.
+    // Handoffs to a member are normal work, not a health signal (the old tile never flagged them): neutral, not in the verdict.
     // App errors: a critical is "crit", errors are "warn" (one failed provider call is not an outage), warnings alone are ok.
     var errors = Model.Errors;
     var errorsLevel = errors is null || !errors.Enabled ? "idle" : errors.Criticals > 0 ? "crit" : errors.Errors > 0 ? "warn" : "ok";
-    // Message flows: any failed flow is a warning (one patient affected), never the whole system down.
+    // Message flows: any failed flow is a warning (one contact affected), never the whole system down.
     var traces = Model.Traces;
     var flowsLevel = traces is null || !traces.Enabled ? "idle" : traces.FailedTraces > 0 ? "warn" : "ok";
     var levels = new[] { channelLevel, deliveryLevel, problemsLevel, errorsLevel, flowsLevel };
@@ -25,7 +25,7 @@
         <span class="au-hero__mark"><partial name="_BrandMark" model="56" /></span>
         <div style="min-width:0">
             <h2 class="au-hero__title">Omni Admin</h2>
-            <p class="au-hero__sub">Everything across all clinics.</p>
+            <p class="au-hero__sub">Everything across all clients.</p>
         </div>
     </section>
 
@@ -61,20 +61,20 @@
                 <span class="au-status__sub">@(traces is null ? "the main app's message trace didn't answer" : !traces.Enabled ? "recording is off" : $"of {Ui.Count(traces.Traces, "message traced", "messages traced")} in the last 24 hours")</span>
             </a>
             <a class="au-status" data-level="idle" href="/Conversations?mode=human&status=active">
-                <div class="au-status__head"><span class="au-icon" aria-hidden="true">support_agent</span><span class="au-eyebrow">Open conversations with staff</span><span class="au-dot" aria-hidden="true"></span></div>
+                <div class="au-status__head"><span class="au-icon" aria-hidden="true">support_agent</span><span class="au-eyebrow">Open conversations with a member</span><span class="au-dot" aria-hidden="true"></span></div>
                 <div class="au-status__metric">@t.ConversationsInHumanMode <span class="au-caption">/ @t.Conversations</span></div>
-                <span class="au-status__sub">handed from the AI to clinic staff</span>
+                <span class="au-status__sub">handed from the AI to a client member</span>
             </a>
         </div>
     </section>
 
     <div class="au-grid au-grid--4" style="--au-gap:12px">
-        <a class="au-stat" href="/Clinics"><span class="au-eyebrow">Clinics (active / all)</span><div class="au-stat__value">@t.ActiveClinics <span class="au-stat__hint">/ @t.Clinics</span></div></a>
-        <a class="au-stat" href="/Staff"><span class="au-eyebrow">Active staff accounts</span><div class="au-stat__value">@t.StaffUsers</div></a>
-        <a class="au-stat" href="/Leads"><span class="au-eyebrow">Leads (new in 7 days)</span><div class="au-stat__value">@t.Leads.ToString("N0") <span class="au-stat__hint">+@t.LeadsLast7Days</span></div></a>
+        <a class="au-stat" href="/Clients"><span class="au-eyebrow">Clients (active / all)</span><div class="au-stat__value">@t.ActiveClients <span class="au-stat__hint">/ @t.Clients</span></div></a>
+        <a class="au-stat" href="/Members"><span class="au-eyebrow">Active member accounts</span><div class="au-stat__value">@t.Users</div></a>
+        <a class="au-stat" href="/Contacts"><span class="au-eyebrow">Contacts (new in 7 days)</span><div class="au-stat__value">@t.Contacts.ToString("N0") <span class="au-stat__hint">+@t.ContactsLast7Days</span></div></a>
         <a class="au-stat" href="/Messages"><span class="au-eyebrow">Messages 24h / 7d</span><div class="au-stat__value">@t.MessagesLast24h <span class="au-stat__hint">/ @t.MessagesLast7Days</span></div></a>
         <div class="au-stat"><span class="au-eyebrow">AI replies / inbound (7d)</span><div class="au-stat__value">@t.AiMessagesLast7Days <span class="au-stat__hint">/ @t.InboundLast7Days</span></div></div>
-        <a class="au-stat" href="/Appointments?upcoming=true"><span class="au-eyebrow">Upcoming appointments</span><div class="au-stat__value">@t.UpcomingAppointments <span class="au-stat__hint">+@t.AppointmentsBookedLast7Days booked 7d</span></div></a>
+        <a class="au-stat" href="/Bookings?upcoming=true"><span class="au-eyebrow">Upcoming bookings</span><div class="au-stat__value">@t.UpcomingBookings <span class="au-stat__hint">+@t.BookingsBookedLast7Days booked 7d</span></div></a>
         <a class="au-stat" href="/Campaigns?status=running"><span class="au-eyebrow">Running campaigns</span><div class="au-stat__value">@t.RunningCampaigns</div></a>
         <a class="au-stat" href="/Knowledge"><span class="au-eyebrow">Knowledge documents</span><div class="au-stat__value">@t.KnowledgeDocuments</div></a>
     </div>
@@ -85,15 +85,15 @@
             <div class="bars">
                 @foreach (var d in Model.Daily)
                 {
-                    var total = d.Inbound + d.Ai + d.Staff;
-                    <div class="col" title="@d.Day: @d.Inbound inbound, @d.Ai AI, @d.Staff staff, @d.Failed failed">
+                    var total = d.Inbound + d.Ai + d.Members;
+                    <div class="col" title="@d.Day: @d.Inbound inbound, @d.Ai AI, @d.Members members, @d.Failed failed">
                         <div class="bar ai" style="height:@(d.Ai * 100 / max)%"></div>
                         <div class="bar" style="height:@((total - d.Ai) * 100 / max)%"></div>
                         <div class="lbl">@d.Day.ToString("dd")</div>
                     </div>
                 }
             </div>
-            <div class="legend"><span><i class="ai"></i>AI replies</span><span><i></i>Customers + staff</span></div>
+            <div class="legend"><span><i class="ai"></i>AI replies</span><span><i></i>Contacts + members</span></div>
         </section>
 
         <section class="au-table-card" id="attention">
@@ -107,13 +107,13 @@
             {
                 <div class="au-table-scroll">
                     <table class="au-table">
-                        <thead><tr><th>What</th><th>Clinic</th><th>Detail</th><th>When</th></tr></thead>
+                        <thead><tr><th>What</th><th>Client</th><th>Detail</th><th>When</th></tr></thead>
                         <tbody>
                             @foreach (var p in Model.Problems.Take(15))
                             {
                                 <tr>
                                     <td>@Ui.Badge("error", p.Kind) <a href="@p.Link">@p.Title</a></td>
-                                    <td><a href="/Clinics/Details?id=@p.ClinicId">@p.ClinicName</a></td>
+                                    <td><a href="/Clients/Details?id=@p.ClientId">@p.ClientName</a></td>
                                     <td title="@p.Detail">@Ui.Truncate(p.Detail, 120)</td>
                                     <td>@Ui.Time(p.At)</td>
                                 </tr>
@@ -126,7 +126,7 @@
     </div>
 
     <section class="au-table-card">
-        <div class="au-panel__head"><h3 class="au-panel__title">Newest clinics</h3><a class="au-panel__link" href="/Clinics">All clinics →</a></div>
-        <partial name="_ClinicTable" model="Model.RecentClinics" />
+        <div class="au-panel__head"><h3 class="au-panel__title">Newest clients</h3><a class="au-panel__link" href="/Clients">All clients →</a></div>
+        <partial name="_ClientTable" model="Model.RecentClients" />
     </section>
 </div>

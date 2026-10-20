@@ -6,7 +6,7 @@ namespace Omni.Admin.Business.Mappers.Billing;
 
 public static class BillingReportGrouping
 {
-    /// <summary>Groups the report's usage rows by "clinic" (default), "channel", "event" or "who_pays", highest revenue first.</summary>
+    /// <summary>Groups the report's usage rows by "client" (default), "channel", "event" or "who_pays", highest revenue first.</summary>
     public static List<BillingReportGroup> Group(BillingReport? report, string groupBy)
     {
         if (report is null) return new();
@@ -15,7 +15,7 @@ public static class BillingReportGrouping
             "channel" => report.Usage.GroupBy(r => r.Channel),
             "event" => report.Usage.GroupBy(r => r.EventType),
             "who_pays" => report.Usage.GroupBy(r => r.ProviderBilling),
-            _ => report.Usage.GroupBy(r => r.ClinicId.ToString())
+            _ => report.Usage.GroupBy(r => r.ClientId.ToString())
         };
         return grouped.Select(g =>
         {
@@ -25,9 +25,9 @@ public static class BillingReportGrouping
                 "channel" => first.Channel,
                 "event" => BillingUi.EventLabel(first.EventType),
                 "who_pays" => BillingUi.ResponsibilityLabel(first.ProviderBilling),
-                _ => first.ClinicName
+                _ => first.ClientName
             };
-            return new BillingReportGroup(g.Key, label, groupBy == "clinic" ? first.ClinicId : null, g.Sum(r => r.Count), g.Sum(r => r.Quantity),
+            return new BillingReportGroup(g.Key, label, groupBy == "client" ? first.ClientId : null, g.Sum(r => r.Count), g.Sum(r => r.Quantity),
                 g.Sum(r => r.Revenue), g.Sum(r => r.ProviderCost), g.Sum(r => r.Margin));
         }).OrderByDescending(g => g.Revenue).ThenBy(g => g.Label).ToList();
     }

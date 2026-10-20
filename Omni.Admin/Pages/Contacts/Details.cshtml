@@ -1,0 +1,89 @@
+@page
+@model Omni.Admin.Pages.Contacts.DetailsModel
+@{
+    var l = Model.Contact;
+    var name = l.FullName ?? $"{l.FirstName} {l.LastName}".Trim();
+    if (string.IsNullOrWhiteSpace(name)) name = "(no name)";
+    ViewData["Title"] = name;
+    var where = string.Join(" · ", new[] { l.PreferredLanguage, l.CountryCode, l.City }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    var source = string.Join(" · ", new[] { l.Source, l.SourceDetail }.Where(x => !string.IsNullOrWhiteSpace(x)));
+}
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Contacts" aria-label="Back to contacts"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@name</h2>
+        <span class="au-back-header__sub"><a href="/Clients/Details?id=@l.ClientId">@l.Client?.Name</a> · created @Ui.Time(l.CreatedAt)</span>
+    </div>
+    <div class="au-row au-row--wrap">
+        <button class="au-btn au-btn--outlined" type="button" data-open="edit-contact"><span class="au-icon" aria-hidden="true">edit</span>Edit</button>
+    </div>
+</div>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">
+    @Ui.Badge(l.StageKey) @Ui.Badge(l.Qualification)
+    <span class="au-copy"><span class="au-mono">@l.Id</span><button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@l.Id" data-au-copy-message="Contact id copied" aria-label="Copy contact id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span>
+</div>
+
+<div class="au-stack">
+    <section class="au-panel au-panel--round au-panel--pad">
+        <div class="au-panel__head"><h3 class="au-panel__title">Contact</h3></div>
+        <div class="au-grid au-grid--2" style="--au-gap:0 32px">
+            <dl class="au-detail-rows">
+                <div class="au-detail-row"><dt>Phone</dt><dd>@Ui.OrDash(l.Phone)</dd></div>
+                <div class="au-detail-row"><dt>Email</dt><dd>@Ui.OrDash(l.Email)</dd></div>
+                <div class="au-detail-row"><dt>Service of interest</dt><dd>@Ui.OrDash(l.Service?.Name)</dd></div>
+                <div class="au-detail-row"><dt>Source</dt><dd>@Ui.OrDash(source)</dd></div>
+                <div class="au-detail-row"><dt>Ad campaign</dt><dd>@Ui.OrDash(l.CampaignName)</dd></div>
+                <div class="au-detail-row"><dt>External contact id</dt><dd><span class="au-mono">@Ui.OrDash(l.ExternalContactId)</span></dd></div>
+                <div class="au-detail-row"><dt>Language / country / city</dt><dd>@Ui.OrDash(where)</dd></div>
+            </dl>
+            <dl class="au-detail-rows">
+                <div class="au-detail-row"><dt>Timeline</dt><dd>@Ui.OrDash(l.DesiredTimeline)</dd></div>
+                <div class="au-detail-row"><dt>Last contact</dt><dd>@Ui.Time(l.LastContactAt)</dd></div>
+                <div class="au-detail-row"><dt>Next follow-up</dt><dd>@Ui.Time(l.NextFollowupAt)</dd></div>
+                <div class="au-detail-row"><dt>Opted out at</dt><dd>@Ui.Time(l.OptedOutAt)</dd></div>
+                <div class="au-detail-row"><dt>Qualification</dt><dd>@Ui.Badge(l.Qualification)</dd></div>
+                <div class="au-detail-row"><dt>Marketing</dt><dd>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</dd></div>
+                <div class="au-detail-row"><dt>Notes</dt><dd style="white-space:pre-line">@Ui.OrDash(l.Notes)</dd></div>
+            </dl>
+        </div>
+    </section>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Conversations</h3></div>
+        <partial name="_ConversationTable" model="Model.Conversations" />
+    </section>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Bookings</h3></div>
+        <partial name="_BookingTable" model="Model.Bookings" />
+    </section>
+
+    <section class="au-table-card">
+        <div class="au-panel__head"><h3 class="au-panel__title">Events (latest 100)</h3></div>
+        <partial name="_EventTable" model="Model.Events.Select(e => new EventRow(e.Id, l.ClientId, l.Client?.Name ?? string.Empty, e.EventType, e.Source, e.ContactId, e.ConversationId, e.BookingId, e.Metadata, e.CreatedAt)).ToList()" />
+    </section>
+</div>
+
+<dialog class="au-dialog au-dialog--sm" id="edit-contact" aria-labelledby="edit-contact-title">
+    <form method="post" asp-page-handler="Update" asp-route-id="@l.Id">
+        <h2 class="au-dialog__title" id="edit-contact-title">Edit contact<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+        <div class="au-dialog__content">
+            <div class="au-form-grid">
+                <div class="au-form-field"><label class="au-form-label" for="el-stage">Stage</label>
+                    <select class="au-select" id="el-stage" name="stageKey">
+                        @if (!Model.Stages.Any(s => s.Key == l.StageKey)) { <option value="@l.StageKey" selected>@l.StageKey (not in this business type)</option> }
+                        @foreach (var s in Model.Stages) { <option value="@s.Key" selected="@(s.Key == l.StageKey)">@s.Label</option> }
+                    </select></div>
+                <div class="au-form-field"><label class="au-form-label" for="el-qual">Qualification</label>
+                    <select class="au-select" id="el-qual" name="qualification">@foreach (var s in ContactQualification.All.OrderBy(x => x)) { <option value="@s" selected="@(s == l.Qualification)">@s.Replace('_', ' ')</option> }</select></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="el-mkt">Marketing</label>
+                    <select class="au-select" id="el-mkt" name="marketingOptIn">
+                        <option value="true" selected="@l.MarketingOptIn">Opted in (campaigns can reach them)</option>
+                        <option value="false" selected="@(!l.MarketingOptIn)">Opted out</option>
+                    </select></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="el-notes">Notes</label><textarea class="au-textarea" id="el-notes" name="notes">@l.Notes</textarea></div>
+            </div>
+        </div>
+        <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Save contact</button></div>
+    </form>
+</dialog>

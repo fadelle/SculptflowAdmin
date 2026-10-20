@@ -1,0 +1,60 @@
+@page
+@model Omni.Admin.Pages.Contacts.IndexModel
+@{ ViewData["Title"] = "Contacts"; }
+<div class="au-page-head"><p class="au-page-head__sub">Contacts and prospects across every client.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:200px">
+            <label class="au-label" for="f-stage">Stage</label>
+            <select class="au-select" id="f-stage" name="stage">
+                <option value="">All</option>
+                @foreach (var s in Model.StageOptions)
+                {
+                    <option value="@s.Key" selected="@(s.Key == Model.Stage)">@s.Label</option>
+                }
+            </select>
+        </div>
+        <div class="au-field" style="width:260px">
+            <label class="au-label" for="f-q">Search</label>
+            <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" placeholder="Name, phone or email" /></span>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "contact", "contacts")</span>
+        <partial name="_FilterActions" />
+    </div>
+</form>
+<div class="au-table-card">
+    @if (Model.Result.Items.Count == 0)
+    {
+        var empty = new EmptyStateModel(Request.EmptyMessage("contacts"), "person_search");
+        <partial name="_EmptyState" model="empty" />
+    }
+    else
+    {
+        <div class="au-table-scroll">
+            <table class="au-table">
+                <thead>
+                    <tr><th>Contact</th><th>Client</th><th>Stage</th><th>Qualification</th><th>Service</th><th>Source</th><th>Marketing</th><th>Last contact</th><th>Created</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model.Result.Items)
+                    {
+                        <tr data-au-href="/Contacts/Details?id=@l.Id">
+                            <td><a href="/Contacts/Details?id=@l.Id">@(string.IsNullOrWhiteSpace(l.Name) ? "(no name)" : l.Name)</a><div class="au-caption">@l.Phone @l.Email</div></td>
+                            <td><a href="/Clients/Details?id=@l.ClientId">@l.ClientName</a></td>
+                            <td>@Ui.Badge(l.StageKey)</td>
+                            <td>@Ui.Badge(l.Qualification)</td>
+                            <td>@Ui.OrDash(l.ServiceName)</td>
+                            <td>@Ui.OrDash(l.Source)</td>
+                            <td>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</td>
+                            <td>@Ui.Time(l.LastContactAt)</td>
+                            <td>@Ui.Time(l.CreatedAt)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
+</div>

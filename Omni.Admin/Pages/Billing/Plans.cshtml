@@ -5,7 +5,7 @@
     var e = Model.Editing;
 }
 <div class="au-page-head">
-    <p class="au-page-head__sub">What a clinic pays Omni for access, the usage credit it includes each period, and which features and limits it unlocks.</p>
+    <p class="au-page-head__sub">What a client pays Omni for access, the usage credit it includes each period, and which features and limits it unlocks.</p>
     @if (Model.LoadError is null)
     {
         <div class="au-page-head__actions">
@@ -79,7 +79,7 @@
                     <div class="au-form-field"><label class="au-form-label" for="pl-sort">Sort order</label><input class="au-input" id="pl-sort" type="number" name="sortOrder" value="@(e?.SortOrder ?? 0)" /></div>
                     <div class="au-form-field"><label class="au-form-label" for="pl-card">Rate card</label>
                         <select class="au-select" id="pl-card" name="rateCardCode"><option value="">Default card</option>
-                            @foreach (var rc in Model.RateCards.Where(c => c.ClinicId is null && !c.IsDefault)) { <option value="@rc.Code" selected="@(rc.Code == e?.RateCardCode)">@rc.Name (@rc.Code)</option> }
+                            @foreach (var rc in Model.RateCards.Where(c => c.ClientId is null && !c.IsDefault)) { <option value="@rc.Code" selected="@(rc.Code == e?.RateCardCode)">@rc.Name (@rc.Code)</option> }
                         </select><span class="au-help">Blank = the default card.</span></div>
                     <label class="au-check au-span-2"><input type="checkbox" name="isActive" value="true" checked="@(e?.IsActive ?? true)" /> Active (offered for new subscriptions)</label>
                 </div>

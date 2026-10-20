@@ -10,7 +10,7 @@ using Omni.Admin.Pages.Shared;
 namespace Omni.Admin.Pages.Traces;
 
 /// <summary>Read-only: recent message traces (one per message story), with a search by trace, message or provider id.</summary>
-[ScopeCapability(ScopeCapability.Clinic)]
+[ScopeCapability(ScopeCapability.Client)]
 public class IndexModel : MainAppPageModel
 {
     private readonly IMessageTracesAdminService _traces;
@@ -25,7 +25,7 @@ public class IndexModel : MainAppPageModel
     [BindProperty(SupportsGet = true)] public int? Hours { get; set; }
     [BindProperty(SupportsGet = true)] public bool Failed { get; set; }
     [BindProperty(SupportsGet = true)] public string? Q { get; set; }
-    [BindProperty(SupportsGet = true)] public Guid? ClinicId { get; set; }
+    [BindProperty(SupportsGet = true)] public Guid? ClientId { get; set; }
     [BindProperty(SupportsGet = true, Name = "p")] public int PageNumber { get; set; } = 1;
     public MessageTracePage? Result { get; private set; }
     public string? NotFoundQuery { get; private set; }
@@ -37,7 +37,7 @@ public class IndexModel : MainAppPageModel
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
         Hours = MessageTraceOptions.Periods.Any(p => p.Hours == Hours) ? Hours : MessageTraceOptions.DefaultHours;
-        ClinicId ??= _scope.FilterGuid;
+        ClientId ??= _scope.FilterGuid;
         if (Clean(Q) is { } query)
         {
             string? traceId = null;
@@ -45,7 +45,7 @@ public class IndexModel : MainAppPageModel
             if (traceId is not null) return Redirect("/Traces/Details?traceId=" + Uri.EscapeDataString(traceId));
             NotFoundQuery = query;
         }
-        await LoadAsync(async () => Result = await _traces.ListAsync(Hours!.Value, ClinicId, Failed, Math.Max(1, PageNumber), ct));
+        await LoadAsync(async () => Result = await _traces.ListAsync(Hours!.Value, ClientId, Failed, Math.Max(1, PageNumber), ct));
         return Page();
     }
 }

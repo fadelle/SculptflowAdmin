@@ -11,7 +11,7 @@ public static class Ui
     private static readonly HashSet<string> Green = new(StringComparer.OrdinalIgnoreCase)
     {
         "connected", "active", "approved", "healthy", "completed", "delivered", "read", "replied", "booked", "confirmed",
-        "attended", "indexed", "synced", "settled", "billable", "hot", "qualified", "consultation_booked", "consultation_attended", "surgery_booked", "yes"
+        "attended", "indexed", "synced", "settled", "billable", "hot", "qualified", "converted", "yes"
     };
     private static readonly HashSet<string> Red = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -61,7 +61,7 @@ public static class Ui
     public static IHtmlContent OrDash(string? text) =>
         string.IsNullOrWhiteSpace(text) ? new HtmlString("<span class=\"au-faint\">—</span>") : new HtmlString(HtmlEncoder.Default.Encode(text));
 
-    /// <summary>"1 lead" / "1,284 leads".</summary>
+    /// <summary>"1 contact" / "1,284 contacts".</summary>
     public static string Count(long n, string one, string many) => $"{n:N0} {(n == 1 ? one : many)}";
 
     public static string Truncate(string? text, int max) =>

@@ -15,8 +15,8 @@ public class MessageTracesApiClient : MainAppApiClient, IMessageTracesApiClient
     {
     }
 
-    public Task<MessageTracePage> ListAsync(int hours, Guid? clinicId, Guid? conversationId, bool failedOnly, int page, int pageSize, CancellationToken ct) =>
-        GetRequiredAsync<MessageTracePage>(Query(("hours", hours), ("clinicId", clinicId), ("conversationId", conversationId),
+    public Task<MessageTracePage> ListAsync(int hours, Guid? clientId, Guid? conversationId, bool failedOnly, int page, int pageSize, CancellationToken ct) =>
+        GetRequiredAsync<MessageTracePage>(Query(("hours", hours), ("clientId", clientId), ("conversationId", conversationId),
             ("failedOnly", failedOnly), ("page", page), ("pageSize", pageSize)), ct);
 
     public Task<MessageTrace?> GetAsync(string traceId, CancellationToken ct) => GetAsync<MessageTrace>("/" + Esc(traceId), ct);

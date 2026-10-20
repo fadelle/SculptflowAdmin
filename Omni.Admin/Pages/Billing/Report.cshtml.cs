@@ -18,7 +18,7 @@ public class ReportModel : MainAppPageModel
     /// <summary>yyyy-MM-dd, UTC; default = the current month.</summary>
     [BindProperty(SupportsGet = true)] public string? From { get; set; }
     [BindProperty(SupportsGet = true)] public string? To { get; set; }
-    [BindProperty(SupportsGet = true)] public string GroupBy { get; set; } = "clinic";
+    [BindProperty(SupportsGet = true)] public string GroupBy { get; set; } = "client";
     public BillingReport? Report { get; private set; }
 
     public async Task OnGetAsync(CancellationToken ct)
@@ -31,7 +31,7 @@ public class ReportModel : MainAppPageModel
         if (to <= from) to = from.AddDays(1);
         From = from.ToString("yyyy-MM-dd");
         To = to.AddDays(-1).ToString("yyyy-MM-dd");
-        GroupBy = GroupBy is "channel" or "event" or "who_pays" ? GroupBy : "clinic";
+        GroupBy = GroupBy is "channel" or "event" or "who_pays" ? GroupBy : "client";
         await LoadAsync(async () => Report = await _billing.ReportAsync(from, to, ct));
     }
 

@@ -22,9 +22,9 @@ public class IndexModel : MainAppPageModel
         Status = Clean(status);
         await LoadAsync(async () => Accounts = await _billing.AccountsAsync(ct));
         Shown = Accounts
-            .Where(a => Q is null || a.ClinicName.Contains(Q, StringComparison.OrdinalIgnoreCase) || (a.PlanCode ?? "").Contains(Q, StringComparison.OrdinalIgnoreCase))
+            .Where(a => Q is null || a.ClientName.Contains(Q, StringComparison.OrdinalIgnoreCase) || (a.PlanCode ?? "").Contains(Q, StringComparison.OrdinalIgnoreCase))
             .Where(a => Status is null || (Status == "none" ? a.SubscriptionStatus is null : a.SubscriptionStatus == Status))
-            .OrderBy(a => a.ClinicName)
+            .OrderBy(a => a.ClientName)
             .ToList();
     }
 }

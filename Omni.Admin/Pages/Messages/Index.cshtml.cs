@@ -1,25 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
-using Omni.Admin.Business.Contracts.Services.Leads;
+using Omni.Admin.Business.Contracts.Services.Contacts;
 using Omni.Admin.Common.Enums;
-using Omni.Admin.Entities.Dtos.Leads;
+using Omni.Admin.Entities.Dtos.Contacts;
 using Omni.Admin.Entities.Responses.Paging;
 using Omni.Admin.Pages.Shared;
 
 namespace Omni.Admin.Pages.Messages;
 
-[ScopeCapability(ScopeCapability.Clinic)]
+[ScopeCapability(ScopeCapability.Client)]
 public class IndexModel : AdminPageModel
 {
-    private readonly ILeadAdminService _leads;
+    private readonly IContactAdminService _contacts;
     private readonly ScopeContext _scope;
 
-    public IndexModel(ILeadAdminService leads, ScopeContext scope)
+    public IndexModel(IContactAdminService contacts, ScopeContext scope)
     {
-        _leads = leads;
+        _contacts = contacts;
         _scope = scope;
     }
 
-    [BindProperty(SupportsGet = true)] public Guid? ClinicId { get; set; }
+    [BindProperty(SupportsGet = true)] public Guid? ClientId { get; set; }
     [BindProperty(SupportsGet = true)] public bool Failed { get; set; }
     [BindProperty(SupportsGet = true)] public string? Sender { get; set; }
     [BindProperty(SupportsGet = true)] public string? Q { get; set; }
@@ -28,7 +28,7 @@ public class IndexModel : AdminPageModel
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        ClinicId ??= _scope.FilterGuid; // the header's clinic scope when the URL names none
-        Result = await _leads.ListMessagesAsync(ClinicId, Failed, Sender, Q, PageNumber, ct);
+        ClientId ??= _scope.FilterGuid; // the header's client scope when the URL names none
+        Result = await _contacts.ListMessagesAsync(ClientId, Failed, Sender, Q, PageNumber, ct);
     }
 }

@@ -9,7 +9,7 @@ using Omni.Admin.Common.Exceptions;
 namespace Omni.Admin.Pages.Shared;
 
 /// <summary>
-/// Resolves the global clinic scope for every page (docs/UI_GUIDE.md §7): ?clinicId= wins (shareable links; empty means
+/// Resolves the global client scope for every page (docs/UI_GUIDE.md §7): ?clientId= wins (shareable links; empty means
 /// "all" and clears it), otherwise the cookie remembers the last choice. Signed-out requests are left alone.
 /// </summary>
 public sealed class ScopePageFilter : IAsyncPageFilter
@@ -45,7 +45,7 @@ public sealed class ScopePageFilter : IAsyncPageFilter
         string? id;
         if (http.Request.Query.TryGetValue(o.QueryKey, out var fromUrl))
         {
-            id = string.IsNullOrWhiteSpace(fromUrl) ? null : fromUrl.ToString(); // "?clinicId=" = explicit All
+            id = string.IsNullOrWhiteSpace(fromUrl) ? null : fromUrl.ToString(); // "?clientId=" = explicit All
             if (id is null) http.Response.Cookies.Delete(o.CookieName);
             else http.Response.Cookies.Append(o.CookieName, id, new CookieOptions
             {

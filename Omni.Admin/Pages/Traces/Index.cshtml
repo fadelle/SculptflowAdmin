@@ -88,7 +88,7 @@
                                     <td class="au-right">@t.Steps</td>
                                     <td>@Ui.OrDash(t.Channel)</td>
                                     <td>
-                                        @if (t.ClinicId.HasValue) { <a href="/Clinics/Details?id=@t.ClinicId">clinic</a> }
+                                        @if (t.ClientId.HasValue) { <a href="/Clients/Details?id=@t.ClientId">client</a> }
                                         @if (t.ConversationId.HasValue) { <a href="/Conversations/Details?id=@t.ConversationId">conversation</a> }
                                     </td>
                                 </tr>

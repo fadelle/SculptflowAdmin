@@ -1,0 +1,23 @@
+@page
+@model Omni.Admin.Pages.Bookings.IndexModel
+@{ ViewData["Title"] = "Bookings"; }
+<div class="au-page-head"><p class="au-page-head__sub">Times are shown in each client's own time zone. Changing a status here doesn't update the client's connected Google/Outlook calendar.</p></div>
+<form class="filters au-toolbar" method="get">
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:180px">
+            <label class="au-label" for="f-status">Status</label>
+            <select class="au-select" id="f-status" name="status"><option value="">All</option>
+                @foreach (var s in BookingStatus.All) { <option value="@s" selected="@(s == Model.Status)">@s.Replace('_', ' ')</option> }
+            </select>
+        </div>
+        <label class="au-check"><input type="checkbox" name="upcoming" value="true" checked="@Model.Upcoming" /> Upcoming only</label>
+    </div>
+    <div class="au-toolbar__actions">
+        <span class="au-toolbar__meta">@Ui.Count(Model.Result.Total, "booking", "bookings")</span>
+        <partial name="_FilterActions" />
+    </div>
+</form>
+<div class="au-table-card">
+    <partial name="_BookingTable" model="Model.Result.Items" />
+    <partial name="_Pager" model="PagerModel.From(Model.Result)" />
+</div>

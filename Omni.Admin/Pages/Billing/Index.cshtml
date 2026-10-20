@@ -7,14 +7,14 @@
     var pastDue = a.Count(x => x.SubscriptionStatus == "past_due");
 }
 <div class="au-page-head">
-    <p class="au-page-head__sub">Every clinic's plan, prepaid wallet and included credit. Billing rules and balances live in the main app; changes here go through its billing API.</p>
+    <p class="au-page-head__sub">Every client's plan, prepaid wallet and included credit. Billing rules and balances live in the main app; changes here go through its billing API.</p>
 </div>
 
 @if (Model.LoadError is null)
 {
     <div class="au-stack">
         <div class="au-grid au-grid--4" style="--au-gap:12px">
-            <div class="au-stat"><span class="au-eyebrow">Clinics</span><div class="au-stat__value">@a.Count</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Clients</span><div class="au-stat__value">@a.Count</div></div>
             <div class="au-stat"><span class="au-eyebrow">Active subscriptions</span><div class="au-stat__value">@a.Count(x => x.SubscriptionStatus == "active")</div></div>
             <div class="au-stat"><span class="au-eyebrow">Past due</span><div class="au-stat__value @(pastDue > 0 ? "au-text-error" : null)">@pastDue</div></div>
             <div class="au-stat"><span class="au-eyebrow">No plan</span><div class="au-stat__value">@a.Count(x => x.SubscriptionStatus is null)</div></div>
@@ -27,7 +27,7 @@
             <form class="filters au-toolbar" method="get">
                 <div class="au-toolbar__filters">
                     <div class="au-field" style="width:240px">
-                        <label class="au-label" for="f-q">Clinic or plan</label>
+                        <label class="au-label" for="f-q">Client or plan</label>
                         <span class="au-input-icon"><span class="au-icon" aria-hidden="true">search</span><input class="au-input" type="search" id="f-q" name="q" value="@Model.Q" /></span>
                     </div>
                     <div class="au-field" style="width:170px">
@@ -55,12 +55,12 @@
                 {
                     <div class="au-table-scroll">
                         <table class="au-table">
-                            <thead><tr><th>Clinic</th><th>Plan</th><th>Subscription</th><th>Period ends</th><th class="au-right">Wallet</th><th class="au-right">Included credit</th><th class="au-right">Reserved</th></tr></thead>
+                            <thead><tr><th>Client</th><th>Plan</th><th>Subscription</th><th>Period ends</th><th class="au-right">Wallet</th><th class="au-right">Included credit</th><th class="au-right">Reserved</th></tr></thead>
                             <tbody>
                                 @foreach (var r in Model.Shown)
                                 {
-                                    <tr data-au-href="/Billing/Clinic?id=@r.ClinicId">
-                                        <td><a href="/Billing/Clinic?id=@r.ClinicId">@r.ClinicName</a></td>
+                                    <tr data-au-href="/Billing/Client?id=@r.ClientId">
+                                        <td><a href="/Billing/Client?id=@r.ClientId">@r.ClientName</a></td>
                                         <td>@Ui.OrDash(r.PlanCode)</td>
                                         <td>@Ui.Badge(r.SubscriptionStatus ?? "none", r.SubscriptionStatus is null ? "no plan" : null)</td>
                                         <td>@Ui.Time(r.CurrentPeriodEnd)</td>

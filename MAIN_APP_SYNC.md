@@ -8,8 +8,8 @@ each API's request/response shapes. This file records how far that has been chec
 
 | | |
 |---|---|
-| Synced on | 2026-10-07 |
-| Main app commit | `9f9912f` on branch `refactor/architecture`, plus that branch's uncommitted caching and platform-admin API work |
+| Synced on | 2026-10-19 (P2) |
+| Main app commit | `bb95a8c` on branch `refactor/generic-platform` (the Omni rename, business types, one users table); the portal's copies match its `Omni.App/Entities/{Dtos,Requests,Responses}/PlatformAdmin` and `BusinessTypes` |
 
 ## How to update the portal ("update the admin portal")
 
@@ -25,7 +25,7 @@ each API's request/response shapes. This file records how far that has been chec
 ## Areas and the shapes the portal copies
 
 All use `PlatformAdmin:ApiKey` (`X-Platform-Admin-Key`), actor `X-Admin-Actor`, and `Idempotency-Key` on money writes.
-Writes outside billing answer `{ clinicId }` (`PlatformAdminChange`) so the portal can file its audit entry.
+Writes outside billing answer `{ clientId }` (`PlatformAdminChange`) so the portal can file its audit entry.
 
 | Area | Main-app API | Portal copy |
 |---|---|---|
@@ -35,18 +35,19 @@ Writes outside billing answer `{ clinicId }` (`PlatformAdminChange`) so the port
 | Message trace (read-only, added 2026-10-15) | `/api/platform-admin/message-traces` (list, `{traceId}`, `by-message/{id}`, `resolve?q=`, `summary`) | `Entities/Responses/Monitoring/{MessageTrace,MessageTracePage,MessageTraceSummary,TraceReference}`, `Entities/Dtos/Monitoring/{MessageTraceEntry,TraceSummaryRow}` (main app: `Entities/Dtos/PlatformAdmin`). Periods: `Common/Statics/MessageTraceOptions` |
 | Error log (read-only, added 2026-10-15) | `/api/platform-admin/logs` (`groups`, list, `{id}`, `summary`) | `Entities/Responses/Monitoring/{AppLogGroupReport,AppLogPage,AppLogDetail,AppLogSummary}`, `Entities/Dtos/Monitoring/{AppLogGroupRow,AppLogRow}` (main app: `Entities/Dtos/PlatformAdmin`). Levels, sorts and limits: `Common/Statics/AppLogOptions` |
 | API timings (read-only, added 2026-10-14) | `/api/platform-admin/api-timings` | `Entities/Responses/Monitoring/ApiTimingReport`, `Entities/Dtos/Monitoring/RouteTimingRow` (main app: `Entities/Dtos/PlatformAdmin`). Sort keys and limits: `Common/Statics/ApiTimingOptions` |
-| Clinics, channels (incl. `whatsapp/debug-token` → `DebugTokenRequest`, `WhatsAppTokenDebugResult`), staff, leads, content, overview | `/api/platform-admin/{clinics,channels,staff,leads,content,overview}` | List rows: `Entities/Dtos/{Clinics,Channels,Staff,Leads,Content,Overview}` (main app: `Entities/Dtos/PlatformAdmin`). Details and `PlatformAdminChange`: `Entities/Responses/PlatformAdmin`. Bodies: `Entities/Requests/{Clinics,Channels,Leads,Content,Staff,PlatformAdmin}`. Clinic Inbox settings (added 2026-10-15, `GET`/`PUT clinics/{id}/inbox-settings`): `Entities/Responses/PlatformAdmin/InboxSettingsDto` (main app: `Entities/Dtos/Inbox`, its computed `AiBotAnswers*` included) and `Entities/Requests/Clinics/UpdateInboxSettingsRequest` (main app: `Entities/Requests/Inbox`) |
-| Knowledge benchmark | `/api/platform-admin/knowledge-benchmark/clinics/{clinicId}/*` | Bodies: `Entities/Requests/KnowledgeBenchmark` (main app: `Entities/Requests/KnowledgeBenchmark`). Answers are passed through as JSON to the Search benchmark scripts, so the copy of the response shapes (main app: `Entities/Responses/KnowledgeBenchmark`, `Entities/Dtos/KnowledgeBenchmark`) is the field names those scripts read (`wwwroot/js/knowledge-benchmark*.js`). Writes answer the changed record, not `{ clinicId }`; the portal audits under the route's clinic |
+| Business types (added 2026-10-19) | `/api/platform-admin/business-types` (list, `{code}`, create, `PUT {code}`, `{code}/active`) and, on a client, `clients/{id}/business-type/preview?to=` and `PUT clients/{id}/business-type` | `Entities/Responses/BusinessTypes/{BusinessTypeResponse,PipelineStageResponse}`, `Entities/Dtos/BusinessTypes/{TermForms,StageMove,BusinessTypeChangePreview}`, `Entities/Requests/BusinessTypes/{SaveBusinessTypeRequest,SaveStageRequest,ChangeBusinessTypeRequest}` (main app: same names under `Omni.App/Entities`). Vocabularies: `Common/Enums/{StageCategory,TermName,AppLanguage}`. The portal's own form shape (`BusinessTypeForm`, `StageForm`) and its mapper are not copies |
+| Clients, channels (incl. `whatsapp/debug-token` → `DebugTokenRequest`, `WhatsAppTokenDebugResult`), member, contacts, content, overview | `/api/platform-admin/{clients,channels,member,contacts,content,overview}` | List rows: `Entities/Dtos/{Clients,Channels,Member,Contacts,Content,Overview}` (main app: `Entities/Dtos/PlatformAdmin`). Details and `PlatformAdminChange`: `Entities/Responses/PlatformAdmin`. Bodies: `Entities/Requests/{Clients,Channels,Contacts,Content,Member,PlatformAdmin}`. Client Inbox settings (added 2026-10-15, `GET`/`PUT clients/{id}/inbox-settings`): `Entities/Responses/PlatformAdmin/InboxSettingsDto` (main app: `Entities/Dtos/Inbox`, its computed `AiBotAnswers*` included) and `Entities/Requests/Clients/UpdateInboxSettingsRequest` (main app: `Entities/Requests/Inbox`) |
+| Knowledge benchmark | `/api/platform-admin/knowledge-benchmark/clients/{clientId}/*` | Bodies: `Entities/Requests/KnowledgeBenchmark` (main app: `Entities/Requests/KnowledgeBenchmark`). Answers are passed through as JSON to the Search benchmark scripts, so the copy of the response shapes (main app: `Entities/Responses/KnowledgeBenchmark`, `Entities/Dtos/KnowledgeBenchmark`) is the field names those scripts read (`wwwroot/js/knowledge-benchmark*.js`). Writes answer the changed record, not `{ clientId }`; the portal audits under the route's client |
 
 The value vocabularies in `Common/Enums` (statuses, channels, modes) are still copies the pages use for filters and
 badges; refresh them when the main app adds a value.
 
 ## Known gaps in the main app that limit admin control
 
-- **`clinics.is_active` is not enforced.** Deactivating a clinic marks it, but the main app still lets its staff in and
-  its AI keep replying. Fix in the main app: check it in `CurrentClinicContext` and before AI triggers.
-- **No security-stamp check on the staff cookie.** Locking a staff account renews its security stamp, but an open
+- **`clients.is_active` is not enforced.** Deactivating a client marks it, but the main app still lets its member in and
+  its AI keep replying. Fix in the main app: check it in `CurrentClientContext` and before AI triggers.
+- **No security-stamp check on the member cookie.** Locking a member account renews its security stamp, but an open
   session lasts until its cookie expires. Fix in the main app: add `SecurityStampValidator` to the Identity cookie.
-- Lead edits, clinic edits and conversation status changes from the portal don't send SignalR events, so a clinic's
-  open Inbox shows them on its next refresh. (Mode changes, appointment status, campaign cancel, procedure and
-  document switches go through the clinic's own services.)
+- Contact edits, client edits and conversation status changes from the portal don't send SignalR events, so a client's
+  open Inbox shows them on its next refresh. (Mode changes, booking status, campaign cancel, service and
+  document switches go through the client's own services.)

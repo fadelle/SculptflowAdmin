@@ -1,0 +1,69 @@
+@page
+@model Omni.Admin.Pages.Members.DetailsModel
+@{
+    var s = Model.Member;
+    ViewData["Title"] = s.FullName ?? s.Email;
+    var methods = string.Join(" · ", new[] { s.HasPassword ? "Password" : null, s.HasGoogleLogin ? "Google" : null }.Where(m => m is not null));
+}
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Members" aria-label="Back to member accounts"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@(s.FullName ?? s.Email)</h2>
+        <span class="au-back-header__sub">@s.Email</span>
+    </div>
+</div>
+<div class="au-row au-row--wrap" style="margin-bottom:16px">
+    @Ui.Badge(s.MembershipActive ? "active" : "inactive", s.MembershipActive ? "member" : "not a member")
+    @Ui.Badge(s.LoginLocked ? "locked" : "active", s.LoginLocked ? "locked" : "can sign in")
+    <span class="au-copy"><span class="au-mono">@s.UserId</span><button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@s.UserId" data-au-copy-message="User id copied" aria-label="Copy user id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span>
+</div>
+
+<div class="au-grid au-grid--2" style="align-items:start">
+    <section class="au-panel au-panel--round au-panel--pad">
+        <div class="au-panel__head"><h3 class="au-panel__title">Account</h3></div>
+        <dl class="au-detail-rows">
+            <div class="au-detail-row"><dt>Client</dt><dd>@if (s.ClientId.HasValue) { <a href="/Clients/Details?id=@s.ClientId">@s.ClientName</a> } else { <span class="au-muted">none</span> }</dd></div>
+            <div class="au-detail-row"><dt>Client membership</dt><dd>@Ui.Badge(s.MembershipActive ? "active" : "inactive")</dd></div>
+            <div class="au-detail-row"><dt>Sign-in</dt><dd>@Ui.Badge(s.LoginLocked ? "locked" : "active", s.LoginLocked ? "locked" : "can sign in")</dd></div>
+            <div class="au-detail-row"><dt>Email confirmed</dt><dd>@Ui.YesNo(s.EmailConfirmed)</dd></div>
+            <div class="au-detail-row"><dt>Failed sign-ins</dt><dd class="au-num">@s.AccessFailedCount</dd></div>
+            <div class="au-detail-row"><dt>Sign-in methods</dt><dd>@Ui.OrDash(methods)</dd></div>
+            <div class="au-detail-row"><dt>Joined client</dt><dd>@Ui.Time(s.JoinedAt)</dd></div>
+        </dl>
+    </section>
+
+    <section class="au-panel au-panel--round au-panel--pad">
+        <div class="au-panel__head"><h3 class="au-panel__title">Access</h3></div>
+        <p class="au-muted" style="font-size:0.8125rem">Lock sign-in to stop new sign-ins (password and Google). A browser that is already signed in stays signed in until its cookie expires, because the main app doesn't re-check accounts yet; deactivate the membership too if access must stop now. Deactivating the membership keeps their login but removes them from the client, so they see no data.</p>
+        <div class="au-row au-row--wrap">
+            <form method="post" asp-page-handler="Lock" asp-route-id="@s.UserId">
+                <input type="hidden" name="locked" value="@(!s.LoginLocked ? "true" : "false")" />
+                @if (s.LoginLocked) { <button class="au-btn au-btn--primary" type="submit">Unlock sign-in</button> }
+                else { <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Lock this account? They won't be able to sign in.">Lock sign-in</button> }
+            </form>
+            @if (s.MembershipId.HasValue)
+            {
+                <form method="post" asp-page-handler="Membership" asp-route-id="@s.UserId">
+                    <input type="hidden" name="active" value="@(!s.MembershipActive ? "true" : "false")" />
+                    @if (s.MembershipActive) { <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Remove this person from @s.ClientName?">Deactivate membership</button> }
+                    else { <button class="au-btn au-btn--outlined" type="submit">Reactivate membership</button> }
+                </form>
+            }
+            <form method="post" asp-page-handler="EmailConfirmed" asp-route-id="@s.UserId">
+                <input type="hidden" name="confirmed" value="@(!s.EmailConfirmed ? "true" : "false")" />
+                <button class="au-btn au-btn--outlined" type="submit">@(s.EmailConfirmed ? "Mark email unconfirmed" : "Mark email confirmed")</button>
+            </form>
+            <button class="au-btn au-btn--outlined" type="button" data-open="set-password"><span class="au-icon" aria-hidden="true">password</span>Set password</button>
+        </div>
+    </section>
+</div>
+
+<dialog class="au-dialog" id="set-password" aria-labelledby="set-password-title">
+    <form method="post" asp-page-handler="Password" asp-route-id="@s.UserId">
+        <h2 class="au-dialog__title" id="set-password-title">Set a new password<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+        <div class="au-dialog__content">
+            <div class="au-form-field"><label class="au-form-label" for="sp-password">New password<span class="au-required">*</span></label><input class="au-input" id="sp-password" type="password" name="password" minlength="8" autocomplete="new-password" required /><span class="au-help">At least 8 characters. Replaces their current password.</span></div>
+        </div>
+        <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Set password</button></div>
+    </form>
+</dialog>

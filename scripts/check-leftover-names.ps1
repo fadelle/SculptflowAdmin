@@ -2,26 +2,20 @@
 Leftover-names guard for the portal (it has no test project). Scans `git ls-files` for the old product vocabulary.
 Run from the repo root:  pwsh scripts/check-leftover-names.ps1   (or powershell -File ...). Exit code 1 on any failure.
 
-STRICT words must have no hits (outside the allowlist). PENDING words are tracked per scope and each closing session
-removes its word from $Pending: P2 closes clinic/lead/procedure/appointment/staff/patient/surgeon/surgery/consultation,
-P3 closes ai_agent and anything left. A pending word with NO hits fails too, so the list cannot go stale.
+STRICT words must have no hits (outside the allowlist). Since P2 every old word is strict ($Pending is empty); a word
+added to $Pending must have hits, so the list cannot go stale.
 #>
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path -Parent $PSScriptRoot)
 
-$Strict  = [ordered]@{ sculptflow = 'sculptflow'; plasticsurgery = 'plasticsurgery'; surgeon = 'surgeon'; max_agents = 'max_agents' }
-# word -> regex. 'lead' matches Lead/leads/leadId/lead_ but not leading/mislead/leader.
-$Pending = [ordered]@{
-    clinic       = '(?i)clinic'
-    lead         = '(?:(?<![A-Za-z])lead|Lead)s?(?![a-z])|LEAD(?![A-Z])'
-    procedure    = '(?i)procedure'
-    appointment  = '(?i)appointment'
-    staff        = '(?i)staff'
-    patient      = '(?i)patient'
-    surgery      = '(?i)surgery'
-    consultation = '(?i)consultation'
-    ai_agent     = '(?i)ai_agent|AiAgent'
-}
+$Strict  = [ordered]@{ sculptflow = '(?i)sculptflow'; plasticsurgery = '(?i)plasticsurgery'; surgeon = '(?i)surgeon'; max_agents = '(?i)max_agents'
+    clinic = '(?i)clinic'
+    # 'lead' matches Lead/leads/leadId/lead_ but not leading/mislead/leader.
+    lead = '(?:(?<![A-Za-z])lead|Lead)s?(?![a-z])|LEAD(?![A-Z])'
+    procedure = '(?i)procedure'; appointment = '(?i)appointment'; staff = '(?i)staff'; patient = '(?i)patient'
+    surgery = '(?i)surgery'; consultation = '(?i)consultation'; ai_agent = '(?i)ai_agent|AiAgent' }
+# Words still being removed (word -> regex). Empty since P2: every old word is strict. A pending word with NO hits fails.
+$Pending = [ordered]@{}
 
 $paths = @(); $tokens = @()
 foreach ($l in Get-Content scripts/leftover-names-allowlist.txt) {
@@ -39,7 +33,7 @@ foreach ($f in $files) {
         if ($line -match 'leftover-ok:') { continue }
         $t = $line
         foreach ($tok in $tokens) { $t = $t -ireplace [regex]::Escape($tok), '' }
-        foreach ($k in $Strict.Keys)  { if ($t -match "(?i)$($Strict[$k])") { $hits[$k].Add("${f}:$n") } }
+        foreach ($k in $Strict.Keys)  { if ($t -cmatch $Strict[$k]) { $hits[$k].Add("${f}:$n") } }
         foreach ($k in $Pending.Keys) { if ($t -cmatch $Pending[$k] -or ($Pending[$k].StartsWith('(?i)') -and $t -match $Pending[$k])) { $hits[$k].Add("${f}:$n") } }
     }
 }

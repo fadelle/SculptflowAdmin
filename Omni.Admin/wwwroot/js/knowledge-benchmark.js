@@ -1,4 +1,4 @@
-/* Search benchmark page (Pages/Knowledge/Benchmark) for one clinic. Drives /api/admin/knowledge-benchmark/{clinicId}
+/* Search benchmark page (Pages/Knowledge/Benchmark) for one client. Drives /api/admin/knowledge-benchmark/{clientId}
    (data-api on #bm-root), which calls the main app's platform-admin benchmark API. While a run or a generation is in
    progress the page re-reads the dashboard every 2 seconds and shows the progress bar; it stops when nothing is running.
    Shared helpers and the detail popup: knowledge-benchmark-kit.js. */
@@ -126,7 +126,7 @@
         var run = d.latestCompletedRun;
         if (!run) {
             host.appendChild(el('section', { class: 'au-panel au-panel--round au-panel--pad' }, [
-                el('div', { class: 'au-muted', text: 'No benchmark has been run for this clinic yet. Generate or add some test cases, then click Run benchmark.' })
+                el('div', { class: 'au-muted', text: 'No benchmark has been run for this client yet. Generate or add some test cases, then click Run benchmark.' })
             ]));
             return;
         }

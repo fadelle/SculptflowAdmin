@@ -5,12 +5,13 @@ using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Managers;
 using Omni.Admin.Business.Contracts.Services.Auth;
 using Omni.Admin.Business.Contracts.Services.Channels;
-using Omni.Admin.Business.Contracts.Services.Clinics;
+using Omni.Admin.Business.Contracts.Services.BusinessTypes;
+using Omni.Admin.Business.Contracts.Services.Clients;
 using Omni.Admin.Business.Contracts.Services.Content;
 using Omni.Admin.Business.Contracts.Services.KnowledgeBenchmark;
-using Omni.Admin.Business.Contracts.Services.Leads;
+using Omni.Admin.Business.Contracts.Services.Contacts;
 using Omni.Admin.Business.Contracts.Services.Overview;
-using Omni.Admin.Business.Contracts.Services.Staff;
+using Omni.Admin.Business.Contracts.Services.Members;
 using Omni.Admin.Business.Engines.Admins;
 using Omni.Admin.Business.HttpClients.MainApp;
 using Omni.Admin.Business.Services.Billing;
@@ -24,12 +25,13 @@ using Omni.Admin.Business.Contracts.Services.Billing;
 using Omni.Admin.Business.Managers;
 using Omni.Admin.Business.Services.Auth;
 using Omni.Admin.Business.Services.Channels;
-using Omni.Admin.Business.Services.Clinics;
+using Omni.Admin.Business.Services.BusinessTypes;
+using Omni.Admin.Business.Services.Clients;
 using Omni.Admin.Business.Services.Content;
 using Omni.Admin.Business.Services.KnowledgeBenchmark;
-using Omni.Admin.Business.Services.Leads;
+using Omni.Admin.Business.Services.Contacts;
 using Omni.Admin.Business.Services.Overview;
-using Omni.Admin.Business.Services.Staff;
+using Omni.Admin.Business.Services.Members;
 using Omni.Admin.Common.Configs;
 using Omni.Admin.Entities.Models;
 using Omni.Admin.Persistence.Contexts;
@@ -55,16 +57,17 @@ builder.Services.AddDbContext<AdminDbContext>(o => o.UseNpgsql(connectionString)
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
-// Persistence: only the portal's own tables (schema admin). Everything about clinics goes through the main app's APIs.
+// Persistence: only the portal's own tables (schema admin). Everything about clients goes through the main app's APIs.
 builder.Services.AddScoped<IAdminUnitOfWork, AdminUnitOfWork>();
 builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 builder.Services.AddScoped<IAdminAuditRepository, AdminAuditRepository>();
 
 builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
 builder.Services.AddScoped<IAdminAudit, AdminAudit>();
-builder.Services.AddScoped<IClinicAdminService, ClinicAdminService>();
-builder.Services.AddScoped<IStaffAdminService, StaffAdminService>();
-builder.Services.AddScoped<ILeadAdminService, LeadAdminService>();
+builder.Services.AddScoped<IClientAdminService, ClientAdminService>();
+builder.Services.AddScoped<IBusinessTypeAdminService, BusinessTypeAdminService>();
+builder.Services.AddScoped<IMemberAdminService, MemberAdminService>();
+builder.Services.AddScoped<IContactAdminService, ContactAdminService>();
 builder.Services.AddScoped<IChannelAdminService, ChannelAdminService>();
 builder.Services.AddScoped<IContentAdminService, ContentAdminService>();
 builder.Services.AddScoped<IOverviewAdminService, OverviewAdminService>();
@@ -87,25 +90,26 @@ builder.Services.AddHttpClient<IAppLogsApiClient, AppLogsApiClient>(c => c.Timeo
 builder.Services.AddScoped<IAppLogsAdminService, AppLogsAdminService>();
 builder.Services.AddHttpClient<IMessageTracesApiClient, MessageTracesApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddScoped<IMessageTracesAdminService, MessageTracesAdminService>();
-// Clinics, channels, staff, leads, content and the dashboard: the main app's platform-admin APIs (reads and writes).
-builder.Services.AddHttpClient<IClinicsApiClient, ClinicsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+// Clients, channels, member, contacts, content and the dashboard: the main app's platform-admin APIs (reads and writes).
+builder.Services.AddHttpClient<IBusinessTypesApiClient, BusinessTypesApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<IClientsApiClient, ClientsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<IChannelsApiClient, ChannelsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(60));
-builder.Services.AddHttpClient<IStaffApiClient, StaffApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
-builder.Services.AddHttpClient<ILeadsApiClient, LeadsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<IMembersApiClient, MembersApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<IContactsApiClient, ContactsApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<IContentApiClient, ContentApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<IOverviewApiClient, OverviewApiClient>(c => c.Timeout = TimeSpan.FromSeconds(30));
-// A clinic's Knowledge Retrieval Benchmark (Search benchmark page). Generate waits for the main app to hand the chunks to n8n.
+// A client's Knowledge Retrieval Benchmark (Search benchmark page). Generate waits for the main app to hand the chunks to n8n.
 builder.Services.AddHttpClient<IKnowledgeBenchmarkApiClient, KnowledgeBenchmarkApiClient>(c => c.Timeout = TimeSpan.FromSeconds(120));
 builder.Services.AddScoped<IKnowledgeBenchmarkAdminService, KnowledgeBenchmarkAdminService>();
 
-// The header's global clinic scope (docs/UI_GUIDE.md §7): ScopePageFilter resolves it for every page (?clinicId=, else
-// the cookie); ClinicScopeLookup names it from the clinic list, cached briefly.
+// The header's global client scope (docs/UI_GUIDE.md §7): ScopePageFilter resolves it for every page (?clientId=, else
+// the cookie); ClientScopeLookup names it from the client list, cached briefly.
 builder.Services.Configure<ScopeOptions>(builder.Configuration.GetSection("Scope"));
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ScopeContext>();
-builder.Services.AddScoped<IScopeLookup, ClinicScopeLookup>();
+builder.Services.AddScoped<IScopeLookup, ClientScopeLookup>();
 
-// Admin-only cookie. Its own name, so it can never be confused with the main app's staff cookie.
+// Admin-only cookie. Its own name, so it can never be confused with the main app's member cookie.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
     {

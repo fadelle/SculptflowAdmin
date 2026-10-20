@@ -9,7 +9,7 @@ public interface IBillingApiClient
 {
     Task<List<BillingAccountRow>> AccountsAsync(CancellationToken ct);
 
-    Task<AdminBillingOverview?> ClinicAsync(Guid clinicId, CancellationToken ct);
+    Task<AdminBillingOverview?> ClientAsync(Guid clientId, CancellationToken ct);
 
     Task<List<PlanResponse>> PlansAsync(CancellationToken ct);
 
@@ -23,16 +23,16 @@ public interface IBillingApiClient
 
     Task<ProviderBillingModes> ProviderBillingModesAsync(CancellationToken ct);
 
-    Task<ReconciliationResponse> ReconcileAsync(Guid clinicId, CancellationToken ct);
+    Task<ReconciliationResponse> ReconcileAsync(Guid clientId, CancellationToken ct);
 
-    Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clinicId, string? status, string? eventType, int page, CancellationToken ct);
+    Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct);
 
-    Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clinicId, int page, CancellationToken ct);
+    Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clientId, int page, CancellationToken ct);
 
     Task<BillingReport> ReportAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken ct);
 
-    /// <summary>What Omni would charge the clinic now; null when no rate card prices it.</summary>
-    Task<QuoteResponse?> QuoteAsync(Guid clinicId, string eventType, string? country, string? provider, string? providerBilling,
+    /// <summary>What Omni would charge the client now; null when no rate card prices it.</summary>
+    Task<QuoteResponse?> QuoteAsync(Guid clientId, string eventType, string? country, string? provider, string? providerBilling,
         CancellationToken ct);
 
     Task CreatePlanAsync(PlanRequest r, CancellationToken ct);
@@ -47,19 +47,19 @@ public interface IBillingApiClient
 
     Task CloseRateAsync(Guid rateId, CancellationToken ct);
 
-    Task StartSubscriptionAsync(Guid clinicId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
+    Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
 
-    Task CancelSubscriptionAsync(Guid clinicId, CancelSubscriptionRequest r, CancellationToken ct);
+    Task CancelSubscriptionAsync(Guid clientId, CancelSubscriptionRequest r, CancellationToken ct);
 
-    Task ResumeSubscriptionAsync(Guid clinicId, CancellationToken ct);
+    Task ResumeSubscriptionAsync(Guid clientId, CancellationToken ct);
 
-    Task RenewAsync(Guid clinicId, CancellationToken ct);
+    Task RenewAsync(Guid clientId, CancellationToken ct);
 
-    Task TopUpAsync(Guid clinicId, TopUpRequest r, string opId, CancellationToken ct);
+    Task TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct);
 
-    Task AdjustAsync(Guid clinicId, AdjustmentRequest r, string opId, CancellationToken ct);
+    Task AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct);
 
-    Task RefundAsync(Guid clinicId, Guid usageId, RefundRequest r, CancellationToken ct);
+    Task RefundAsync(Guid clientId, Guid usageId, RefundRequest r, CancellationToken ct);
 
     Task SetProviderBillingAsync(Guid channelIntegrationId, ProviderBillingRequest r, CancellationToken ct);
 

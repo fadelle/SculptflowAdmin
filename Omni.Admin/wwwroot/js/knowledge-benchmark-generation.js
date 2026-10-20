@@ -1,5 +1,5 @@
 /* One search-benchmark generation's page (Pages/Knowledge/BenchmarkGeneration, /Knowledge/Benchmark/Generations/{id}).
-   Drives the same /api/admin/knowledge-benchmark/{clinicId} API as the Search benchmark page (data-api and data-id on
+   Drives the same /api/admin/knowledge-benchmark/{clientId} API as the Search benchmark page (data-api and data-id on
    #bmg-root), always for this one generation. Shared helpers and the detail popup: knowledge-benchmark-kit.js. */
 (function () {
     'use strict';
@@ -110,7 +110,7 @@
         });
     }
 
-    /** Re-reads the clinic's dashboard only to know when the run this page started has finished, then reloads the
+    /** Re-reads the client's dashboard only to know when the run this page started has finished, then reloads the
         summary and cases to show the fresh scores. */
     function waitForRun() {
         api('GET', '').then(function (dash) {

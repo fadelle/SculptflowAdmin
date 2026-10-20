@@ -23,15 +23,15 @@ public static class UiExtensions
     }
 
     /// <summary>True when the URL narrows the list (any query value other than paging, handler, tab, id or the global
-    /// clinic scope): picks "No leads match your filters" over "No leads yet", and shows the toolbar's Clear.</summary>
+    /// client scope): picks "No contacts match your filters" over "No contacts yet", and shows the toolbar's Clear.</summary>
     public static bool HasFilters(this HttpRequest request)
     {
-        var scopeKey = request.HttpContext.RequestServices.GetService<IOptions<ScopeOptions>>()?.Value.QueryKey ?? "clinicId";
+        var scopeKey = request.HttpContext.RequestServices.GetService<IOptions<ScopeOptions>>()?.Value.QueryKey ?? "clientId";
         return request.Query.Any(kv => kv.Key is not ("p" or "handler" or "tab" or "id")
             && !kv.Key.Equals(scopeKey, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(kv.Value));
     }
 
-    /// <summary>The empty-list message for a list of <paramref name="things"/> ("leads"), filtered or not.</summary>
+    /// <summary>The empty-list message for a list of <paramref name="things"/> ("contacts"), filtered or not.</summary>
     public static string EmptyMessage(this HttpRequest request, string things) =>
         request.HasFilters() ? $"No {things} match your filters." : $"No {things} yet.";
 }

@@ -4,7 +4,7 @@ namespace Omni.Admin.Business.Contracts.HttpClients.MainApp;
 
 public interface IMessageTracesApiClient
 {
-    Task<MessageTracePage> ListAsync(int hours, Guid? clinicId, Guid? conversationId, bool failedOnly, int page, int pageSize, CancellationToken ct);
+    Task<MessageTracePage> ListAsync(int hours, Guid? clientId, Guid? conversationId, bool failedOnly, int page, int pageSize, CancellationToken ct);
 
     /// <summary>Null when nothing is recorded for the trace.</summary>
     Task<MessageTrace?> GetAsync(string traceId, CancellationToken ct);

@@ -1,7 +1,7 @@
 @page
 @model Omni.Admin.Pages.Campaigns.IndexModel
 @{ ViewData["Title"] = "Campaigns"; }
-<div class="au-page-head"><p class="au-page-head__sub">Outbound template campaigns across clinics, with delivery and reply counts.</p></div>
+<div class="au-page-head"><p class="au-page-head__sub">Outbound template campaigns across clients, with delivery and reply counts.</p></div>
 <form class="filters au-toolbar" method="get">
     <div class="au-toolbar__filters">
         <div class="au-field" style="width:170px">
@@ -27,14 +27,14 @@
         <div class="au-table-scroll">
             <table class="au-table">
                 <thead>
-                    <tr><th>Campaign</th><th>Clinic</th><th>Status</th><th class="au-right">Audience</th><th class="au-right">Sent</th><th class="au-right">Delivered</th><th class="au-right">Read</th><th class="au-right">Replied</th><th class="au-right">Booked</th><th class="au-right">Failed</th><th>Started</th></tr>
+                    <tr><th>Campaign</th><th>Client</th><th>Status</th><th class="au-right">Audience</th><th class="au-right">Sent</th><th class="au-right">Delivered</th><th class="au-right">Read</th><th class="au-right">Replied</th><th class="au-right">Booked</th><th class="au-right">Failed</th><th>Started</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var c in Model.Result.Items)
                     {
                         <tr data-au-href="/Campaigns/Details?id=@c.Id">
                             <td><a href="/Campaigns/Details?id=@c.Id">@c.Name</a><div class="au-caption">@c.CampaignType.Replace('_', ' ') · @c.TemplateName</div></td>
-                            <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
+                            <td><a href="/Clients/Details?id=@c.ClientId">@c.ClientName</a></td>
                             <td>@Ui.Badge(c.Status)</td>
                             <td class="au-right">@c.Recipients</td>
                             <td class="au-right">@c.Sent</td>

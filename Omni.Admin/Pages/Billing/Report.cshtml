@@ -30,13 +30,13 @@
             <div class="au-stat"><span class="au-eyebrow">Usage revenue</span><div class="au-stat__value">@BillingUi.Money(r.UsageRevenue)</div><div class="au-stat__hint">@cur, after refunds</div></div>
             <div class="au-stat"><span class="au-eyebrow">Usage margin</span><div class="au-stat__value @(r.Margin < 0 ? "au-text-error" : null)">@BillingUi.Money(r.Margin)</div><div class="au-stat__hint">usage revenue − cost Omni paid</div></div>
             <div class="au-stat"><span class="au-eyebrow">Provider cost paid by Omni</span><div class="au-stat__value">@BillingUi.Money(r.ProviderCostPaidByPlatform)</div><div class="au-stat__hint">@cur</div></div>
-            <div class="au-stat"><span class="au-eyebrow">Provider cost paid by clinics</span><div class="au-stat__value">@BillingUi.Money(r.ProviderCostPaidExternally)</div><div class="au-stat__hint">estimate, not Omni money</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Provider cost paid by clients</span><div class="au-stat__value">@BillingUi.Money(r.ProviderCostPaidExternally)</div><div class="au-stat__hint">estimate, not Omni money</div></div>
             <div class="au-stat"><span class="au-eyebrow">Wallet top-ups</span><div class="au-stat__value">@BillingUi.Money(r.TopUps)</div><div class="au-stat__hint">cash received</div></div>
         </div>
 
         <section class="au-table-card">
             <div class="au-tabs" style="padding:0 8px">
-                <a class="au-tab @(Model.GroupBy == "clinic" ? "is-active" : null)" href="@GroupUrl("clinic")">By clinic</a>
+                <a class="au-tab @(Model.GroupBy == "client" ? "is-active" : null)" href="@GroupUrl("client")">By client</a>
                 <a class="au-tab @(Model.GroupBy == "channel" ? "is-active" : null)" href="@GroupUrl("channel")">By channel</a>
                 <a class="au-tab @(Model.GroupBy == "event" ? "is-active" : null)" href="@GroupUrl("event")">By event type</a>
                 <a class="au-tab @(Model.GroupBy == "who_pays" ? "is-active" : null)" href="@GroupUrl("who_pays")">By who pays the provider</a>
@@ -52,14 +52,14 @@
                 <div class="au-table-scroll">
                     <table class="au-table">
                         <thead>
-                            <tr><th>@(Model.GroupBy switch { "channel" => "Channel", "event" => "Event type", "who_pays" => "Who pays the provider", _ => "Clinic" })</th>
+                            <tr><th>@(Model.GroupBy switch { "channel" => "Channel", "event" => "Event type", "who_pays" => "Who pays the provider", _ => "Client" })</th>
                                 <th class="au-right">Count</th><th class="au-right">Quantity</th><th class="au-right">Usage revenue</th><th class="au-right">Provider cost</th><th class="au-right">Margin</th></tr>
                         </thead>
                         <tbody>
                             @foreach (var g in groups)
                             {
                                 <tr>
-                                    <td>@if (g.ClinicId is not null) { <a href="/Billing/Clinic?id=@g.ClinicId">@g.Label</a> } else { @g.Label }</td>
+                                    <td>@if (g.ClientId is not null) { <a href="/Billing/Client?id=@g.ClientId">@g.Label</a> } else { @g.Label }</td>
                                     <td class="au-right">@g.Count.ToString("N0")</td>
                                     <td class="au-right">@BillingUi.Number(g.Quantity)</td>
                                     <td class="au-right">@BillingUi.Money(g.Revenue)</td>
@@ -74,7 +74,7 @@
                         </tfoot>
                     </table>
                 </div>
-                <div class="au-pager"><span class="au-pager__count">Provider cost includes cost clinics paid directly (where known); margin only subtracts cost Omni paid.</span></div>
+                <div class="au-pager"><span class="au-pager__count">Provider cost includes cost clients paid directly (where known); margin only subtracts cost Omni paid.</span></div>
             }
         </section>
     </div>

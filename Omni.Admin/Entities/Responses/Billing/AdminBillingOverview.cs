@@ -3,9 +3,9 @@ using Omni.Admin.Entities.Dtos.Billing;
 namespace Omni.Admin.Entities.Responses.Billing;
 
 public record AdminBillingOverview(
-    Guid ClinicId,
-    string ClinicName,
-    ClinicBillingSummary Summary,
+    Guid ClientId,
+    string ClientName,
+    ClientBillingSummary Summary,
     SubscriptionResponse? Subscription,
     string? CustomRateCardCode,
     IReadOnlyList<AdminUsageBreakdownRow> UsageWithCosts,

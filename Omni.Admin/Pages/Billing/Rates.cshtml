@@ -114,13 +114,13 @@
                     <div class="au-form-field"><label class="au-form-label" for="ec-name">Name<span class="au-required">*</span></label><input class="au-input" id="ec-name" name="name" value="@c.Name" required maxlength="100" /></div>
                     <div class="au-form-field"><label class="au-form-label" for="ec-desc">Description</label><input class="au-input" id="ec-desc" name="description" value="@c.Description" maxlength="500" /></div>
                     <label class="au-check"><input type="checkbox" name="isActive" value="true" checked="@c.IsActive" /> Active</label>
-                    @if (c.ClinicId is null)
+                    @if (c.ClientId is null)
                     {
                         <label class="au-check"><input type="checkbox" name="isDefault" value="true" checked="@c.IsDefault" /> Default card</label>
                     }
                     else
                     {
-                        <p class="au-help">Custom prices for <a href="/Billing/Clinic?id=@c.ClinicId">this clinic</a>.</p>
+                        <p class="au-help">Custom prices for <a href="/Billing/Client?id=@c.ClientId">this client</a>.</p>
                     }
                 </div>
             </div>

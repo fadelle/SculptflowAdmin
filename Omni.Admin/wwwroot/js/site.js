@@ -1,6 +1,6 @@
 // Omni Admin — page behaviours on signed-in pages. Plain JS, no libraries. The shell (sidebar, theme, header menus,
 // Ctrl+K, toasts) is aurora.js; this file keeps the pages' own hooks:
-//  - <time data-utc> in the viewer's time zone (data-tz="Area/City" shows that zone instead; appointments use clinic time)
+//  - <time data-utc> in the viewer's time zone (data-tz="Area/City" shows that zone instead; bookings use client time)
 //  - popups: [data-open="dialogId"] opens <dialog id> (data-autoopen opens it on load), [data-close] or a backdrop click closes it
 //  - data-confirm on a button or form asks in a small popup (#confirm-dialog in _Layout) before submitting
 //  - tables: click a header to sort the rows on the page; <input data-filter="#tableId"> filters them as you type

@@ -1,0 +1,146 @@
+@page
+@using Omni.Admin.Business.Mappers.BusinessTypes
+@using Omni.Admin.Common.Enums
+@model Omni.Admin.Pages.BusinessTypes.EditModel
+@{
+    ViewData["Title"] = Model.IsNew ? "New business type" : (Model.Form.Name.GetValueOrDefault("en") ?? Model.Code);
+    var languages = AppLanguage.All;
+}
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/BusinessTypes" aria-label="Back to business types"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">@ViewData["Title"]</h2>
+        @if (!Model.IsNew)
+        {
+            <span class="au-back-header__sub"><span class="au-mono">@Model.Code</span> · @Ui.Count(Model.ClientCount, "client", "clients") use it @Ui.Badge(Model.IsActive ? "active" : "inactive")</span>
+        }
+    </div>
+</div>
+
+<form method="post" class="au-stack">
+    <section class="au-panel au-panel--round au-panel--pad">
+        <div class="au-panel__head"><h3 class="au-panel__title">Basics</h3></div>
+        <div class="au-form-grid">
+            <div class="au-form-field">
+                <label class="au-form-label" for="bt-code">Code @if (Model.IsNew) { <span class="au-required">*</span> }</label>
+                @if (Model.IsNew)
+                {
+                    <input class="au-input au-mono" id="bt-code" name="Form.Code" value="@Model.Form.Code" required pattern="[a-z][a-z0-9_]{1,49}" maxlength="50" />
+                    <span class="au-caption">Starts with a letter; lower-case letters, digits and underscores. Cannot change later.</span>
+                }
+                else
+                {
+                    <input class="au-input au-mono" id="bt-code" value="@Model.Code" disabled />
+                }
+            </div>
+            <div class="au-form-field">
+                <label class="au-form-label" for="bt-sort">Sort order</label>
+                <input class="au-input" id="bt-sort" type="number" name="Form.SortOrder" value="@Model.Form.SortOrder" />
+                <span class="au-caption">Lower numbers come first in the sign-up list.</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="au-panel au-panel--round au-panel--pad">
+        <div class="au-panel__head"><h3 class="au-panel__title">Name</h3></div>
+        <div class="au-form-grid">
+            @foreach (var lang in languages)
+            {
+                <div class="au-form-field">
+                    <label class="au-form-label" for="bt-name-@lang">@AppLanguage.Label(lang)@if (lang == AppLanguage.English) { <span class="au-required">*</span> }</label>
+                    <input class="au-input" id="bt-name-@lang" name="Form.Name[@lang]" value="@Model.Form.Name.GetValueOrDefault(lang)" maxlength="100" required="@(lang == AppLanguage.English)" dir="@(lang == AppLanguage.Arabic ? "rtl" : "ltr")" />
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="au-table-card">
+        <div class="au-panel__head">
+            <h3 class="au-panel__title">Terminology</h3>
+            <span class="au-caption">How the dashboard names things for this business type. English is required, other languages fall back to it. Write singular and plural as they read mid-sentence.</span>
+        </div>
+        <div class="au-table-scroll">
+            <table class="au-table">
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        @foreach (var lang in languages) { <th>@AppLanguage.Label(lang) (singular / plural)</th> }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var term in TermName.All)
+                    {
+                        <tr>
+                            <td><span class="au-mono">@term</span></td>
+                            @foreach (var lang in languages)
+                            {
+                                var key = BusinessTypeFormMapper.TermKey(lang, term);
+                                var dir = lang == AppLanguage.Arabic ? "rtl" : "ltr";
+                                <td>
+                                    <span class="au-row" style="--au-gap:6px">
+                                        <input class="au-input" style="min-width:110px" name="Form.TermOne[@key]" value="@Model.Form.TermOne.GetValueOrDefault(key)" maxlength="50" aria-label="@term, @AppLanguage.Label(lang), singular" required="@(lang == AppLanguage.English)" dir="@dir" />
+                                        <input class="au-input" style="min-width:110px" name="Form.TermOther[@key]" value="@Model.Form.TermOther.GetValueOrDefault(key)" maxlength="50" aria-label="@term, @AppLanguage.Label(lang), plural" required="@(lang == AppLanguage.English)" dir="@dir" />
+                                    </span>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="au-table-card">
+        <div class="au-panel__head">
+            <h3 class="au-panel__title">Pipeline stages</h3>
+            <span class="au-caption">Rows are sorted by the Order number. Clear a row's key to remove the stage (refused while contacts are in it). Every category needs at least one stage; each stage needs an English label. The blank rows at the end add stages.</span>
+        </div>
+        <div class="au-table-scroll">
+            <table class="au-table">
+                <thead>
+                    <tr>
+                        <th style="width:80px">Order</th><th>Key</th><th>Category</th>
+                        @foreach (var lang in languages) { <th>@AppLanguage.Label(lang) label</th> }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Form.Stages.Count; i++)
+                    {
+                        var stage = Model.Form.Stages[i];
+                        <tr>
+                            <td><input class="au-input" type="number" name="Form.Stages[@i].Order" value="@stage.Order" aria-label="Order" /></td>
+                            <td><input class="au-input au-mono" style="min-width:130px" name="Form.Stages[@i].Key" value="@stage.Key" maxlength="50" pattern="[a-z][a-z0-9_]{0,49}" aria-label="Stage key" /></td>
+                            <td>
+                                <select class="au-select" name="Form.Stages[@i].Category" aria-label="Category">
+                                    <option value="">(choose)</option>
+                                    @foreach (var category in StageCategory.All)
+                                    {
+                                        <option value="@category" selected="@(category == stage.Category)">@category.Replace('_', ' ')</option>
+                                    }
+                                </select>
+                            </td>
+                            @foreach (var lang in languages)
+                            {
+                                <td><input class="au-input" style="min-width:140px" name="Form.Stages[@i].Labels[@lang]" value="@stage.Labels.GetValueOrDefault(lang)" maxlength="100" aria-label="@AppLanguage.Label(lang) label" dir="@(lang == AppLanguage.Arabic ? "rtl" : "ltr")" /></td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="au-panel au-panel--round au-panel--pad">
+        <div class="au-panel__head"><h3 class="au-panel__title">AI profile</h3></div>
+        <div class="au-form-field">
+            <label class="au-form-label" for="bt-ai">Instructions added to the AI for every client of this type</label>
+            <textarea class="au-textarea" id="bt-ai" name="Form.AiProfile" rows="14" maxlength="20000">@Model.Form.AiProfile</textarea>
+            <span class="au-caption">What the business does, how the assistant should talk, what it must never do. Up to 20,000 characters. Each client's own details are added on top.</span>
+        </div>
+    </section>
+
+    <div class="au-row au-row--wrap">
+        <button class="au-btn au-btn--primary" type="submit">@(Model.IsNew ? "Create business type" : "Save changes")</button>
+        <a class="au-btn" href="/BusinessTypes">Cancel</a>
+    </div>
+</form>

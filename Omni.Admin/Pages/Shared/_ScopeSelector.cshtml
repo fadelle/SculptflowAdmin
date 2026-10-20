@@ -1,7 +1,7 @@
 @inject ScopeContext Scope
 @inject Microsoft.Extensions.Options.IOptions<ScopeOptions> ScopeOptions
-@* The header's clinic selector (aurora.js data-au-scope): searchable, "All clinics" first, infinite scroll, keyboard.
-   Only on pages with a scope capability; picking reloads with ?clinicId= and drops the page number (p). *@
+@* The header's client selector (aurora.js data-au-scope): searchable, "All clients" first, infinite scroll, keyboard.
+   Only on pages with a scope capability; picking reloads with ?clientId= and drops the page number (p). *@
 @{ var o = ScopeOptions.Value; var all = "All " + o.EntityLabelPlural.ToLowerInvariant(); }
 @if (Scope.Capability != ScopeCapability.None)
 {

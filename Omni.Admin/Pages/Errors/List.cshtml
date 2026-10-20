@@ -83,7 +83,7 @@
                                 <td class="au-mono" style="--au-col-max:280px">@(row.Route is null ? AppLogDisplay.Short(row.Category) : row.Method + " " + row.Route)</td>
                                 <td class="au-right">@(row.RepeatCount > 1 ? "×" + row.RepeatCount.ToString("N0") : "1")</td>
                                 <td>
-                                    @if (row.ClinicId.HasValue) { <a href="/Clinics/Details?id=@row.ClinicId">clinic</a> }
+                                    @if (row.ClientId.HasValue) { <a href="/Clients/Details?id=@row.ClientId">client</a> }
                                     @if (row.ConversationId.HasValue) { <a href="/Conversations/Details?id=@row.ConversationId">conversation</a> }
                                     @if (row.TraceId is not null && Model.TraceId is null) { <a href="/Errors/List?traceId=@row.TraceId&hours=@Model.Hours">same request</a> }
                                 </td>

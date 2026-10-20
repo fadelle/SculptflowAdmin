@@ -26,7 +26,7 @@ it does**. Concretely, **do not change** without the user's explicit OK:
 
 Allowed: wrapping markup, adding classes, replacing presentation-only markup (layout, navbar,
 footer, headings, alerts), adding presentation partials/helpers, and the **additive** plumbing in §6
-(nav tree) and §7 (clinic scope — see its own approval gate).
+(nav tree) and §7 (client scope — see its own approval gate).
 
 When in doubt: keep the old element, add the Aurora class to it.
 
@@ -59,10 +59,10 @@ of them (put those in the page's `.cshtml.css` isolation file or `site.css`).
 ### 0.3 Order of work
 1. **Inventory** (no edits): Bootstrap version, jQuery/validation, `site.css` rules that fight the kit
    (§3.4), JS that depends on DOM, Identity UI/`_LoginPartial`, the current menu, how lists
-   page/sort/filter (param names), where clinic appears. Propose a page-by-page plan.
+   page/sort/filter (param names), where client appears. Propose a page-by-page plan.
 2. **Kit + shell**: install kit, new `_Layout` (§3), nav tree (§6). Build, run, click every page in light and dark.
 3. **Pages one at a time** with the recipes in §8. Re-test each page's forms after it changes.
-4. **Clinic scope** (§7) — only on pages the user approves.
+4. **Client scope** (§7) — only on pages the user approves.
 5. Keep this guide true: if you change a rule or the kit, update this file in the same change.
 
 ### 0.4 Omni Admin — how this project applies the guide
@@ -79,13 +79,14 @@ This portal had its own hand-rolled CSS/JS before Aurora. Where the rest of this
   | `Ui/Ui.cs` | `Common/Helpers/UiExtensions.cs` (`WithQuery`), `Common/Helpers/Ui.cs` (`Badge`, `Time`, `Initials`…), `Entities/Dtos/Ui/{ErrorPanelModel,EmptyStateModel}.cs` |
   | `PagerModel` + `_Pager` | the existing `Entities/Dtos/Paging/PagerModel` + `Pages/Shared/_Pager.cshtml`: page key **`p`**, fixed 50 rows, **no page-size select** (there is no size parameter) |
   | `fonts.css` (self-hosted) | Google Fonts links in `_Layout` / `_AuthLayout` (the users' browsers reach Google) |
-  | `Scoping/Scope.cs` | `Common/Enums/ScopeCapability.cs`, `Common/Configs/ScopeOptions.cs`, `Pages/Shared/{ScopeCapabilityAttribute,ScopeContext,ScopePageFilter}.cs`, `Business/Managers/ClinicScopeLookup.cs` (+ `Contracts/Managers/IScopeLookup.cs`), `Entities/Dtos/Scoping/{ScopeOption,ScopeOptionPage}.cs` |
+  | `Scoping/Scope.cs` | `Common/Enums/ScopeCapability.cs`, `Common/Configs/ScopeOptions.cs`, `Pages/Shared/{ScopeCapabilityAttribute,ScopeContext,ScopePageFilter}.cs`, `Business/Managers/ClientScopeLookup.cs` (+ `Contracts/Managers/IScopeLookup.cs`), `Entities/Dtos/Scoping/{ScopeOption,ScopeOptionPage}.cs` |
   | `/scope/options` (MapGet) | `Controllers/Admin/ScopeApiController.cs` → **`/api/admin/scope/options`** (signed-in only; 401, not a login redirect) |
 
-- **`NavItem.Aliases`** (§6): extra path prefixes that count as a leaf — `/Billing/Clinic` is *Billing accounts*,
+- **`NavItem.Aliases`** (§6): extra path prefixes that count as a leaf — `/Billing/Client` is *Billing accounts*,
   `/Billing/Rates` is *Rate cards*; `/Billing` itself is `Exact` so it doesn't light up on every billing page.
-- **Sections:** *Overview* (captioned, so Dashboard never reads as part of Favorites) · *Operations* (Patients, Logs) ·
+- **Sections:** *Overview* (captioned, so Dashboard never reads as part of Favorites) · *Operations* (Contacts, Logs) ·
   *Manage* (Tenants, Billing, Setup, System). Each group is one sidebar row with its pages as header tabs.
+- **Business types (Setup tab, added P2):** `/BusinessTypes` is a table with Duplicate and Activate/Deactivate row actions; `/BusinessTypes/Edit` is one plain form (no script): Basics, Name and Terminology panels (`au-form-grid`, one input per language, singular + plural side by side), the stage table (`au-table-card`; rows sorted by an Order number, blank rows at the end add stages, clearing a key removes one) and the AI profile textarea. A refusal re-renders the form as typed with the reason in the standard error alert. A client's **Change business type** is a two-step page (`/Clients/BusinessType`): pick the type (GET), read the preview table, then confirm (POST with `data-confirm`).
 - **`site.js` stays the page-behaviour script.** Use its hooks, not the kit's equivalents:
 
   | Need | Use here | Not |
@@ -106,37 +107,37 @@ This portal had its own hand-rolled CSS/JS before Aurora. Where the rest of this
 - **Status tones (R12):** `Ui.Badge(value, label?)` is the one status → chip map: healthy words → `au-chip--success`,
   waiting → `--warning`, broken → `--error` (all filled), informational → `--outlined --info`, `ai` → `--outlined
   --primary`, switched off (*inactive, disabled, no, expired, cancelled*) and anything unknown → neutral `--outlined`.
-  Add a word to its set rather than writing a chip by hand. `Ui.OrDash(text)` for empty values, `Ui.Count(n, "lead",
-  "leads")` for counts.
+  Add a word to its set rather than writing a chip by hand. `Ui.OrDash(text)` for empty values, `Ui.Count(n, "contact",
+  "contacts")` for counts.
 - **Recipes as built here** (copy an existing page of the same kind):
-  - *List* (`Leads/Index`): `.au-page-head__sub` one-liner → `form.filters.au-toolbar` (notched `.au-field`s; actions
+  - *List* (`Contacts/Index`): `.au-page-head__sub` one-liner → `form.filters.au-toolbar` (notched `.au-field`s; actions
     = count + `_FilterActions` = Search · Clear · ⟳) → `.au-table-card` holding the table (or `_EmptyState` with
-    `Request.EmptyMessage("leads")`) and `_Pager`. Rows with a detail page get `data-au-href`. No `<h1>` (the header has it).
-  - *Shared table partials* (`_ClinicTable`, `_AppointmentTable`, `_AuditTable`, `_ConversationTable`, `_EventTable`)
+    `Request.EmptyMessage("contacts")`) and `_Pager`. Rows with a detail page get `data-au-href`. No `<h1>` (the header has it).
+  - *Shared table partials* (`_ClientTable`, `_BookingTable`, `_AuditTable`, `_ConversationTable`, `_EventTable`)
     render only `.au-table-scroll` + table (or the empty state); the caller wraps them in `.au-table-card`, with the
     pager on lists or a `.au-panel__head` title row on detail pages.
-  - *Detail* (`Clinics/Details`): `.au-back-header` (← back, title, sub, actions on the right) → a chips row (status +
+  - *Detail* (`Clients/Details`): `.au-back-header` (← back, title, sub, actions on the right) → a chips row (status +
     copyable id) → `.au-stack` of panels (`.au-panel--round --pad` with `.au-detail-rows`) and titled table cards.
   - *Popup form*: `<dialog class="au-dialog [--sm|--md]">` › `form` › `h2.au-dialog__title` (+ close `data-close`) ›
     `.au-dialog__content` (`.au-form-grid` / `.au-form-field` + `.au-form-label`, `.au-help`) › `.au-dialog__actions`.
     A dialog that sits inside a table cell needs `style="white-space:normal"` (cells are `nowrap`).
   - *Signed-out pages*: `_AuthLayout` (Login; Error when signed out). In an `@page` view use `HttpContext`, not `Context`.
-- **Clinic scope (§7) as built here:**
-  - The query key is the pages' existing **`clinicId`** (`ScopeOptions.QueryKey`), so the header selector, old links
-    (dashboard tiles, clinic page tiles, tab links, `asp-route-clinicId`) and the pages share one parameter. Cookie:
-    `admin.scope`. The selector resets the page number with `data-reset-params="p"`; the chip's ✕ links to `?clinicId=`.
-  - Scoped pages (the 12 whose queries already took `clinicId`, plus Search benchmark): Leads, Conversations, Messages, Appointments, Staff,
-    Campaigns, Events, Audit, Knowledge, Channels, Procedures, Templates. Each has `[ScopeCapability(ScopeCapability.Clinic)]`,
-    takes `ScopeContext`, and does `ClinicId ??= _scope.FilterGuid` before its query. Their old per-page clinic
-    dropdown (`_ClinicFilter`) is gone: the header selector is the one place to pick a clinic (R10).
-  - **Search benchmark** (`Knowledge/Benchmark`, `Knowledge/BenchmarkGeneration`) needs one clinic: with none selected it shows an
+- **Client scope (§7) as built here:**
+  - The query key is the pages' existing **`clientId`** (`ScopeOptions.QueryKey`), so the header selector, old links
+    (dashboard tiles, client page tiles, tab links, `asp-route-clientId`) and the pages share one parameter. Cookie:
+    `admin.scope`. The selector resets the page number with `data-reset-params="p"`; the chip's ✕ links to `?clientId=`.
+  - Scoped pages (the 12 whose queries already took `clientId`, plus Search benchmark): Contacts, Conversations, Messages, Bookings, Members,
+    Campaigns, Events, Audit, Knowledge, Channels, Services, Templates. Each has `[ScopeCapability(ScopeCapability.Client)]`,
+    takes `ScopeContext`, and does `ClientId ??= _scope.FilterGuid` before its query. Their old per-page client
+    dropdown (`_ClientFilter`) is gone: the header selector is the one place to pick a client (R10).
+  - **Search benchmark** (`Knowledge/Benchmark`, `Knowledge/BenchmarkGeneration`) needs one client: with none selected it shows an
     empty state pointing at the header selector. It is a script page (`knowledge-benchmark-kit.js` + one script per page) that
-    calls `/api/admin/knowledge-benchmark/{clinicId}`; it builds only kit markup (`au-chip`, `au-alert`, `au-stat`, `au-table`,
+    calls `/api/admin/knowledge-benchmark/{clientId}`; it builds only kit markup (`au-chip`, `au-alert`, `au-stat`, `au-table`,
     `au-dialog` `#bm-dialog` from `_BenchmarkDialog`), writes server text with `textContent`, and re-reads the dashboard every
     2 s only while a run or generation is in progress (shown by the progress bar and note, so it isn't hidden polling).
-  - Adding a scoped page = the attribute + those two lines; a page whose query has no clinic filter stays unscoped
+  - Adding a scoped page = the attribute + those two lines; a page whose query has no client filter stays unscoped
     (the selector hides, the chip and the selection stay).
-  - `ClinicScopeLookup` reads the existing clinic options list (cached 2 minutes) for the chip's name and the
+  - `ClientScopeLookup` reads the existing client options list (cached 2 minutes) for the chip's name and the
     selector's search. If the main app is down the selection is kept without a name. Signed-out requests skip the filter.
   - `Request.HasFilters()` ignores the scope key: the scope is global, not a page filter, so it doesn't show Clear or
     turn empty states into "match your filters".
@@ -158,7 +159,7 @@ A **dark gradient sidebar in both modes** (uppercase section captions with hairl
 "pill" rows, the active row lit with an indigo wash and a 3px gradient accent bar, favourites
 star on hover, filter box, collapsible to a 76px icon rail). A **sticky glass header**
 (translucent + 16px backdrop blur) holding a breadcrumb whose ancestors are dropdowns, the page
-title, a scope chip, a Ctrl+K search pill, the clinic selector and a light/dark toggle; under it a
+title, a scope chip, a Ctrl+K search pill, the client selector and a light/dark toggle; under it a
 **tab strip** of the current section's sibling views with a gradient underline. Content sits on a
 cool off‑white (`#f2f5fa`) / near‑black (`#070b15`) ground with a faint **aurora backdrop**
 (three blurred radial washes). Surfaces are white/navy **panels with a 1px hairline, a soft long
@@ -177,12 +178,12 @@ coloured glow. Motion is subtle (0.12–0.26s), and `prefers-reduced-motion` tur
 | R2 | **Light and dark are both first-class.** | Every new style is checked in both modes. Theme lives on `<html data-theme>`, stamped before first paint (§3.2). |
 | R3 | **URL is the state.** | Filters, paging, sort, tab and date range are **GET query parameters**; forms that filter use `method="get"`. Links are shareable; Back works. Never keep filter state in session. |
 | R4 | **Writes are POST + Post‑Redirect‑Get + feedback.** | Every mutation is a POST with the antiforgery token, redirects, and shows a toast (`this.Toast("Saved.")`, §11). No write ever succeeds or fails silently. |
-| R5 | **Every list is server‑paginated** (and **scope‑aware** where the data has a clinic). | `page`/`pageSize` (or the page's existing names) in the query; the `_Pager` partial; never render an unbounded list. |
+| R5 | **Every list is server‑paginated** (and **scope‑aware** where the data has a client). | `page`/`pageSize` (or the page's existing names) in the query; the `_Pager` partial; never render an unbounded list. |
 | R6 | **Every view has loading, empty and error states.** | Empty → `_EmptyState`; error → `_ErrorPanel` (specific message, *What to check*, details, copy); never a blank area or a bare "An error occurred". |
 | R7 | **Errors are specific.** | Show what failed, why, and what to check, plus a trace id. Stack traces only in Development. |
 | R8 | **Destructive or irreversible actions are confirm‑gated.** | `data-au-confirm` on the form/button (danger tone, default focus on *Cancel*). Say exactly what will happen ("Delete *Nile Dental*? Its 12 users lose access."). |
 | R9 | **One navigation tree.** | Sidebar, breadcrumb, section tabs and the Ctrl+K palette all read `NavTree` (§6). Adding a page = one line there. |
-| R10 | **Scope is global, declared per page, never re‑implemented.** | `[ScopeCapability(Clinic)]` on the PageModel + `ScopeContext.FilterId` in the query (§7). |
+| R10 | **Scope is global, declared per page, never re‑implemented.** | `[ScopeCapability(Client)]` on the PageModel + `ScopeContext.FilterId` in the query (§7). |
 | R11 | **Information density for operators.** | Compact tables (44px rows), monospaced ids with copy buttons, tabular numerals, `—` for empty values. |
 | R12 | **Semantic status colours, consistently.** | One status→tone map per enum (§9.3), reused everywhere that status appears. |
 | R13 | **No background polling by default.** | Reloads are explicit (⟳ Refresh). A live page needs a visible user toggle. |
@@ -202,7 +203,7 @@ wwwroot/css/aurora-bootstrap.css  ← kit (Appendix B)  only if Bootstrap is pre
 wwwroot/js/aurora.js              ← kit (Appendix C)  behaviours, opt-in by data-au-*
 wwwroot/fonts/…                   ← self-hosted fonts (§3.3)
 Navigation/Nav.cs                 ← the ONE nav tree + resolver (§6)
-Scoping/Scope.cs                  ← clinic scope (§7)
+Scoping/Scope.cs                  ← client scope (§7)
 Ui/Ui.cs                          ← WithQuery, Toast, PagerModel, ErrorPanelModel… (§11)
 Pages/Shared/_Layout.cshtml       ← the shell
 Pages/Shared/_Sidebar.cshtml, _NavNode.cshtml, _Header.cshtml, _SectionTabs.cshtml,
@@ -224,7 +225,7 @@ Keep every script, section and partial the old layout rendered (jQuery, validati
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@(ViewData["Title"] is string t ? $"{t} · Clinic Admin" : "Clinic Admin")</title>
+    <title>@(ViewData["Title"] is string t ? $"{t} · Client Admin" : "Client Admin")</title>
     <script>
         // Stamp theme + rail state BEFORE first paint (no white flash in dark mode).
         (function () {
@@ -366,7 +367,7 @@ sub‑portal. Everything else stays identical.
 
 ```
 ┌──────────────┬───────────────────────────────────────────────────────────────────────────┐
-│ [+] Clinic   │ ▣  Access ˅                      [Clinic: Nile ✕] [⌕ Search Ctrl K] [🏥 Nile Dental ▾] [☾] │
+│ [+] Client   │ ▣  Access ˅                      [Client: Nile ✕] [⌕ Search Ctrl K] [🏥 Nile Dental ▾] [☾] │
 │     Admin    │    Users                                                                  │  ← .au-header__bar (glass)
 │──────────────│───────────────────────────────────────────────────────────────────────────│
 │ ⌕ Filter…    │  👤 Users   🪪 Roles   ✉ Invitations                                       │  ← .au-section-tabs
@@ -374,8 +375,8 @@ sub‑portal. Everything else stays identical.
 │  ▢ Overview  │                                                                           │
 │ OPERATIONS ──│  ╭ toolbar (30px radius): [Period ▾] [Status ▾] [⌕ Search…]   Export ⟳ ⊕ ╮ │
 │  ▢ Appts     │  ┌ table card ─────────────────────────────────────────────────────────┐ │
-│ MANAGE ──────│  │ NAME ↑   EMAIL   CLINIC   ROLE   STATUS   …                          │ │
-│  ▢ Clinics   │  │ rows 44px, hover tint, chips, mono ids + copy                         │ │
+│ MANAGE ──────│  │ NAME ↑   EMAIL   CLIENT   ROLE   STATUS   …                          │ │
+│  ▢ Clients   │  │ rows 44px, hover tint, chips, mono ids + copy                         │ │
 │ ┃▣ Access ★  │  │ 51–75 of 1,284 rows                         [25 ▾] ‹  3 / 52  ›       │ │
 │  ▢ Settings  │  └───────────────────────────────────────────────────────────────────────┘ │
 │──────────────│                                                                           │
@@ -400,7 +401,7 @@ sub‑portal. Everything else stays identical.
 **Header** (`.au-header__bar`, sticky, glass)
 - Breadcrumb (`.au-crumbs`): only ancestors; each ancestor is a dropdown of its siblings, so you can
   hop to a sibling area without the sidebar. Then the **page title** (`.au-header__title`, the nav leaf's label).
-- Tools, left→right: active-scope chip (with ✕), search pill (opens Ctrl+K), clinic selector,
+- Tools, left→right: active-scope chip (with ✕), search pill (opens Ctrl+K), client selector,
   theme toggle, user menu.
 
 **Section tabs** (`.au-section-tabs`): the current page's sibling views, gradient underline.
@@ -419,7 +420,7 @@ directly with its toolbar or panels — the title is already in the header (no d
 namespace YourApp.Navigation;
 
 /// <summary>A node of the ONE navigation tree. Leaf = has Path. Group = has Children.</summary>
-/// Aliases = extra path prefixes that also count as this leaf (e.g. /Billing/Clinic is "Billing accounts").
+/// Aliases = extra path prefixes that also count as this leaf (e.g. /Billing/Client is "Billing accounts").
 public sealed record NavItem(string Label, string Icon, string? Path = null, NavItem[]? Children = null, bool Exact = false,
     string[]? Aliases = null)
 {
@@ -430,7 +431,7 @@ public sealed record NavItem(string Label, string Icon, string? Path = null, Nav
 
     public string? FirstLeafPath => Path ?? Children?.Select(c => c.FirstLeafPath).FirstOrDefault(p => p is not null);
 
-    /// <summary>Segment-aware: "/Clinics" matches "/Clinics" and "/Clinics/Edit/3", not "/ClinicsArchive". Aliases always
+    /// <summary>Segment-aware: "/Clients" matches "/Clients" and "/Clients/Edit/3", not "/ClientsArchive". Aliases always
     /// match as prefixes; Exact applies to Path only.</summary>
     public bool Matches(string path) =>
         Path is not null && (Covers(Path, path, Exact) || (Aliases?.Any(a => Covers(a, path, exact: false)) ?? false));
@@ -454,7 +455,7 @@ public static class NavTree
         new(null, new[] { new NavItem("Overview", "dashboard", "/", Exact: true) }),   // "/" MUST be Exact
         new("Operations", new[]
         {
-            new NavItem("Appointments", "event", "/Appointments"),
+            new NavItem("Bookings", "event", "/Bookings"),
             new NavItem("Reports", "assessment", Children: new[]
             {
                 new NavItem("Revenue", "payments", "/Reports/Revenue"),
@@ -463,7 +464,7 @@ public static class NavTree
         }),
         new("Manage", new[]
         {
-            new NavItem("Clinics", "local_hospital", "/Clinics"),
+            new NavItem("Clients", "local_hospital", "/Clients"),
             new NavItem("Access", "admin_panel_settings", Children: new[]
             {
                 new NavItem("Users", "person", "/Access/Users"),
@@ -527,7 +528,7 @@ Rules:
     <a class="au-brand" href="~/">
         <span class="au-brand__mark"><partial name="_BrandMark" model="38" /></span>
         <span class="au-brand__text">
-            <span class="au-brand__name">Clinic Admin</span>
+            <span class="au-brand__name">Client Admin</span>
             <span class="au-brand__sub">Administration Portal</span>
         </span>
     </a>
@@ -633,7 +634,7 @@ else
 @{
     var path = Context.Request.Path.Value ?? "/";
     var steps = NavTree.Resolve(path);
-    var title = (steps.Count > 0 ? steps[^1].Node.Label : null) ?? ViewData["Title"] as string ?? "Clinic Admin";
+    var title = (steps.Count > 0 ? steps[^1].Node.Label : null) ?? ViewData["Title"] as string ?? "Client Admin";
     var so = ScopeOptions.Value;
 }
 <div class="au-header__bar">
@@ -745,7 +746,7 @@ else
 ```cshtml
 @model int
 @{ var gid = "au-mark-" + Guid.NewGuid().ToString("N")[..8]; }
-<svg width="@Model" height="@Model" viewBox="0 0 32 32" role="img" aria-label="Clinic Admin">
+<svg width="@Model" height="@Model" viewBox="0 0 32 32" role="img" aria-label="Client Admin">
     <defs>
         <linearGradient id="@(gid)" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
             <stop offset="0" stop-color="#6366f1" /><stop offset=".55" stop-color="#8b5cf6" /><stop offset="1" stop-color="#a855f7" />
@@ -759,29 +760,29 @@ else
 
 ---
 
-## 7. Clinic scope — the global "narrow everything to one clinic" selector
+## 7. Client scope — the global "narrow everything to one client" selector
 
 ### 7.1 Model (from the Omni portal's tenant/client scoping, reduced to one entity)
 - The Omni portal narrows every data view by **tenant → client**, chosen once in the header,
   synced to the URL, and each page declares what it supports (`tenant-client | tenant | none`).
-- The Admin Portal has **one** scope entity today: **Clinic**. Capabilities are therefore
-  **`Clinic`** (the page's data has a clinic and filters by it) or **`None`** (selector hidden).
-- Levels: **Global** (all clinics) or **Clinic** (one clinic). Optional *group by clinic* is only
+- The Admin Portal has **one** scope entity today: **Client**. Capabilities are therefore
+  **`Client`** (the page's data has a client and filters by it) or **`None`** (selector hidden).
+- Levels: **Global** (all clients) or **Client** (one client). Optional *group by client* is only
   legal at Global level.
 - **Future-proof:** everything is named *Scope*, and the label/query key/icon live in
-  `ScopeOptions`. Turning Clinic into Client later is a configuration + lookup change, not a rewrite.
+  `ScopeOptions`. Turning Client into Client later is a configuration + lookup change, not a rewrite.
 
 ### 7.2 Behaviour rules
-1. The selected clinic lives in the URL as `?clinic=<id>` and is remembered in a cookie, so
-   navigating keeps it and a pasted link reproduces the view. `?clinic=` (empty) means **All** and clears it.
-2. The header shows a **scope chip** ("Clinic: Nile Dental ✕") whenever a clinic is selected, on every page.
-3. Changing the clinic resets paging (`page` is dropped).
-4. A page that is not clinic-aware hides the selector but keeps the selection.
-5. At Global level, list rows show **which clinic** each row belongs to (a Clinic column); at Clinic level that column is redundant and may be hidden.
-6. Ids in the URL: prefer the clinic's public/guid id if it has one; otherwise use what exists
+1. The selected client lives in the URL as `?client=<id>` and is remembered in a cookie, so
+   navigating keeps it and a pasted link reproduces the view. `?client=` (empty) means **All** and clears it.
+2. The header shows a **scope chip** ("Client: Nile Dental ✕") whenever a client is selected, on every page.
+3. Changing the client resets paging (`page` is dropped).
+4. A page that is not client-aware hides the selector but keeps the selection.
+5. At Global level, list rows show **which client** each row belongs to (a Client column); at Client level that column is redundant and may be hidden.
+6. Ids in the URL: prefer the client's public/guid id if it has one; otherwise use what exists
    (do not add columns for this). Never put internal ids into new URLs when a public id exists.
 7. If anything ever switches the *outer* data source (another database/environment), it must
-   **reset the scope** — an id from one database can mean a different clinic in another.
+   **reset the scope** — an id from one database can mean a different client in another.
 
 ### 7.3 Plumbing (`Scoping/Scope.cs`)
 
@@ -793,7 +794,7 @@ using Microsoft.Extensions.Options;
 namespace YourApp.Scoping;
 
 /// <summary>What a page can be narrowed by. One entity today; add a value when Client arrives.</summary>
-public enum ScopeCapability { None, Clinic }
+public enum ScopeCapability { None, Client }
 
 [AttributeUsage(AttributeTargets.Class, Inherited = true)]
 public sealed class ScopeCapabilityAttribute(ScopeCapability capability) : Attribute
@@ -801,12 +802,12 @@ public sealed class ScopeCapabilityAttribute(ScopeCapability capability) : Attri
     public ScopeCapability Capability { get; } = capability;
 }
 
-/// <summary>Names live here so "Clinic" → "Client" later is configuration, not a rewrite.</summary>
+/// <summary>Names live here so "Client" → "Client" later is configuration, not a rewrite.</summary>
 public sealed class ScopeOptions
 {
-    public string EntityLabel { get; set; } = "Clinic";
-    public string EntityLabelPlural { get; set; } = "Clinics";
-    public string QueryKey { get; set; } = "clinic";
+    public string EntityLabel { get; set; } = "Client";
+    public string EntityLabelPlural { get; set; } = "Clients";
+    public string QueryKey { get; set; } = "client";
     public string CookieName { get; set; } = "au.scope";
     public string Icon { get; set; } = "local_hospital";
 }
@@ -826,14 +827,14 @@ public sealed class ScopeContext
 public sealed record ScopeOption(string Id, string Name, bool IsActive = true, string? Sub = null);
 public sealed record ScopeOptionPage(IReadOnlyList<ScopeOption> Items, bool HasMore);
 
-/// <summary>Implement ONCE over the project's existing clinic data access (no new queries elsewhere).</summary>
+/// <summary>Implement ONCE over the project's existing client data access (no new queries elsewhere).</summary>
 public interface IScopeLookup
 {
     Task<string?> GetNameAsync(string id, CancellationToken ct);
     Task<ScopeOptionPage> SearchAsync(string? q, int skip, int take, CancellationToken ct);
 }
 
-/// <summary>Resolves scope for every page: ?clinic= wins (shareable links), else the cookie.</summary>
+/// <summary>Resolves scope for every page: ?client= wins (shareable links), else the cookie.</summary>
 public sealed class ScopePageFilter(ScopeContext scope, IOptions<ScopeOptions> options, IScopeLookup lookup) : IAsyncPageFilter
 {
     public Task OnPageHandlerSelectionAsync(PageHandlerSelectedContext context) => Task.CompletedTask;
@@ -848,7 +849,7 @@ public sealed class ScopePageFilter(ScopeContext scope, IOptions<ScopeOptions> o
         string? id;
         if (http.Request.Query.TryGetValue(o.QueryKey, out var fromUrl))
         {
-            id = string.IsNullOrWhiteSpace(fromUrl) ? null : fromUrl.ToString(); // "?clinic=" = explicit All
+            id = string.IsNullOrWhiteSpace(fromUrl) ? null : fromUrl.ToString(); // "?client=" = explicit All
             if (id is null) http.Response.Cookies.Delete(o.CookieName);
             else http.Response.Cookies.Append(o.CookieName, id, new CookieOptions
             {
@@ -878,7 +879,7 @@ public sealed class ScopePageFilter(ScopeContext scope, IOptions<ScopeOptions> o
 ```csharp
 builder.Services.Configure<ScopeOptions>(builder.Configuration.GetSection("Scope")); // section optional
 builder.Services.AddScoped<ScopeContext>();
-builder.Services.AddScoped<IScopeLookup, ClinicScopeLookup>(); // implement over the existing clinic service/repository
+builder.Services.AddScoped<IScopeLookup, ClientScopeLookup>(); // implement over the existing client service/repository
 builder.Services.AddRazorPages().AddMvcOptions(o => o.Filters.Add<ScopePageFilter>()); // chain onto the EXISTING AddRazorPages()
 
 // after app.MapRazorPages():
@@ -887,7 +888,7 @@ app.MapGet("/scope/options", async (string? q, int? skip, int? take, IScopeLooku
     // add .RequireAuthorization() when the app requires sign-in (it must not be more open than the pages)
 ```
 
-`Pages/Shared/_ScopeSelector.cshtml` (searchable, "All clinics" first, infinite scroll, keyboard):
+`Pages/Shared/_ScopeSelector.cshtml` (searchable, "All clients" first, infinite scroll, keyboard):
 
 ```cshtml
 @inject ScopeContext Scope
@@ -911,20 +912,20 @@ app.MapGet("/scope/options", async (string? q, int? skip, int? take, IScopeLooku
 A scope-aware page (the **only** per-page work):
 
 ```csharp
-[ScopeCapability(ScopeCapability.Clinic)]
-public class IndexModel(ScopeContext scope, IAppointmentService appointments) : PageModel
+[ScopeCapability(ScopeCapability.Client)]
+public class IndexModel(ScopeContext scope, IBookingService bookings) : PageModel
 {
     public async Task OnGetAsync(/* existing filters */)
     {
         // pass scope.FilterId to the EXISTING query — only after the user approved this page (§0.3 step 4)
-        Rows = await appointments.SearchAsync(clinicId: scope.FilterId /*, existing args */);
+        Rows = await bookings.SearchAsync(clientId: scope.FilterId /*, existing args */);
     }
 }
 ```
 
-> **Approval gate.** Adding the selector is UI; *filtering a query by clinic is logic*. List the
-> pages whose existing queries already accept a clinic filter, ask the user, and wire only those.
-> Never add a clinic filter to a query that didn't have one without asking.
+> **Approval gate.** Adding the selector is UI; *filtering a query by client is logic*. List the
+> pages whose existing queries already accept a client filter, ask the user, and wire only those.
+> Never add a client filter to a query that didn't have one without asking.
 
 ---
 
@@ -977,7 +978,7 @@ else
                 <thead><tr>
                     <th><partial name="_SortLink" model="@(new SortLinkModel("name", "Name", Model.Sort, Model.Dir))" /></th>
                     <th>Email</th>
-                    @if (Model.ShowClinicColumn) { <th>Clinic</th> }
+                    @if (Model.ShowClientColumn) { <th>Client</th> }
                     <th>Status</th>
                     <th>User id</th>
                     <th class="au-shrink"></th>
@@ -988,7 +989,7 @@ else
                     <tr data-au-href="@Url.Page("Details", new { id = u.Id })" tabindex="0">
                         <td class="au-strong">@u.Name</td>
                         <td>@u.Email</td>
-                        @if (Model.ShowClinicColumn) { <td>@u.ClinicName</td> }
+                        @if (Model.ShowClientColumn) { <td>@u.ClientName</td> }
                         <td><span class="@UserStatusUi.Chip(u.Status)">@UserStatusUi.Label(u.Status)</span></td>
                         <td><span class="au-copy"><span class="au-mono">@u.PublicId</span>
                             <button type="button" class="au-icon-btn au-icon-btn--xs" data-au-copy="@u.PublicId" aria-label="Copy id"><span class="au-icon" aria-hidden="true">content_copy</span></button></span></td>
@@ -1026,7 +1027,7 @@ Prefer a server-rendered **drawer** for quick looks and a **detail page** for an
 </dialog>
 ```
 - **Detail page**: `.au-back-header` (← back, 1.5rem title, caption subtitle), a chips row (status,
-  clinic, plan), then panels with `.au-kv au-kv--2` field grids (eyebrow label + value), and in-page
+  client, plan), then panels with `.au-kv au-kv--2` field grids (eyebrow label + value), and in-page
   tabs (`.au-tabs` with `?tab=` links) for sub-views. Long payloads in `.au-code`; ids in `.au-copy`.
 
 ### 8.3 Overview (landing) page
@@ -1048,7 +1049,7 @@ board reads as a full system snapshot. Every new feature offers a card here (R15
 - Delete/deactivate: a POST form with `data-au-confirm="…" data-au-confirm-tone="danger"`; the
   confirmed submit keeps the clicked button's `name`/`value` (so `asp-page-handler` still works) and
   shows a spinner (`aria-busy`). Never disable the submit button yourself — a disabled button is not posted.
-- After POST: `this.Toast("Clinic saved.");` then `RedirectToPage(...)` (PRG).
+- After POST: `this.Toast("Client saved.");` then `RedirectToPage(...)` (PRG).
 
 ### 8.5 Tabs inside a page
 `<div class="au-tabs">` of `<a class="au-tab is-active" href="?tab=billing">` (preserve other
@@ -1116,7 +1117,7 @@ For a toggle between 2–4 views of the *same* data, use the segmented control (
 | `data-au-sidebar-toggle` | rail on desktop, off-canvas on mobile |
 | `data-au-nav-filter` / `data-au-favorites` / `.au-nav-star` | sidebar filter, favourites |
 | `data-au-palette-open`, Ctrl/⌘+K | command palette (needs `#au-nav-data`) |
-| `data-au-scope` | clinic combobox (needs `/scope/options`) |
+| `data-au-scope` | client combobox (needs `/scope/options`) |
 | `form[data-au-autosubmit]` | submit on select/checkbox/date change; resets `page` (`data-au-page-param`, `data-au-page-first`) |
 | `data-au-range` + `[data-au-range-select]` + `[data-au-range-custom]` | preset select that reveals custom from/to |
 | `data-au-confirm` (+`-title`, `-label`, `-tone`) | confirm gate for forms, submit buttons, links |
@@ -1237,7 +1238,7 @@ public sealed record ErrorPanelModel(string Title, string Message, string? Hint 
         var (title, hint) = ex switch
         {
             TimeoutException or OperationCanceledException =>
-                ("The operation timed out", "Narrow the filters (date range, clinic) and try again."),
+                ("The operation timed out", "Narrow the filters (date range, client) and try again."),
             HttpRequestException => ("A dependency could not be reached", "Check that the downstream service is up and reachable from this server."),
             UnauthorizedAccessException => ("You are not allowed to do this", "Ask an administrator for the required role."),
             // extend with the project's own exceptions: DB errors (SqlException.Number / PostgresException.SqlState),
@@ -1418,7 +1419,7 @@ never let the user pick a range the server will reject.
 - [ ] Destructive actions behind `data-au-confirm`.
 - [ ] Icon-only buttons have `aria-label`; keyboard path works (Tab, Enter, Esc).
 - [ ] Page is in `NavTree` (or deliberately reachable only from another page).
-- [ ] Scope: capability declared if (and only if) the user approved clinic filtering for this page.
+- [ ] Scope: capability declared if (and only if) the user approved client filtering for this page.
 - [ ] Overview tile offered for new features; this guide updated if a rule or the kit changed.
 
 ---
@@ -4513,7 +4514,7 @@ span.au-crumb:hover {
   background: color-mix(in srgb, var(--au-error) 10%, var(--au-paper));
   color: var(--au-error);
 }
-/* the global scope selector (one entity: e.g. Clinic) */
+/* the global scope selector (one entity: e.g. Client) */
 .au-scope {
   display: flex;
   align-items: center;
@@ -6692,7 +6693,7 @@ hr {
     });
   }
 
-  // --- global scope selector (one entity, e.g. Clinic) ----------------------
+  // --- global scope selector (one entity, e.g. Client) ----------------------
   // Server contract: GET {endpoint}&q=&skip=&take= → { items:[{id,name,isActive,sub}], hasMore }
   // Picking sets ?{param}=<id> (or ?{param}= for "All") and reloads; the server
   // persists the choice (cookie) and every scope-aware page reads it.

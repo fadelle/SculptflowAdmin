@@ -15,8 +15,8 @@ public class MessageTracesAdminService : IMessageTracesAdminService
         _api = api;
     }
 
-    public Task<MessageTracePage> ListAsync(int hours, Guid? clinicId, bool failedOnly, int page, CancellationToken ct) =>
-        _api.ListAsync(hours, clinicId, null, failedOnly, page, MessageTraceOptions.PageSize, ct);
+    public Task<MessageTracePage> ListAsync(int hours, Guid? clientId, bool failedOnly, int page, CancellationToken ct) =>
+        _api.ListAsync(hours, clientId, null, failedOnly, page, MessageTraceOptions.PageSize, ct);
 
     public Task<MessageTrace?> GetAsync(string? traceId, Guid? messageId, CancellationToken ct) =>
         messageId is { } id ? _api.ForMessageAsync(id, ct)

@@ -35,7 +35,7 @@
             <div class="au-kv__item"><span class="au-eyebrow">Server</span><span class="au-kv__value">@Ui.OrDash(e.Instance)</span></div>
             <div class="au-kv__item"><span class="au-eyebrow">Trace id</span><span class="au-kv__value">@if (e.TraceId is null) { @Ui.OrDash(null) } else { <span class="au-copy"><span class="au-mono">@e.TraceId</span></span> }</span></div>
             <div class="au-kv__item"><span class="au-eyebrow">Problem (fingerprint)</span><span class="au-kv__value au-mono">@e.Fingerprint</span></div>
-            <div class="au-kv__item"><span class="au-eyebrow">Clinic</span><span class="au-kv__value">@if (e.ClinicId.HasValue) { <a href="/Clinics/Details?id=@e.ClinicId">@Ui.Short(e.ClinicId.Value)</a> } else { @Ui.OrDash(null) }</span></div>
+            <div class="au-kv__item"><span class="au-eyebrow">Client</span><span class="au-kv__value">@if (e.ClientId.HasValue) { <a href="/Clients/Details?id=@e.ClientId">@Ui.Short(e.ClientId.Value)</a> } else { @Ui.OrDash(null) }</span></div>
             <div class="au-kv__item"><span class="au-eyebrow">Conversation</span><span class="au-kv__value">@if (e.ConversationId.HasValue) { <a href="/Conversations/Details?id=@e.ConversationId">@Ui.Short(e.ConversationId.Value)</a> } else { @Ui.OrDash(null) }</span></div>
             @if (e.MessageId.HasValue)
             {

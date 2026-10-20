@@ -2,20 +2,20 @@
 @model Omni.Admin.Pages.Channels.DetailsModel
 @{
     var r = Model.Row;
-    ViewData["Title"] = r.Channel + " · " + r.Clinic?.Name;
+    ViewData["Title"] = r.Channel + " · " + r.Client?.Name;
     var problem = string.Join(" ", new[] { r.LastProblemCode, r.LastProblemMessage }.Where(x => !string.IsNullOrWhiteSpace(x)));
 }
 <div class="au-back-header">
     <a class="au-icon-btn au-icon-btn--bordered" href="/Channels" aria-label="Back to channels"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
     <div style="min-width:0">
         <h2 class="au-back-header__title">@r.Channel</h2>
-        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@r.ClinicId">@r.Clinic?.Name</a></span>
+        <span class="au-back-header__sub"><a href="/Clients/Details?id=@r.ClientId">@r.Client?.Name</a></span>
     </div>
     @if (r.Status != ChannelIntegrationStatus.Disconnected)
     {
         <div class="au-row au-row--wrap">
             <form method="post" asp-page-handler="Disconnect" asp-route-id="@r.Id">
-                <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Disconnect @r.Channel for @r.Clinic?.Name? Messages stop flowing until it's reconnected.">Disconnect</button>
+                <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Disconnect @r.Channel for @r.Client?.Name? Messages stop flowing until it's reconnected.">Disconnect</button>
             </form>
         </div>
     }

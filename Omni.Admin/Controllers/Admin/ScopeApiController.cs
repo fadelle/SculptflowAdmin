@@ -5,7 +5,7 @@ using Omni.Admin.Common.Exceptions;
 
 namespace Omni.Admin.Controllers.Admin;
 
-/// <summary>Choices for the header's clinic scope selector (aurora.js): GET /api/admin/scope/options?q=&amp;skip=&amp;take=.
+/// <summary>Choices for the header's client scope selector (aurora.js): GET /api/admin/scope/options?q=&amp;skip=&amp;take=.
 /// Signed-in admins only, like the rest of /api/admin.</summary>
 [ApiController]
 [Authorize]

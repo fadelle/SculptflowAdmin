@@ -4,11 +4,11 @@ using Omni.Admin.Pages.Shared;
 
 namespace Omni.Admin.Pages.Knowledge;
 
-/// <summary>One "Generate test cases" batch of a clinic's search benchmark: its summary, the chunks sent, rejected
+/// <summary>One "Generate test cases" batch of a client's search benchmark: its summary, the chunks sent, rejected
 /// questions, n8n's raw reply and its own test cases (edit, review, delete, run just this batch). Only the page shell —
-/// wwwroot/js/knowledge-benchmark-generation.js loads it through /api/admin/knowledge-benchmark/{clinicId}; the main app
-/// answers 404 for a generation that isn't that clinic's.</summary>
-[ScopeCapability(ScopeCapability.Clinic)]
+/// wwwroot/js/knowledge-benchmark-generation.js loads it through /api/admin/knowledge-benchmark/{clientId}; the main app
+/// answers 404 for a generation that isn't that client's.</summary>
+[ScopeCapability(ScopeCapability.Client)]
 public class BenchmarkGenerationModel : AdminPageModel
 {
     private readonly ScopeContext _scope;
@@ -16,9 +16,9 @@ public class BenchmarkGenerationModel : AdminPageModel
     public BenchmarkGenerationModel(ScopeContext scope) => _scope = scope;
 
     [BindProperty(SupportsGet = true)] public Guid Id { get; set; }
-    [BindProperty(SupportsGet = true)] public Guid? ClinicId { get; set; }
+    [BindProperty(SupportsGet = true)] public Guid? ClientId { get; set; }
 
-    public string? ClinicName => _scope.EntityName;
+    public string? ClientName => _scope.EntityName;
 
-    public void OnGet() => ClinicId ??= _scope.FilterGuid;
+    public void OnGet() => ClientId ??= _scope.FilterGuid;
 }

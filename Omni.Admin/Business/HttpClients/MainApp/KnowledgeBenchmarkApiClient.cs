@@ -6,10 +6,10 @@ using Omni.Admin.Common.Configs;
 namespace Omni.Admin.Business.HttpClients.MainApp;
 
 /// <summary>Client for the main app's platform-admin Knowledge Retrieval Benchmark API
-/// (/api/platform-admin/knowledge-benchmark/clinics/{clinicId}).</summary>
+/// (/api/platform-admin/knowledge-benchmark/clients/{clientId}).</summary>
 public class KnowledgeBenchmarkApiClient : MainAppApiClient, IKnowledgeBenchmarkApiClient
 {
-    public const string Prefix = "api/platform-admin/knowledge-benchmark/clinics/";
+    public const string Prefix = "api/platform-admin/knowledge-benchmark/clients/";
 
     public KnowledgeBenchmarkApiClient(HttpClient http, IOptions<MainAppApiOptions> options, IHttpContextAccessor context,
         ILogger<KnowledgeBenchmarkApiClient> logger)
@@ -17,10 +17,10 @@ public class KnowledgeBenchmarkApiClient : MainAppApiClient, IKnowledgeBenchmark
     {
     }
 
-    public Task<JsonNode?> GetAsync(Guid clinicId, string path, CancellationToken ct) => GetAsync<JsonNode>(clinicId + path, ct);
+    public Task<JsonNode?> GetAsync(Guid clientId, string path, CancellationToken ct) => GetAsync<JsonNode>(clientId + path, ct);
 
-    public Task<JsonNode> SendAsync(Guid clinicId, HttpMethod method, string path, object? body, CancellationToken ct) =>
-        WriteForAsync<JsonNode>(method, clinicId + path, body, null, false, ct);
+    public Task<JsonNode> SendAsync(Guid clientId, HttpMethod method, string path, object? body, CancellationToken ct) =>
+        WriteForAsync<JsonNode>(method, clientId + path, body, null, false, ct);
 
-    public Task DeleteAsync(Guid clinicId, string path, CancellationToken ct) => WriteAsync(HttpMethod.Delete, clinicId + path, null, null, false, ct);
+    public Task DeleteAsync(Guid clientId, string path, CancellationToken ct) => WriteAsync(HttpMethod.Delete, clientId + path, null, null, false, ct);
 }

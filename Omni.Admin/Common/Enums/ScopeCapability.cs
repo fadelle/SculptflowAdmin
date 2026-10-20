@@ -5,5 +5,5 @@ namespace Omni.Admin.Common.Enums;
 public enum ScopeCapability
 {
     None,
-    Clinic,
+    Client,
 }

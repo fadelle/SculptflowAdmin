@@ -26,7 +26,7 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
     // ---- reads -------------------------------------------------------------------------------------------------
 
     public Task<List<BillingAccountRow>> AccountsAsync(CancellationToken ct) => GetRequiredAsync<List<BillingAccountRow>>("accounts", ct);
-    public Task<AdminBillingOverview?> ClinicAsync(Guid clinicId, CancellationToken ct) => GetAsync<AdminBillingOverview>($"clinics/{clinicId}", ct);
+    public Task<AdminBillingOverview?> ClientAsync(Guid clientId, CancellationToken ct) => GetAsync<AdminBillingOverview>($"clients/{clientId}", ct);
     public Task<List<PlanResponse>> PlansAsync(CancellationToken ct) => GetRequiredAsync<List<PlanResponse>>("plans", ct);
     public Task<PlanResponse?> PlanAsync(string code, CancellationToken ct) => GetAsync<PlanResponse>($"plans/{Esc(code)}", ct);
     public Task<List<EntitlementDefinition>> EntitlementsAsync(CancellationToken ct) => GetRequiredAsync<List<EntitlementDefinition>>("entitlements", ct);
@@ -34,24 +34,24 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
     public Task<List<RateResponse>?> RatesAsync(string code, bool history, CancellationToken ct) =>
         GetAsync<List<RateResponse>>($"rate-cards/{Esc(code)}/rates?history={(history ? "true" : "false")}", ct);
     public Task<ProviderBillingModes> ProviderBillingModesAsync(CancellationToken ct) => GetRequiredAsync<ProviderBillingModes>("provider-billing", ct);
-    public Task<ReconciliationResponse> ReconcileAsync(Guid clinicId, CancellationToken ct) =>
-        GetRequiredAsync<ReconciliationResponse>($"clinics/{clinicId}/reconciliation", ct);
+    public Task<ReconciliationResponse> ReconcileAsync(Guid clientId, CancellationToken ct) =>
+        GetRequiredAsync<ReconciliationResponse>($"clients/{clientId}/reconciliation", ct);
 
-    public Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clinicId, string? status, string? eventType, int page, CancellationToken ct) =>
-        GetRequiredAsync<PagedResponse<AdminUsageRow>>($"clinics/{clinicId}/usage?page={page}&pageSize=50" +
+    public Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct) =>
+        GetRequiredAsync<PagedResponse<AdminUsageRow>>($"clients/{clientId}/usage?page={page}&pageSize=50" +
             (string.IsNullOrWhiteSpace(status) ? "" : "&status=" + Esc(status)) +
             (string.IsNullOrWhiteSpace(eventType) ? "" : "&eventType=" + Esc(eventType)), ct);
 
-    public Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clinicId, int page, CancellationToken ct) =>
-        GetRequiredAsync<PagedResponse<AdminLedgerRow>>($"clinics/{clinicId}/ledger?page={page}&pageSize=50", ct);
+    public Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clientId, int page, CancellationToken ct) =>
+        GetRequiredAsync<PagedResponse<AdminLedgerRow>>($"clients/{clientId}/ledger?page={page}&pageSize=50", ct);
 
     public Task<BillingReport> ReportAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken ct) =>
         GetRequiredAsync<BillingReport>($"report?from={Esc(from.ToString("o"))}&to={Esc(to.ToString("o"))}", ct);
 
-    /// <summary>What Omni would charge the clinic now; null when no rate card prices it.</summary>
-    public Task<QuoteResponse?> QuoteAsync(Guid clinicId, string eventType, string? country, string? provider, string? providerBilling,
+    /// <summary>What Omni would charge the client now; null when no rate card prices it.</summary>
+    public Task<QuoteResponse?> QuoteAsync(Guid clientId, string eventType, string? country, string? provider, string? providerBilling,
         CancellationToken ct) =>
-        GetAsync<QuoteResponse>($"clinics/{clinicId}/quote?eventType={Esc(eventType)}" +
+        GetAsync<QuoteResponse>($"clients/{clientId}/quote?eventType={Esc(eventType)}" +
             (string.IsNullOrWhiteSpace(country) ? "" : "&country=" + Esc(country)) +
             (string.IsNullOrWhiteSpace(provider) ? "" : "&provider=" + Esc(provider)) +
             (string.IsNullOrWhiteSpace(providerBilling) ? "" : "&providerBilling=" + Esc(providerBilling)), ct);
@@ -76,26 +76,26 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
     public Task CloseRateAsync(Guid rateId, CancellationToken ct) =>
         WriteAsync(HttpMethod.Post, $"rates/{rateId}/close", new CloseRateRequest(null), null, false, ct);
 
-    public Task StartSubscriptionAsync(Guid clinicId, StartSubscriptionApiRequest r, string opId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clinics/{clinicId}/subscription", r, opId, false, ct);
+    public Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription", r, opId, false, ct);
 
-    public Task CancelSubscriptionAsync(Guid clinicId, CancelSubscriptionRequest r, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clinics/{clinicId}/subscription/cancel", r, null, false, ct);
+    public Task CancelSubscriptionAsync(Guid clientId, CancelSubscriptionRequest r, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription/cancel", r, null, false, ct);
 
-    public Task ResumeSubscriptionAsync(Guid clinicId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clinics/{clinicId}/subscription/resume", null, null, false, ct);
+    public Task ResumeSubscriptionAsync(Guid clientId, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription/resume", null, null, false, ct);
 
-    public Task RenewAsync(Guid clinicId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clinics/{clinicId}/subscription/renew", null, null, false, ct);
+    public Task RenewAsync(Guid clientId, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription/renew", null, null, false, ct);
 
-    public Task TopUpAsync(Guid clinicId, TopUpRequest r, string opId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clinics/{clinicId}/wallet/top-ups", r, opId, false, ct);
+    public Task TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Post, $"clients/{clientId}/wallet/top-ups", r, opId, false, ct);
 
-    public Task AdjustAsync(Guid clinicId, AdjustmentRequest r, string opId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clinics/{clinicId}/wallet/adjustments", r, opId, false, ct);
+    public Task AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Post, $"clients/{clientId}/wallet/adjustments", r, opId, false, ct);
 
-    public Task RefundAsync(Guid clinicId, Guid usageId, RefundRequest r, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clinics/{clinicId}/usage/{usageId}/refund", r, null, false, ct);
+    public Task RefundAsync(Guid clientId, Guid usageId, RefundRequest r, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Post, $"clients/{clientId}/usage/{usageId}/refund", r, null, false, ct);
 
     public Task SetProviderBillingAsync(Guid channelIntegrationId, ProviderBillingRequest r, CancellationToken ct) =>
         WriteAsync(HttpMethod.Put, $"channel-accounts/{channelIntegrationId}/provider-billing", r, null, false, ct);

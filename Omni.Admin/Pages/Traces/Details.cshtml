@@ -13,7 +13,7 @@
             @if (tr.StartedAt.HasValue) { <text> · @Ui.Time(tr.StartedAt) to @Ui.Time(tr.EndedAt)</text> }</span>
     </div>
     <div class="au-row au-row--wrap">
-        @if (tr.ClinicId.HasValue) { <a class="au-btn au-btn--outlined" href="/Clinics/Details?id=@tr.ClinicId">Clinic</a> }
+        @if (tr.ClientId.HasValue) { <a class="au-btn au-btn--outlined" href="/Clients/Details?id=@tr.ClientId">Client</a> }
         @foreach (var c in tr.ConversationIds) { <a class="au-btn au-btn--outlined" href="/Conversations/Details?id=@c">Conversation</a> }
         <a class="au-btn au-btn--outlined" href="/Errors/List?traceId=@tr.TraceId&hours=2160">Errors in this trace</a>
     </div>

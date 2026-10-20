@@ -18,52 +18,52 @@ public class ContentAdminService : IContentAdminService
         _audit = audit;
     }
 
-    public Task<PagedResult<CampaignRow>> ListCampaignsAsync(Guid? clinicId, string? status, int page, CancellationToken ct = default) =>
-        _api.ListCampaignsAsync(clinicId, status, page, ct);
+    public Task<PagedResult<CampaignRow>> ListCampaignsAsync(Guid? clientId, string? status, int page, CancellationToken ct = default) =>
+        _api.ListCampaignsAsync(clientId, status, page, ct);
 
     public Task<CampaignRow?> GetCampaignAsync(Guid id, CancellationToken ct = default) => _api.GetCampaignAsync(id, ct);
 
     public Task<PagedResult<RecipientRow>> RecipientsAsync(Guid campaignId, string? status, int page, CancellationToken ct = default) =>
         _api.RecipientsAsync(campaignId, status, page, ct);
 
-    public Task<List<TemplateRow>> ListTemplatesAsync(Guid? clinicId, string? status, CancellationToken ct = default) =>
-        _api.ListTemplatesAsync(clinicId, status, ct);
+    public Task<List<TemplateRow>> ListTemplatesAsync(Guid? clientId, string? status, CancellationToken ct = default) =>
+        _api.ListTemplatesAsync(clientId, status, ct);
 
-    public Task<List<ProcedureRow>> ListProceduresAsync(Guid? clinicId, CancellationToken ct = default) => _api.ListProceduresAsync(clinicId, ct);
+    public Task<List<ServiceRow>> ListServicesAsync(Guid? clientId, CancellationToken ct = default) => _api.ListServicesAsync(clientId, ct);
 
-    public Task<PagedResult<KnowledgeDocRow>> ListDocumentsAsync(Guid? clinicId, string? search, bool? active, int page,
+    public Task<PagedResult<KnowledgeDocRow>> ListDocumentsAsync(Guid? clientId, string? search, bool? active, int page,
         CancellationToken ct = default) =>
-        _api.ListDocumentsAsync(clinicId, search, active, page, ct);
+        _api.ListDocumentsAsync(clientId, search, active, page, ct);
 
     public Task<KnowledgeDocDetail?> GetDocumentAsync(Guid id, CancellationToken ct = default) => _api.GetDocumentAsync(id, ct);
 
-    public Task<SearchSettingsDetail?> SearchSettingsAsync(Guid clinicId, CancellationToken ct = default) => _api.SearchSettingsAsync(clinicId, ct);
+    public Task<SearchSettingsDetail?> SearchSettingsAsync(Guid clientId, CancellationToken ct = default) => _api.SearchSettingsAsync(clientId, ct);
 
-    public Task<List<WebsiteSourceRow>> ListWebsitesAsync(Guid? clinicId, CancellationToken ct = default) => _api.ListWebsitesAsync(clinicId, ct);
+    public Task<List<WebsiteSourceRow>> ListWebsitesAsync(Guid? clientId, CancellationToken ct = default) => _api.ListWebsitesAsync(clientId, ct);
 
     public async Task CancelCampaignAsync(Guid id, CancellationToken ct = default)
     {
         var change = await _api.CancelCampaignAsync(id, ct);
-        await _audit.LogAsync("campaign.cancelled", "campaign", id, change.ClinicId, ct: ct);
+        await _audit.LogAsync("campaign.cancelled", "campaign", id, change.ClientId, ct: ct);
     }
 
-    public async Task SetProcedureActiveAsync(Guid id, bool active, CancellationToken ct = default)
+    public async Task SetServiceActiveAsync(Guid id, bool active, CancellationToken ct = default)
     {
-        var change = await _api.SetProcedureActiveAsync(id, active, ct);
-        await _audit.LogAsync(active ? "procedure.activated" : "procedure.deactivated", "procedure", id, change.ClinicId, ct: ct);
+        var change = await _api.SetServiceActiveAsync(id, active, ct);
+        await _audit.LogAsync(active ? "service.activated" : "service.deactivated", "service", id, change.ClientId, ct: ct);
     }
 
     public async Task SetDocumentActiveAsync(Guid id, bool active, CancellationToken ct = default)
     {
         var change = await _api.SetDocumentActiveAsync(id, active, ct);
-        await _audit.LogAsync(active ? "knowledge.activated" : "knowledge.deactivated", "knowledge_document", id, change.ClinicId, ct: ct);
+        await _audit.LogAsync(active ? "knowledge.activated" : "knowledge.deactivated", "knowledge_document", id, change.ClientId, ct: ct);
     }
 
-    public async Task UpdateSearchSettingsAsync(Guid clinicId, int topK, double minimumSimilarity, CancellationToken ct = default)
+    public async Task UpdateSearchSettingsAsync(Guid clientId, int topK, double minimumSimilarity, CancellationToken ct = default)
     {
-        var before = await _api.SearchSettingsAsync(clinicId, ct);
-        await _api.UpdateSearchSettingsAsync(clinicId, topK, minimumSimilarity, ct);
-        await _audit.LogAsync("knowledge.settings_updated", "knowledge_search_settings", before?.Id, clinicId,
+        var before = await _api.SearchSettingsAsync(clientId, ct);
+        await _api.UpdateSearchSettingsAsync(clientId, topK, minimumSimilarity, ct);
+        await _audit.LogAsync("knowledge.settings_updated", "knowledge_search_settings", before?.Id, clientId,
             new { before = before is null ? null : new { before.TopK, before.MinimumSimilarity }, after = new { topK, minimumSimilarity } }, ct);
     }
 }

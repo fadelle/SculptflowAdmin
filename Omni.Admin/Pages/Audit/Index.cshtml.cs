@@ -7,7 +7,7 @@ using Omni.Admin.Pages.Shared;
 
 namespace Omni.Admin.Pages.Audit;
 
-[ScopeCapability(ScopeCapability.Clinic)]
+[ScopeCapability(ScopeCapability.Client)]
 public class IndexModel : AdminPageModel
 {
     private readonly IOverviewAdminService _overview;
@@ -19,14 +19,14 @@ public class IndexModel : AdminPageModel
         _scope = scope;
     }
 
-    [BindProperty(SupportsGet = true)] public Guid? ClinicId { get; set; }
+    [BindProperty(SupportsGet = true)] public Guid? ClientId { get; set; }
     [BindProperty(SupportsGet = true)] public string? Q { get; set; }
     [BindProperty(SupportsGet = true, Name = "p")] public int PageNumber { get; set; } = 1;
     public PagedResult<AdminAuditEntry> Result { get; private set; } = null!;
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        ClinicId ??= _scope.FilterGuid; // the header's clinic scope when the URL names none
-        Result = await _overview.AuditAsync(ClinicId, Q, PageNumber, ct);
+        ClientId ??= _scope.FilterGuid; // the header's client scope when the URL names none
+        Result = await _overview.AuditAsync(ClientId, Q, PageNumber, ct);
     }
 }

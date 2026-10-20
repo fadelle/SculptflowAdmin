@@ -2,25 +2,25 @@
 @model Omni.Admin.Pages.Knowledge.BenchmarkGenerationModel
 @{
     ViewData["Title"] = "Generated test cases";
-    var back = Model.ClinicId is null ? "/Knowledge/Benchmark" : $"/Knowledge/Benchmark?clinicId={Model.ClinicId}";
+    var back = Model.ClientId is null ? "/Knowledge/Benchmark" : $"/Knowledge/Benchmark?clientId={Model.ClientId}";
 }
 <div class="au-back-header">
     <a class="au-icon-btn au-icon-btn--bordered" href="@back" aria-label="Back to the search benchmark"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
     <div style="min-width:0">
         <h2 class="au-back-header__title">Generated test cases</h2>
-        <span class="au-back-header__sub">@(Model.ClinicName is null ? "" : Model.ClinicName + " · ")One request to the question generator, and how its cases score.</span>
+        <span class="au-back-header__sub">@(Model.ClientName is null ? "" : Model.ClientName + " · ")One request to the question generator, and how its cases score.</span>
     </div>
 </div>
 
-@if (Model.ClinicId is null)
+@if (Model.ClientId is null)
 {
     <div class="au-table-card">
-        <partial name="_EmptyState" model="@(new EmptyStateModel("Choose this generation's clinic with the clinic selector in the header.", "fact_check"))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel("Choose this generation's client with the client selector in the header.", "fact_check"))" />
     </div>
 }
 else
 {
-    <div id="bmg-root" class="au-stack" data-api="/api/admin/knowledge-benchmark/@Model.ClinicId" data-id="@Model.Id">
+    <div id="bmg-root" class="au-stack" data-api="/api/admin/knowledge-benchmark/@Model.ClientId" data-id="@Model.Id">
         <div id="bmg-message"></div>
 
         @* ---------- Generation summary ---------- *@
@@ -81,7 +81,7 @@ else
 }
 
 @section Scripts {
-    @if (Model.ClinicId is not null)
+    @if (Model.ClientId is not null)
     {
         <script src="~/js/knowledge-benchmark-kit.js" asp-append-version="true"></script>
         <script src="~/js/knowledge-benchmark-generation.js" asp-append-version="true"></script>

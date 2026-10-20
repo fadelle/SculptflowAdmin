@@ -18,8 +18,8 @@ public class ChannelsApiClient : MainAppApiClient, IChannelsApiClient
     {
     }
 
-    public Task<List<ChannelRow>> ListAsync(Guid? clinicId, string? channel, bool problemsOnly, CancellationToken ct) =>
-        GetRequiredAsync<List<ChannelRow>>(Query(("clinicId", clinicId), ("channel", channel), ("problemsOnly", problemsOnly)), ct);
+    public Task<List<ChannelRow>> ListAsync(Guid? clientId, string? channel, bool problemsOnly, CancellationToken ct) =>
+        GetRequiredAsync<List<ChannelRow>>(Query(("clientId", clientId), ("channel", channel), ("problemsOnly", problemsOnly)), ct);
 
     public Task<ChannelDetail?> GetAsync(Guid id, CancellationToken ct) => GetAsync<ChannelDetail>($"/{id}", ct);
 
@@ -29,8 +29,8 @@ public class ChannelsApiClient : MainAppApiClient, IChannelsApiClient
     public Task<PlatformAdminChange> DisconnectAsync(Guid id, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Post, $"/{id}/disconnect", null, null, false, ct);
 
-    public Task<List<CalendarRow>> ListCalendarsAsync(Guid? clinicId, CancellationToken ct) =>
-        GetRequiredAsync<List<CalendarRow>>("/calendars" + Query(("clinicId", clinicId)), ct);
+    public Task<List<CalendarRow>> ListCalendarsAsync(Guid? clientId, CancellationToken ct) =>
+        GetRequiredAsync<List<CalendarRow>>("/calendars" + Query(("clientId", clientId)), ct);
 
     public Task<PlatformAdminChange> DisconnectCalendarAsync(Guid id, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Post, $"/calendars/{id}/disconnect", null, null, false, ct);
@@ -38,8 +38,8 @@ public class ChannelsApiClient : MainAppApiClient, IChannelsApiClient
     public Task<PlatformAdminChange> SetCalendarSyncAsync(Guid id, bool enabled, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/calendars/{id}/sync", new FlagBody(enabled), null, false, ct);
 
-    public Task<List<TikTokRow>> ListTikTokAsync(Guid? clinicId, CancellationToken ct) =>
-        GetRequiredAsync<List<TikTokRow>>("/tiktok" + Query(("clinicId", clinicId)), ct);
+    public Task<List<TikTokRow>> ListTikTokAsync(Guid? clientId, CancellationToken ct) =>
+        GetRequiredAsync<List<TikTokRow>>("/tiktok" + Query(("clientId", clientId)), ct);
 
     public Task<WhatsAppTokenDebugResult> DebugTokenAsync(DebugTokenRequest request, CancellationToken ct) =>
         WriteForAsync<WhatsAppTokenDebugResult>(HttpMethod.Post, "/whatsapp/debug-token", request, null, false, ct);

@@ -2,7 +2,7 @@ using Omni.Admin.Entities.Dtos.Scoping;
 
 namespace Omni.Admin.Business.Contracts.Managers;
 
-/// <summary>The scope entity's names and choices (clinics), for the header selector and its chip.</summary>
+/// <summary>The scope entity's names and choices (clients), for the header selector and its chip.</summary>
 public interface IScopeLookup
 {
     /// <summary>The name for an id, or null when no such entity exists (a stale or edited cookie/URL).</summary>

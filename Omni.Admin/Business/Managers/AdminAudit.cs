@@ -24,7 +24,7 @@ public class AdminAudit : IAdminAudit
         _http = http;
     }
 
-    public async Task LogAsync(string action, string entityType, object? entityId, Guid? clinicId = null,
+    public async Task LogAsync(string action, string entityType, object? entityId, Guid? clientId = null,
         object? details = null, CancellationToken ct = default)
     {
         var user = _http.HttpContext?.User;
@@ -36,7 +36,7 @@ public class AdminAudit : IAdminAudit
             Action = action,
             EntityType = entityType,
             EntityId = entityId?.ToString(),
-            ClinicId = clinicId,
+            ClientId = clientId,
             Details = details is null ? null : details as string ?? JsonSerializer.Serialize(details),
             CreatedAt = DateTimeOffset.UtcNow
         });

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Common.Configs;
-using Omni.Admin.Entities.Dtos.Clinics;
+using Omni.Admin.Entities.Dtos.Clients;
 using Omni.Admin.Entities.Dtos.Overview;
 using Omni.Admin.Entities.Responses.Paging;
 
@@ -25,11 +25,11 @@ public class OverviewApiClient : MainAppApiClient, IOverviewApiClient
 
     public Task<List<ProblemRow>> ProblemsAsync(CancellationToken ct) => GetRequiredAsync<List<ProblemRow>>("/problems", ct);
 
-    public Task<List<ClinicRow>> RecentClinicsAsync(int take, CancellationToken ct) =>
-        GetRequiredAsync<List<ClinicRow>>("/recent-clinics" + Query(("take", take)), ct);
+    public Task<List<ClientRow>> RecentClientsAsync(int take, CancellationToken ct) =>
+        GetRequiredAsync<List<ClientRow>>("/recent-clients" + Query(("take", take)), ct);
 
-    public Task<PagedResult<EventRow>> EventsAsync(Guid? clinicId, string? eventType, int page, CancellationToken ct) =>
-        GetRequiredAsync<PagedResult<EventRow>>("/events" + Query(("clinicId", clinicId), ("eventType", eventType), ("page", page)), ct);
+    public Task<PagedResult<EventRow>> EventsAsync(Guid? clientId, string? eventType, int page, CancellationToken ct) =>
+        GetRequiredAsync<PagedResult<EventRow>>("/events" + Query(("clientId", clientId), ("eventType", eventType), ("page", page)), ct);
 
     public Task<List<string>> EventTypesAsync(CancellationToken ct) => GetRequiredAsync<List<string>>("/event-types", ct);
 }

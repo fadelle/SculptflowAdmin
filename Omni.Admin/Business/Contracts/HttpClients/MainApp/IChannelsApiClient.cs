@@ -6,7 +6,7 @@ namespace Omni.Admin.Business.Contracts.HttpClients.MainApp;
 
 public interface IChannelsApiClient
 {
-    Task<List<ChannelRow>> ListAsync(Guid? clinicId, string? channel, bool problemsOnly, CancellationToken ct);
+    Task<List<ChannelRow>> ListAsync(Guid? clientId, string? channel, bool problemsOnly, CancellationToken ct);
 
     Task<ChannelDetail?> GetAsync(Guid id, CancellationToken ct);
 
@@ -14,13 +14,13 @@ public interface IChannelsApiClient
 
     Task<PlatformAdminChange> DisconnectAsync(Guid id, CancellationToken ct);
 
-    Task<List<CalendarRow>> ListCalendarsAsync(Guid? clinicId, CancellationToken ct);
+    Task<List<CalendarRow>> ListCalendarsAsync(Guid? clientId, CancellationToken ct);
 
     Task<PlatformAdminChange> DisconnectCalendarAsync(Guid id, CancellationToken ct);
 
     Task<PlatformAdminChange> SetCalendarSyncAsync(Guid id, bool enabled, CancellationToken ct);
 
-    Task<List<TikTokRow>> ListTikTokAsync(Guid? clinicId, CancellationToken ct);
+    Task<List<TikTokRow>> ListTikTokAsync(Guid? clientId, CancellationToken ct);
 
     Task<PlatformAdminChange> DisconnectTikTokAsync(Guid id, CancellationToken ct);
 

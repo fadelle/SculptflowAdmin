@@ -1,0 +1,72 @@
+@page
+@model Omni.Admin.Pages.Clients.BusinessTypeModel
+@{
+    var c = Model.Client;
+    ViewData["Title"] = "Change business type";
+}
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Clients/Details?id=@c.Id" aria-label="Back to @c.Name"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">Change business type</h2>
+        <span class="au-back-header__sub">@c.Name · currently <span class="au-mono">@c.BusinessTypeCode</span></span>
+    </div>
+</div>
+
+<div class="au-stack">
+    <section class="au-panel au-panel--round au-panel--pad">
+        <form method="get" class="au-row au-row--wrap" style="align-items:flex-end">
+            <input type="hidden" name="id" value="@c.Id" />
+            <div class="au-form-field" style="width:320px">
+                <label class="au-form-label" for="bt-to">Move this client to</label>
+                <select class="au-select" id="bt-to" name="to">
+                    <option value="">(choose a business type)</option>
+                    @foreach (var t in Model.Types)
+                    {
+                        <option value="@t.Code" selected="@(t.Code == Model.To)" disabled="@(t.Code == c.BusinessTypeCode)">@(t.Name.GetValueOrDefault("en") ?? t.Code) (@t.Code)@(t.Code == c.BusinessTypeCode ? " — current" : "")@(t.IsActive ? "" : " — inactive")</option>
+                    }
+                </select>
+            </div>
+            <button class="au-btn au-btn--outlined" type="submit"><span class="au-icon" aria-hidden="true">preview</span>Preview the change</button>
+        </form>
+    </section>
+
+    @if (Model.Preview is { } p)
+    {
+        <section class="au-table-card">
+            <div class="au-panel__head">
+                <h3 class="au-panel__title">What happens to the @Ui.Count(p.ContactCount, "contact", "contacts")</h3>
+                <span class="au-caption">The client moves from <span class="au-mono">@p.FromCode</span> to <span class="au-mono">@p.ToCode</span>. Each contact moves to the stage in the new type with the same meaning (category). Nothing changes until you confirm.</span>
+            </div>
+            @if (p.Moves.Count == 0)
+            {
+                <div class="au-panel__body"><p class="au-caption">This client has no contacts to move.</p></div>
+            }
+            else
+            {
+                <div class="au-table-scroll">
+                    <table class="au-table">
+                        <thead><tr><th>Now in</th><th>Category</th><th class="au-right">Contacts</th><th>Moves to</th></tr></thead>
+                        <tbody>
+                            @foreach (var m in p.Moves)
+                            {
+                                <tr>
+                                    <td>@m.FromLabel <span class="au-caption au-mono">@m.FromKey</span></td>
+                                    <td>@Ui.OrDash(m.Category.Replace('_', ' '))</td>
+                                    <td class="au-right">@m.Count</td>
+                                    <td>@m.ToLabel <span class="au-caption au-mono">@m.ToKey</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            <div class="au-panel__body">
+                <form method="post" asp-page-handler="Confirm" asp-route-id="@c.Id" class="au-row au-row--wrap">
+                    <input type="hidden" name="to" value="@p.ToCode" />
+                    <button class="au-btn au-btn--primary" type="submit" data-confirm="Move @c.Name to @p.ToCode? Its @Ui.Count(p.ContactCount, "contact", "contacts") move to the stages listed. This cannot be undone automatically.">Change business type</button>
+                    <a class="au-btn" href="/Clients/Details?id=@c.Id">Cancel</a>
+                </form>
+            </div>
+        </section>
+    }
+</div>

@@ -19,10 +19,10 @@ public class AdminAuditRepository : IAdminAuditRepository
 
     public void Add(AdminAuditEntry entry) => _db.AuditLog.Add(entry);
 
-    public Task<PagedResult<AdminAuditEntry>> ListAsync(Guid? clinicId, string? search, int page, CancellationToken ct = default)
+    public Task<PagedResult<AdminAuditEntry>> ListAsync(Guid? clientId, string? search, int page, CancellationToken ct = default)
     {
         var q = _db.AuditLog.AsNoTracking().AsQueryable();
-        if (clinicId.HasValue) q = q.Where(a => a.ClinicId == clinicId.Value);
+        if (clientId.HasValue) q = q.Where(a => a.ClientId == clientId.Value);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var like = Paging.Like(search);

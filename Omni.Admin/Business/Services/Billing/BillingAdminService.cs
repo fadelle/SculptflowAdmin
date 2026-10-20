@@ -2,7 +2,7 @@ using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Managers;
 using Omni.Admin.Business.Contracts.Services.Billing;
 using Omni.Admin.Entities.Dtos.Billing;
-using Omni.Admin.Entities.Dtos.Clinics;
+using Omni.Admin.Entities.Dtos.Clients;
 using Omni.Admin.Entities.Requests.Billing;
 using Omni.Admin.Entities.Responses.Billing;
 
@@ -30,28 +30,28 @@ public class BillingAdminService : IBillingAdminService
 
     public Task<List<BillingAccountRow>> AccountsAsync(CancellationToken ct) => _api.AccountsAsync(ct);
 
-    public async Task<List<ClinicOption>> ClinicOptionsAsync(CancellationToken ct) =>
-        (await _api.AccountsAsync(ct)).Select(a => new ClinicOption(a.ClinicId, a.ClinicName)).OrderBy(c => c.Name).ToList();
+    public async Task<List<ClientOption>> ClientOptionsAsync(CancellationToken ct) =>
+        (await _api.AccountsAsync(ct)).Select(a => new ClientOption(a.ClientId, a.ClientName)).OrderBy(c => c.Name).ToList();
 
-    public Task<AdminBillingOverview?> ClinicAsync(Guid clinicId, CancellationToken ct) => _api.ClinicAsync(clinicId, ct);
+    public Task<AdminBillingOverview?> ClientAsync(Guid clientId, CancellationToken ct) => _api.ClientAsync(clientId, ct);
     public Task<List<PlanResponse>> PlansAsync(CancellationToken ct) => _api.PlansAsync(ct);
     public Task<PlanResponse?> PlanAsync(string code, CancellationToken ct) => _api.PlanAsync(code, ct);
     public Task<List<EntitlementDefinition>> EntitlementsAsync(CancellationToken ct) => _api.EntitlementsAsync(ct);
     public Task<List<RateCardResponse>> RateCardsAsync(CancellationToken ct) => _api.RateCardsAsync(ct);
     public Task<List<RateResponse>?> RatesAsync(string code, bool history, CancellationToken ct) => _api.RatesAsync(code, history, ct);
     public Task<ProviderBillingModes> ProviderBillingModesAsync(CancellationToken ct) => _api.ProviderBillingModesAsync(ct);
-    public Task<ReconciliationResponse> ReconcileAsync(Guid clinicId, CancellationToken ct) => _api.ReconcileAsync(clinicId, ct);
+    public Task<ReconciliationResponse> ReconcileAsync(Guid clientId, CancellationToken ct) => _api.ReconcileAsync(clientId, ct);
 
-    public Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clinicId, string? status, string? eventType, int page, CancellationToken ct) =>
-        _api.UsageAsync(clinicId, status, eventType, page, ct);
+    public Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct) =>
+        _api.UsageAsync(clientId, status, eventType, page, ct);
 
-    public Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clinicId, int page, CancellationToken ct) => _api.LedgerAsync(clinicId, page, ct);
+    public Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clientId, int page, CancellationToken ct) => _api.LedgerAsync(clientId, page, ct);
 
     public Task<BillingReport> ReportAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken ct) => _api.ReportAsync(from, to, ct);
 
-    public Task<QuoteResponse?> QuoteAsync(Guid clinicId, string eventType, string? country, string? provider, string? providerBilling,
+    public Task<QuoteResponse?> QuoteAsync(Guid clientId, string eventType, string? country, string? provider, string? providerBilling,
         CancellationToken ct) =>
-        _api.QuoteAsync(clinicId, eventType, country, provider, providerBilling, ct);
+        _api.QuoteAsync(clientId, eventType, country, provider, providerBilling, ct);
 
     // ---- writes ------------------------------------------------------------------------------------------------
 
@@ -70,7 +70,7 @@ public class BillingAdminService : IBillingAdminService
     public async Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct)
     {
         await _api.CreateRateCardAsync(r, ct);
-        await _audit.LogAsync("billing.rate_card_create", "billing_rate_card", r.Code, r.ClinicId, r, ct);
+        await _audit.LogAsync("billing.rate_card_create", "billing_rate_card", r.Code, r.ClientId, r, ct);
     }
 
     public async Task UpdateRateCardAsync(string code, RateCardUpdateRequest r, CancellationToken ct)
@@ -91,57 +91,57 @@ public class BillingAdminService : IBillingAdminService
         await _audit.LogAsync("billing.rate_close", "billing_rate", rateId, null, null, ct);
     }
 
-    public async Task StartSubscriptionAsync(Guid clinicId, StartSubscriptionApiRequest r, string opId, CancellationToken ct)
+    public async Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct)
     {
-        await _api.StartSubscriptionAsync(clinicId, r, opId, ct);
-        await _audit.LogAsync("billing.subscription_start", "billing_subscription", clinicId, clinicId, r, ct);
+        await _api.StartSubscriptionAsync(clientId, r, opId, ct);
+        await _audit.LogAsync("billing.subscription_start", "billing_subscription", clientId, clientId, r, ct);
     }
 
-    public async Task CancelSubscriptionAsync(Guid clinicId, CancelSubscriptionRequest r, CancellationToken ct)
+    public async Task CancelSubscriptionAsync(Guid clientId, CancelSubscriptionRequest r, CancellationToken ct)
     {
-        await _api.CancelSubscriptionAsync(clinicId, r, ct);
-        await _audit.LogAsync("billing.subscription_cancel", "billing_subscription", clinicId, clinicId, r, ct);
+        await _api.CancelSubscriptionAsync(clientId, r, ct);
+        await _audit.LogAsync("billing.subscription_cancel", "billing_subscription", clientId, clientId, r, ct);
     }
 
-    public async Task ResumeSubscriptionAsync(Guid clinicId, CancellationToken ct)
+    public async Task ResumeSubscriptionAsync(Guid clientId, CancellationToken ct)
     {
-        await _api.ResumeSubscriptionAsync(clinicId, ct);
-        await _audit.LogAsync("billing.subscription_resume", "billing_subscription", clinicId, clinicId, null, ct);
+        await _api.ResumeSubscriptionAsync(clientId, ct);
+        await _audit.LogAsync("billing.subscription_resume", "billing_subscription", clientId, clientId, null, ct);
     }
 
-    public async Task RenewAsync(Guid clinicId, CancellationToken ct)
+    public async Task RenewAsync(Guid clientId, CancellationToken ct)
     {
-        await _api.RenewAsync(clinicId, ct);
-        await _audit.LogAsync("billing.subscription_renew", "billing_subscription", clinicId, clinicId, null, ct);
+        await _api.RenewAsync(clientId, ct);
+        await _audit.LogAsync("billing.subscription_renew", "billing_subscription", clientId, clientId, null, ct);
     }
 
-    public async Task TopUpAsync(Guid clinicId, TopUpRequest r, string opId, CancellationToken ct)
+    public async Task TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct)
     {
-        await _api.TopUpAsync(clinicId, r, opId, ct);
-        await _audit.LogAsync("billing.wallet_top_up", "billing_account", clinicId, clinicId, r, ct);
+        await _api.TopUpAsync(clientId, r, opId, ct);
+        await _audit.LogAsync("billing.wallet_top_up", "billing_account", clientId, clientId, r, ct);
     }
 
-    public async Task AdjustAsync(Guid clinicId, AdjustmentRequest r, string opId, CancellationToken ct)
+    public async Task AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct)
     {
-        await _api.AdjustAsync(clinicId, r, opId, ct);
-        await _audit.LogAsync("billing.wallet_adjust", "billing_account", clinicId, clinicId, r, ct);
+        await _api.AdjustAsync(clientId, r, opId, ct);
+        await _audit.LogAsync("billing.wallet_adjust", "billing_account", clientId, clientId, r, ct);
     }
 
-    public async Task RefundAsync(Guid clinicId, Guid usageId, RefundRequest r, CancellationToken ct)
+    public async Task RefundAsync(Guid clientId, Guid usageId, RefundRequest r, CancellationToken ct)
     {
-        await _api.RefundAsync(clinicId, usageId, r, ct);
-        await _audit.LogAsync("billing.usage_refund", "billing_usage", usageId, clinicId, r, ct);
+        await _api.RefundAsync(clientId, usageId, r, ct);
+        await _audit.LogAsync("billing.usage_refund", "billing_usage", usageId, clientId, r, ct);
     }
 
-    public async Task SetProviderBillingAsync(Guid clinicId, Guid channelIntegrationId, ProviderBillingRequest r, CancellationToken ct)
+    public async Task SetProviderBillingAsync(Guid clientId, Guid channelIntegrationId, ProviderBillingRequest r, CancellationToken ct)
     {
         await _api.SetProviderBillingAsync(channelIntegrationId, r, ct);
-        await _audit.LogAsync("billing.provider_billing_set", "channel_integration", channelIntegrationId, clinicId, r, ct);
+        await _audit.LogAsync("billing.provider_billing_set", "channel_integration", channelIntegrationId, clientId, r, ct);
     }
 
-    public async Task ResetProviderBillingAsync(Guid clinicId, Guid channelIntegrationId, ResetProviderBillingRequest r, CancellationToken ct)
+    public async Task ResetProviderBillingAsync(Guid clientId, Guid channelIntegrationId, ResetProviderBillingRequest r, CancellationToken ct)
     {
         await _api.ResetProviderBillingAsync(channelIntegrationId, r, ct);
-        await _audit.LogAsync("billing.provider_billing_reset", "channel_integration", channelIntegrationId, clinicId, r, ct);
+        await _audit.LogAsync("billing.provider_billing_reset", "channel_integration", channelIntegrationId, clientId, r, ct);
     }
 }

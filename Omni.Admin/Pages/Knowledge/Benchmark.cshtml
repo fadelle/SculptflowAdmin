@@ -5,29 +5,29 @@
 }
 <div class="au-page-head">
     <p class="au-page-head__sub">
-        How well a clinic's Knowledge Base <strong>search</strong> finds the right piece of information. Each test case is a
-        realistic patient question tied to the one chunk that answers it; a run sends the question through the real search (the
-        one the clinic's AI uses) and checks where that chunk ranks. It tests retrieval only, not the AI's replies.
+        How well a client's Knowledge Base <strong>search</strong> finds the right piece of information. Each test case is a
+        realistic contact question tied to the one chunk that answers it; a run sends the question through the real search (the
+        one the client's AI uses) and checks where that chunk ranks. It tests retrieval only, not the AI's replies.
     </p>
 </div>
 
-@if (Model.ClinicId is null)
+@if (Model.ClientId is null)
 {
     <div class="au-table-card">
-        <partial name="_EmptyState" model="@(new EmptyStateModel("Choose a clinic with the clinic selector in the header to test its search.", "fact_check"))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel("Choose a client with the client selector in the header to test its search.", "fact_check"))" />
     </div>
 }
 else
 {
-    <div id="bm-root" class="au-stack" data-api="/api/admin/knowledge-benchmark/@Model.ClinicId"
-         data-generation-url="/Knowledge/Benchmark/Generations/{id}?clinicId=@Model.ClinicId">
+    <div id="bm-root" class="au-stack" data-api="/api/admin/knowledge-benchmark/@Model.ClientId"
+         data-generation-url="/Knowledge/Benchmark/Generations/{id}?clientId=@Model.ClientId">
         <div id="bm-message"></div>
 
         @* ---------- Cases summary + actions ---------- *@
         <section class="au-panel au-panel--round au-panel--pad">
             <div class="au-row au-row--wrap au-row--between">
                 <div>
-                    <span class="au-eyebrow">@(Model.ClinicName ?? "Selected clinic")</span>
+                    <span class="au-eyebrow">@(Model.ClientName ?? "Selected client")</span>
                     <div id="bm-counts" class="au-muted">Loading…</div>
                 </div>
                 <div class="au-row au-row--wrap">
@@ -63,7 +63,7 @@ else
             <div class="bm-add-form" id="bm-add-form" hidden>
                 <div class="au-form-grid">
                     <label class="au-form-field au-span-2">
-                        <span class="au-form-label">Patient question</span>
+                        <span class="au-form-label">Contact question</span>
                         <textarea id="bm-add-question" class="au-textarea" rows="2" maxlength="500" placeholder="e.g. How much time should I take off work after a nose job?"></textarea>
                     </label>
                     <label class="au-form-field">
@@ -183,7 +183,7 @@ else
 }
 
 @section Scripts {
-    @if (Model.ClinicId is not null)
+    @if (Model.ClientId is not null)
     {
         <script src="~/js/knowledge-benchmark-kit.js" asp-append-version="true"></script>
         <script src="~/js/knowledge-benchmark.js" asp-append-version="true"></script>

@@ -1,0 +1,4 @@
+namespace Omni.Admin.Entities.Dtos.Contacts;
+
+public record ConversationRow(Guid Id, Guid ClientId, string ClientName, Guid ContactId, string ContactName, string Channel,
+    string Status, string Mode, DateTimeOffset? LastMessageAt, string? LastMessageDirection, int MessageCount, DateTimeOffset CreatedAt);

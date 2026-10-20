@@ -2,9 +2,9 @@
 @model Omni.Admin.Pages.Knowledge.IndexModel
 @{
     ViewData["Title"] = "Knowledge base";
-    string TabUrl(string tab) => $"?tab={tab}" + (Model.ClinicId.HasValue ? $"&clinicId={Model.ClinicId}" : "");
+    string TabUrl(string tab) => $"?tab={tab}" + (Model.ClientId.HasValue ? $"&clientId={Model.ClientId}" : "");
 }
-<div class="au-page-head"><p class="au-page-head__sub">What each clinic's AI answers from. Inactive documents are skipped by the AI's search.</p></div>
+<div class="au-page-head"><p class="au-page-head__sub">What each client's AI answers from. Inactive documents are skipped by the AI's search.</p></div>
 <div class="au-tabs" style="margin-bottom:16px">
     <a class="au-tab @(Model.Tab == "documents" ? "is-active" : null)" href="@TabUrl("documents")"><span class="au-icon" aria-hidden="true">description</span>Documents <span class="au-tab__count">@Model.Docs.Total</span></a>
     <a class="au-tab @(Model.Tab == "websites" ? "is-active" : null)" href="@TabUrl("websites")"><span class="au-icon" aria-hidden="true">language</span>Websites <span class="au-tab__count">@Model.Websites.Count</span></a>
@@ -45,14 +45,14 @@
             <div class="au-table-scroll">
                 <table class="au-table">
                     <thead>
-                        <tr><th>Document</th><th>Clinic</th><th>Category</th><th>Source</th><th class="au-right">Chunks</th><th class="au-right">Characters</th><th>Status</th><th>Updated</th><th class="au-shrink"></th></tr>
+                        <tr><th>Document</th><th>Client</th><th>Category</th><th>Source</th><th class="au-right">Chunks</th><th class="au-right">Characters</th><th>Status</th><th>Updated</th><th class="au-shrink"></th></tr>
                     </thead>
                     <tbody>
                         @foreach (var d in Model.Docs.Items)
                         {
                             <tr data-au-href="/Knowledge/Details?id=@d.Id">
                                 <td style="--au-col-max:320px" title="@d.Title"><a href="/Knowledge/Details?id=@d.Id">@d.Title</a></td>
-                                <td><a href="/Clinics/Details?id=@d.ClinicId">@d.ClinicName</a></td>
+                                <td><a href="/Clients/Details?id=@d.ClientId">@d.ClientName</a></td>
                                 <td>@KnowledgeCategory.Label(d.Category)</td>
                                 <td>@d.SourceType @if (d.SourceUrl is not null) { <div class="au-caption" title="@d.SourceUrl">@Ui.Truncate(d.SourceUrl, 50)</div> }</td>
                                 <td class="au-right">@d.Chunks</td>
@@ -60,7 +60,7 @@
                                 <td>@Ui.Badge(d.IsActive ? "active" : "inactive")</td>
                                 <td>@Ui.Time(d.UpdatedAt)</td>
                                 <td>
-                                    <form method="post" asp-page-handler="SetActive" asp-route-clinicId="@Model.ClinicId" asp-route-q="@Model.Q" asp-route-p="@Model.PageNumber">
+                                    <form method="post" asp-page-handler="SetActive" asp-route-clientId="@Model.ClientId" asp-route-q="@Model.Q" asp-route-p="@Model.PageNumber">
                                         <input type="hidden" name="id" value="@d.Id" /><input type="hidden" name="active" value="@(!d.IsActive ? "true" : "false")" />
                                         <button class="au-btn au-btn--sm @(d.IsActive ? "au-btn--danger-outlined" : "au-btn--outlined")" type="submit">@(d.IsActive ? "Deactivate" : "Activate")</button>
                                     </form>
@@ -85,14 +85,14 @@
             <div class="au-table-scroll">
                 <table class="au-table">
                     <thead>
-                        <tr><th>Website</th><th>Clinic</th><th>Mode</th><th>Status</th><th class="au-right">Pages</th><th>Last scraped</th><th>Last error</th></tr>
+                        <tr><th>Website</th><th>Client</th><th>Mode</th><th>Status</th><th class="au-right">Pages</th><th>Last scraped</th><th>Last error</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var w in Model.Websites)
                         {
                             <tr>
                                 <td style="--au-col-max:320px" title="@w.StartUrl"><span class="au-mono">@w.StartUrl</span> @if (!w.IsActive) { @Ui.Badge("inactive") }</td>
-                                <td><a href="/Clinics/Details?id=@w.ClinicId">@w.ClinicName</a></td>
+                                <td><a href="/Clients/Details?id=@w.ClientId">@w.ClientName</a></td>
                                 <td>@w.CrawlMode.Replace('_', ' ')</td>
                                 <td>@Ui.Badge(w.Status)</td>
                                 <td class="au-right">@w.Pages</td>

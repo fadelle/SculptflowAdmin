@@ -8,7 +8,7 @@
     <a class="au-icon-btn au-icon-btn--bordered" href="/Campaigns" aria-label="Back to campaigns"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
     <div style="min-width:0">
         <h2 class="au-back-header__title">@c.Name</h2>
-        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a> · @c.CampaignType.Replace('_', ' ') on @c.Channel · template @c.TemplateName · created @Ui.Time(c.CreatedAt)</span>
+        <span class="au-back-header__sub"><a href="/Clients/Details?id=@c.ClientId">@c.ClientName</a> · @c.CampaignType.Replace('_', ' ') on @c.Channel · template @c.TemplateName · created @Ui.Time(c.CreatedAt)</span>
     </div>
     @if (c.Status is not ("completed" or "cancelled"))
     {
@@ -65,12 +65,12 @@
             {
                 <div class="au-table-scroll">
                     <table class="au-table">
-                        <thead><tr><th>Lead</th><th>Phone</th><th>Status</th><th>Reason</th><th>Sent</th><th>Replied</th><th>Booked</th></tr></thead>
+                        <thead><tr><th>Contact</th><th>Phone</th><th>Status</th><th>Reason</th><th>Sent</th><th>Replied</th><th>Booked</th></tr></thead>
                         <tbody>
                             @foreach (var r in Model.Recipients.Items)
                             {
-                                <tr data-au-href="/Leads/Details?id=@r.LeadId">
-                                    <td><a href="/Leads/Details?id=@r.LeadId">@(string.IsNullOrWhiteSpace(r.LeadName) ? "(no name)" : r.LeadName)</a></td>
+                                <tr data-au-href="/Contacts/Details?id=@r.ContactId">
+                                    <td><a href="/Contacts/Details?id=@r.ContactId">@(string.IsNullOrWhiteSpace(r.ContactName) ? "(no name)" : r.ContactName)</a></td>
                                     <td>@Ui.OrDash(r.PhoneNumber)</td>
                                     <td>@Ui.Badge(r.Status)</td>
                                     <td>@Ui.OrDash(r.SkipReason ?? r.FailureReason)</td>

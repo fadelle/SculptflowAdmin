@@ -6,12 +6,12 @@ The main app (`..\SculptFlowApp`) owns the business rules and every write. It ex
 `/api/platform-admin/{domain}/...` with the shared key (`X-Platform-Admin-Key`, actor in `X-Admin-Actor`,
 `Idempotency-Key` on money writes). This portal calls those APIs for every read and every change; it has no access to
 the main app's tables (its database connection is only for its own `admin` schema). Each successful change is also
-written to `admin_audit_log`, filed under the clinic the API's answer names.
+written to `admin_audit_log`, filed under the client the API's answer names.
 
 ## Code architecture (standing rule, agreed with Mohammad 2026-10-06)
 
 Same layout as the main app (its `CLAUDE.md` has the full table). The namespace always equals the folder path
-(`Omni.Admin.Business.Services.Clinics`).
+(`Omni.Admin.Business.Services.Clients`).
 
 | Folder | What goes there |
 |---|---|
@@ -32,9 +32,9 @@ Same layout as the main app (its `CLAUDE.md` has the full table). The namespace 
 Rules:
 
 1. **One top-level type per file**, named after the type. Only private nested helper types may stay inside a class.
-2. **Request flow: Controller or PageModel → Service → main-app API client** for everything about clinics, and
+2. **Request flow: Controller or PageModel → Service → main-app API client** for everything about clients, and
    **→ Service → Repository** only for the portal's own tables (admins, audit log). Pages never call an API client
-   directly; the service audits each write with the `clinicId` the API answered. API clients derive from
+   directly; the service audits each write with the `clientId` the API answered. API clients derive from
    `Business/HttpClients/MainApp/MainAppApiClient` (key, actor, idempotency, query strings, readable errors as
    `MainAppApiException`). A GET that can't reach the main app lands on the Unavailable page (`AdminPageModel`); pages
    that want an inline message instead derive from `MainAppPageModel` and use `LoadAsync`. Controllers and PageModels
@@ -59,8 +59,8 @@ UI: follow docs/UI_GUIDE.md for every page, partial and component; keep it up to
 
 ## Rename guard (Omni Milestone A)
 
-The product is being renamed (see the workspace `milestone-a-plan.md`). `scripts/check-leftover-names.ps1` scans tracked files
-for the old vocabulary: `sculptflow`, `plasticsurgery`, `surgeon`, `max_agents` are strict; the other words are pending and
-each portal session (P2, P3) removes its words from `$Pending`. Run it before every commit. New code uses the new names
-(`Omni.Admin.*` namespaces, "client"/"contact"/"service"/"booking"/"member" vocabulary). The `SculptFlowApp` / `SculptFlowAdmin`
-checkout folders keep their names until after the merge.
+The product was renamed (see the workspace `milestone-a-plan.md`). `scripts/check-leftover-names.ps1` scans tracked files for
+the old product and business vocabulary (the words are listed in the script itself, which is the only file allowed to hold them);
+all of it is strict since P2, so any hit fails. Run it before every commit. New code uses the new names (`Omni.Admin.*`
+namespaces, "client"/"contact"/"service"/"booking"/"member" vocabulary). The checkout folders keep their pre-rename names until
+after the merge.

@@ -1,5 +1,5 @@
 using Omni.Admin.Entities.Dtos.Billing;
-using Omni.Admin.Entities.Dtos.Clinics;
+using Omni.Admin.Entities.Dtos.Clients;
 using Omni.Admin.Entities.Requests.Billing;
 using Omni.Admin.Entities.Responses.Billing;
 
@@ -13,10 +13,10 @@ public interface IBillingAdminService
 {
     Task<List<BillingAccountRow>> AccountsAsync(CancellationToken ct);
 
-    /// <summary>Every clinic (id and name) as the main app lists it, for clinic pickers on billing pages.</summary>
-    Task<List<ClinicOption>> ClinicOptionsAsync(CancellationToken ct);
+    /// <summary>Every client (id and name) as the main app lists it, for client pickers on billing pages.</summary>
+    Task<List<ClientOption>> ClientOptionsAsync(CancellationToken ct);
 
-    Task<AdminBillingOverview?> ClinicAsync(Guid clinicId, CancellationToken ct);
+    Task<AdminBillingOverview?> ClientAsync(Guid clientId, CancellationToken ct);
 
     Task<List<PlanResponse>> PlansAsync(CancellationToken ct);
 
@@ -30,16 +30,16 @@ public interface IBillingAdminService
 
     Task<ProviderBillingModes> ProviderBillingModesAsync(CancellationToken ct);
 
-    Task<ReconciliationResponse> ReconcileAsync(Guid clinicId, CancellationToken ct);
+    Task<ReconciliationResponse> ReconcileAsync(Guid clientId, CancellationToken ct);
 
-    Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clinicId, string? status, string? eventType, int page, CancellationToken ct);
+    Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct);
 
-    Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clinicId, int page, CancellationToken ct);
+    Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clientId, int page, CancellationToken ct);
 
     Task<BillingReport> ReportAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken ct);
 
-    /// <summary>What Omni would charge the clinic now; null when no rate card prices it.</summary>
-    Task<QuoteResponse?> QuoteAsync(Guid clinicId, string eventType, string? country, string? provider, string? providerBilling,
+    /// <summary>What Omni would charge the client now; null when no rate card prices it.</summary>
+    Task<QuoteResponse?> QuoteAsync(Guid clientId, string eventType, string? country, string? provider, string? providerBilling,
         CancellationToken ct);
 
     Task CreatePlanAsync(PlanRequest r, CancellationToken ct);
@@ -54,23 +54,23 @@ public interface IBillingAdminService
 
     Task CloseRateAsync(Guid rateId, CancellationToken ct);
 
-    Task StartSubscriptionAsync(Guid clinicId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
+    Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
 
-    Task CancelSubscriptionAsync(Guid clinicId, CancelSubscriptionRequest r, CancellationToken ct);
+    Task CancelSubscriptionAsync(Guid clientId, CancelSubscriptionRequest r, CancellationToken ct);
 
-    Task ResumeSubscriptionAsync(Guid clinicId, CancellationToken ct);
+    Task ResumeSubscriptionAsync(Guid clientId, CancellationToken ct);
 
-    Task RenewAsync(Guid clinicId, CancellationToken ct);
+    Task RenewAsync(Guid clientId, CancellationToken ct);
 
-    Task TopUpAsync(Guid clinicId, TopUpRequest r, string opId, CancellationToken ct);
+    Task TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct);
 
-    Task AdjustAsync(Guid clinicId, AdjustmentRequest r, string opId, CancellationToken ct);
+    Task AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct);
 
-    Task RefundAsync(Guid clinicId, Guid usageId, RefundRequest r, CancellationToken ct);
+    Task RefundAsync(Guid clientId, Guid usageId, RefundRequest r, CancellationToken ct);
 
-    Task SetProviderBillingAsync(Guid clinicId, Guid channelIntegrationId, ProviderBillingRequest r, CancellationToken ct);
+    Task SetProviderBillingAsync(Guid clientId, Guid channelIntegrationId, ProviderBillingRequest r, CancellationToken ct);
 
-    Task ResetProviderBillingAsync(Guid clinicId, Guid channelIntegrationId, ResetProviderBillingRequest r, CancellationToken ct);
+    Task ResetProviderBillingAsync(Guid clientId, Guid channelIntegrationId, ResetProviderBillingRequest r, CancellationToken ct);
 
     bool IsConfigured { get; }
 

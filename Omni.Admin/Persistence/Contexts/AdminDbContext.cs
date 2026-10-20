@@ -44,7 +44,7 @@ public class AdminDbContext : DbContext
             e.Property(x => x.Action).HasColumnName("action").IsRequired();
             e.Property(x => x.EntityType).HasColumnName("entity_type").IsRequired();
             e.Property(x => x.EntityId).HasColumnName("entity_id");
-            e.Property(x => x.ClinicId).HasColumnName("clinic_id");
+            e.Property(x => x.ClientId).HasColumnName("client_id");
             e.Property(x => x.Details).HasColumnName("details");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });

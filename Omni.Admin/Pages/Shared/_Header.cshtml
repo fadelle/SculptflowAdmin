@@ -1,6 +1,6 @@
 @inject ScopeContext Scope
 @inject Microsoft.Extensions.Options.IOptions<ScopeOptions> ScopeOptions
-@* The glass header: sidebar toggle, breadcrumb (ancestors are sibling switchers), page title, scope chip, search, clinic
+@* The glass header: sidebar toggle, breadcrumb (ancestors are sibling switchers), page title, scope chip, search, client
    selector, theme, user menu. *@
 @{
     var path = Context.Request.Path.Value ?? "/";
@@ -50,7 +50,7 @@
     <div class="au-header__tools">
         @if (!Scope.IsGlobal)
         {
-            @* On every page while a clinic is selected; ✕ goes back to all clinics (and the first page). *@
+            @* On every page while a client is selected; ✕ goes back to all clients (and the first page). *@
             <span class="au-chip au-chip--outlined au-scope-chip au-hide-md" title="Every @so.EntityLabel.ToLowerInvariant()-aware page is filtered to this @so.EntityLabel.ToLowerInvariant()">
                 <span>@so.EntityLabel: @(Scope.EntityName ?? "selected")</span>
                 <a class="au-chip__delete" href="@Context.Request.WithQuery((so.QueryKey, ""), ("p", null))" aria-label="Clear @so.EntityLabel.ToLowerInvariant()">

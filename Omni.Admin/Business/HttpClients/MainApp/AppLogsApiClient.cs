@@ -15,13 +15,13 @@ public class AppLogsApiClient : MainAppApiClient, IAppLogsApiClient
     {
     }
 
-    public Task<AppLogGroupReport> GroupsAsync(int hours, string level, Guid? clinicId, string? search, string sort, int take, CancellationToken ct) =>
-        GetRequiredAsync<AppLogGroupReport>("/groups" + Query(("hours", hours), ("level", level), ("clinicId", clinicId), ("search", search),
+    public Task<AppLogGroupReport> GroupsAsync(int hours, string level, Guid? clientId, string? search, string sort, int take, CancellationToken ct) =>
+        GetRequiredAsync<AppLogGroupReport>("/groups" + Query(("hours", hours), ("level", level), ("clientId", clientId), ("search", search),
             ("sort", sort), ("take", take)), ct);
 
-    public Task<AppLogPage> ListAsync(int hours, string level, Guid? clinicId, string? search, string? fingerprint, string? traceId, int page,
+    public Task<AppLogPage> ListAsync(int hours, string level, Guid? clientId, string? search, string? fingerprint, string? traceId, int page,
         int pageSize, CancellationToken ct) =>
-        GetRequiredAsync<AppLogPage>(Query(("hours", hours), ("level", level), ("clinicId", clinicId), ("search", search),
+        GetRequiredAsync<AppLogPage>(Query(("hours", hours), ("level", level), ("clientId", clientId), ("search", search),
             ("fingerprint", fingerprint), ("traceId", traceId), ("page", page), ("pageSize", pageSize)), ct);
 
     public Task<AppLogDetail?> GetAsync(long id, CancellationToken ct) =>

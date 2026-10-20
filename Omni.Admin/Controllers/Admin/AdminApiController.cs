@@ -1,25 +1,25 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Omni.Admin.Business.Contracts.Services.Channels;
-using Omni.Admin.Business.Contracts.Services.Clinics;
+using Omni.Admin.Business.Contracts.Services.Clients;
 using Omni.Admin.Business.Contracts.Services.Content;
-using Omni.Admin.Business.Contracts.Services.Leads;
+using Omni.Admin.Business.Contracts.Services.Contacts;
 using Omni.Admin.Business.Contracts.Services.Overview;
-using Omni.Admin.Business.Contracts.Services.Staff;
+using Omni.Admin.Business.Contracts.Services.Members;
 using Omni.Admin.Common.Enums;
 using Omni.Admin.Common.Exceptions;
 using Omni.Admin.Entities.Models;
-using Omni.Admin.Entities.Requests.Clinics;
+using Omni.Admin.Entities.Requests.Clients;
 using Omni.Admin.Entities.Requests.Content;
-using Omni.Admin.Entities.Requests.Leads;
-using Omni.Admin.Entities.Requests.Staff;
+using Omni.Admin.Entities.Requests.Contacts;
+using Omni.Admin.Entities.Requests.Members;
 
 namespace Omni.Admin.Controllers.Admin;
 
 /// <summary>
 /// The admin JSON API (/api/admin/*). Same rules and audit log as the pages: every endpoint needs a signed-in admin
 /// (the admin cookie; 401 otherwise), and every write goes through the same service and lands in admin_audit_log.
-/// Clinic staff credentials from the main app never work here. The cookie is SameSite=Strict, so other sites can't
+/// Client member credentials from the main app never work here. The cookie is SameSite=Strict, so other sites can't
 /// make a signed-in admin's browser call these.
 /// </summary>
 [ApiController]
@@ -28,19 +28,19 @@ namespace Omni.Admin.Controllers.Admin;
 public class AdminApiController : ControllerBase
 {
     private readonly IOverviewAdminService _overview;
-    private readonly IClinicAdminService _clinics;
-    private readonly IStaffAdminService _staff;
-    private readonly ILeadAdminService _leads;
+    private readonly IClientAdminService _clients;
+    private readonly IMemberAdminService _members;
+    private readonly IContactAdminService _contacts;
     private readonly IChannelAdminService _channels;
     private readonly IContentAdminService _content;
 
-    public AdminApiController(IOverviewAdminService overview, IClinicAdminService clinics, IStaffAdminService staff,
-        ILeadAdminService leads, IChannelAdminService channels, IContentAdminService content)
+    public AdminApiController(IOverviewAdminService overview, IClientAdminService clients, IMemberAdminService member,
+        IContactAdminService contacts, IChannelAdminService channels, IContentAdminService content)
     {
         _overview = overview;
-        _clinics = clinics;
-        _staff = staff;
-        _leads = leads;
+        _clients = clients;
+        _members = member;
+        _contacts = contacts;
         _channels = channels;
         _content = content;
     }
@@ -55,118 +55,118 @@ public class AdminApiController : ControllerBase
     public async Task<IActionResult> Problems(CancellationToken ct) => Ok(await _overview.ProblemsAsync(ct));
 
     [HttpGet("events")]
-    public async Task<IActionResult> Events(Guid? clinicId, string? type, int page = 1, CancellationToken ct = default) =>
-        Ok(await _overview.EventsAsync(clinicId, type, page, ct));
+    public async Task<IActionResult> Events(Guid? clientId, string? type, int page = 1, CancellationToken ct = default) =>
+        Ok(await _overview.EventsAsync(clientId, type, page, ct));
 
     [HttpGet("audit")]
-    public async Task<IActionResult> Audit(Guid? clinicId, string? q, int page = 1, CancellationToken ct = default) =>
-        Ok(await _overview.AuditAsync(clinicId, q, page, ct));
+    public async Task<IActionResult> Audit(Guid? clientId, string? q, int page = 1, CancellationToken ct = default) =>
+        Ok(await _overview.AuditAsync(clientId, q, page, ct));
 
-    // ------------------------------------------------------------------ clinics
+    // ------------------------------------------------------------------ clients
 
-    [HttpGet("clinics")]
-    public async Task<IActionResult> Clinics(string? q, bool? active, int page = 1, CancellationToken ct = default) =>
-        Ok(await _clinics.ListAsync(q, active, page, ct));
+    [HttpGet("clients")]
+    public async Task<IActionResult> Clients(string? q, bool? active, int page = 1, CancellationToken ct = default) =>
+        Ok(await _clients.ListAsync(q, active, page, ct));
 
-    [HttpGet("clinics/{id:guid}")]
-    public async Task<IActionResult> Clinic(Guid id, CancellationToken ct)
+    [HttpGet("clients/{id:guid}")]
+    public async Task<IActionResult> Client(Guid id, CancellationToken ct)
     {
-        var clinic = await _clinics.GetAsync(id, ct);
-        if (clinic is null) return NotFound();
+        var client = await _clients.GetAsync(id, ct);
+        if (client is null) return NotFound();
         return Ok(new
         {
-            clinic = new
+            client = new
             {
-                clinic.Id, clinic.Name, clinic.Slug, clinic.Phone, clinic.Email, clinic.Website, clinic.CountryCode,
-                clinic.Timezone, clinic.Address, clinic.OperatingHours, clinic.ConsultationInfo, clinic.IsActive,
-                clinic.CreatedAt, clinic.UpdatedAt
+                client.Id, client.Name, client.Slug, client.Phone, client.Email, client.Website, client.CountryCode,
+                client.Timezone, client.Address, client.OperatingHours, client.BookingInfo, client.IsActive,
+                client.CreatedAt, client.UpdatedAt
             },
-            counts = await _clinics.CountsAsync(id, ct),
+            counts = await _clients.CountsAsync(id, ct),
             channels = await _channels.ListChannelsAsync(id, null, false, ct),
             calendars = await _channels.ListCalendarsAsync(id, ct),
             tiktok = await _channels.ListTikTokAsync(id, ct)
         });
     }
 
-    [HttpPut("clinics/{id:guid}")]
-    public Task<IActionResult> UpdateClinic(Guid id, ClinicUpdate body, CancellationToken ct) =>
-        Write(() => _clinics.UpdateAsync(id, body, ct));
+    [HttpPut("clients/{id:guid}")]
+    public Task<IActionResult> UpdateClient(Guid id, ClientUpdate body, CancellationToken ct) =>
+        Write(() => _clients.UpdateAsync(id, body, ct));
 
-    [HttpPost("clinics/{id:guid}/activate")]
-    public Task<IActionResult> ActivateClinic(Guid id, CancellationToken ct) => Write(() => _clinics.SetActiveAsync(id, true, ct));
+    [HttpPost("clients/{id:guid}/activate")]
+    public Task<IActionResult> ActivateClient(Guid id, CancellationToken ct) => Write(() => _clients.SetActiveAsync(id, true, ct));
 
-    [HttpPost("clinics/{id:guid}/deactivate")]
-    public Task<IActionResult> DeactivateClinic(Guid id, CancellationToken ct) => Write(() => _clinics.SetActiveAsync(id, false, ct));
+    [HttpPost("clients/{id:guid}/deactivate")]
+    public Task<IActionResult> DeactivateClient(Guid id, CancellationToken ct) => Write(() => _clients.SetActiveAsync(id, false, ct));
 
-    [HttpPut("clinics/{id:guid}/knowledge-settings")]
+    [HttpPut("clients/{id:guid}/knowledge-settings")]
     public Task<IActionResult> UpdateSearchSettings(Guid id, SearchSettingsBody body, CancellationToken ct) =>
         Write(() => _content.UpdateSearchSettingsAsync(id, body.TopK, body.MinimumSimilarity, ct));
 
-    // ------------------------------------------------------------------ staff
+    // ------------------------------------------------------------------ members
 
-    [HttpGet("staff")]
-    public async Task<IActionResult> Staff(Guid? clinicId, string? q, int page = 1, CancellationToken ct = default) =>
-        Ok(await _staff.ListAsync(clinicId, q, page, ct));
+    [HttpGet("members")]
+    public async Task<IActionResult> Member(Guid? clientId, string? q, int page = 1, CancellationToken ct = default) =>
+        Ok(await _members.ListAsync(clientId, q, page, ct));
 
-    [HttpGet("staff/{userId}")]
-    public async Task<IActionResult> StaffMember(string userId, CancellationToken ct) =>
-        await _staff.GetAsync(userId, ct) is { } s ? Ok(s) : NotFound();
+    [HttpGet("members/{userId}")]
+    public async Task<IActionResult> Member(string userId, CancellationToken ct) =>
+        await _members.GetAsync(userId, ct) is { } s ? Ok(s) : NotFound();
 
-    [HttpPost("staff/{userId}/lock")]
-    public Task<IActionResult> Lock(string userId, CancellationToken ct) => Write(() => _staff.SetLoginLockedAsync(userId, true, ct));
+    [HttpPost("members/{userId}/lock")]
+    public Task<IActionResult> Lock(string userId, CancellationToken ct) => Write(() => _members.SetLoginLockedAsync(userId, true, ct));
 
-    [HttpPost("staff/{userId}/unlock")]
-    public Task<IActionResult> Unlock(string userId, CancellationToken ct) => Write(() => _staff.SetLoginLockedAsync(userId, false, ct));
+    [HttpPost("members/{userId}/unlock")]
+    public Task<IActionResult> Unlock(string userId, CancellationToken ct) => Write(() => _members.SetLoginLockedAsync(userId, false, ct));
 
-    [HttpPost("staff/{userId}/membership/activate")]
+    [HttpPost("members/{userId}/membership/activate")]
     public Task<IActionResult> ActivateMembership(string userId, CancellationToken ct) =>
-        Write(() => _staff.SetMembershipActiveAsync(userId, true, ct));
+        Write(() => _members.SetMembershipActiveAsync(userId, true, ct));
 
-    [HttpPost("staff/{userId}/membership/deactivate")]
+    [HttpPost("members/{userId}/membership/deactivate")]
     public Task<IActionResult> DeactivateMembership(string userId, CancellationToken ct) =>
-        Write(() => _staff.SetMembershipActiveAsync(userId, false, ct));
+        Write(() => _members.SetMembershipActiveAsync(userId, false, ct));
 
-    [HttpPost("staff/{userId}/password")]
-    public Task<IActionResult> StaffPassword(string userId, PasswordBody body, CancellationToken ct) =>
-        Write(() => _staff.SetPasswordAsync(userId, body.Password, ct));
+    [HttpPost("members/{userId}/password")]
+    public Task<IActionResult> MemberPassword(string userId, PasswordBody body, CancellationToken ct) =>
+        Write(() => _members.SetPasswordAsync(userId, body.Password, ct));
 
-    // ------------------------------------------------------------------ leads, conversations, messages, appointments
+    // ------------------------------------------------------------------ contacts, conversations, messages, bookings
 
-    [HttpGet("leads")]
-    public async Task<IActionResult> Leads(Guid? clinicId, string? status, string? q, int page = 1, CancellationToken ct = default) =>
-        Ok(await _leads.ListLeadsAsync(clinicId, status, q, page, ct));
+    [HttpGet("contacts")]
+    public async Task<IActionResult> Contacts(Guid? clientId, string? status, string? q, int page = 1, CancellationToken ct = default) =>
+        Ok(await _contacts.ListContactsAsync(clientId, status, q, page, ct));
 
-    [HttpGet("leads/{id:guid}")]
-    public async Task<IActionResult> Lead(Guid id, CancellationToken ct)
+    [HttpGet("contacts/{id:guid}")]
+    public async Task<IActionResult> Contact(Guid id, CancellationToken ct)
     {
-        var lead = await _leads.GetLeadAsync(id, ct);
-        if (lead is null) return NotFound();
+        var contact = await _contacts.GetContactAsync(id, ct);
+        if (contact is null) return NotFound();
         return Ok(new
         {
-            lead.Id, lead.ClinicId, clinicName = lead.Clinic?.Name, lead.FullName, lead.FirstName, lead.LastName, lead.Phone,
-            lead.Email, lead.Source, lead.SourceDetail, lead.CampaignName, lead.Status, lead.QualificationStatus,
-            procedure = lead.Procedure?.Name, lead.PreferredLanguage, lead.CountryCode, lead.City, lead.DesiredTimeline,
-            lead.Notes, lead.MarketingOptIn, lead.OptedOutAt, lead.LastContactAt, lead.NextFollowupAt, lead.CreatedAt, lead.UpdatedAt
+            contact.Id, contact.ClientId, clientName = contact.Client?.Name, contact.FullName, contact.FirstName, contact.LastName, contact.Phone,
+            contact.Email, contact.Source, contact.SourceDetail, contact.CampaignName, contact.StageKey, contact.Qualification,
+            service = contact.Service?.Name, contact.PreferredLanguage, contact.CountryCode, contact.City, contact.DesiredTimeline,
+            contact.Notes, contact.MarketingOptIn, contact.OptedOutAt, contact.LastContactAt, contact.NextFollowupAt, contact.CreatedAt, contact.UpdatedAt
         });
     }
 
-    [HttpPatch("leads/{id:guid}")]
-    public Task<IActionResult> UpdateLead(Guid id, LeadUpdate body, CancellationToken ct) => Write(() => _leads.UpdateLeadAsync(id, body, ct));
+    [HttpPatch("contacts/{id:guid}")]
+    public Task<IActionResult> UpdateContact(Guid id, ContactUpdate body, CancellationToken ct) => Write(() => _contacts.UpdateContactAsync(id, body, ct));
 
     [HttpGet("conversations")]
-    public async Task<IActionResult> Conversations(Guid? clinicId, Guid? leadId, string? channel, string? mode, string? status,
+    public async Task<IActionResult> Conversations(Guid? clientId, Guid? contactId, string? channel, string? mode, string? status,
         int page = 1, CancellationToken ct = default) =>
-        Ok(await _leads.ListConversationsAsync(clinicId, leadId, channel, mode, status, page, ct));
+        Ok(await _contacts.ListConversationsAsync(clientId, contactId, channel, mode, status, page, ct));
 
     [HttpGet("conversations/{id:guid}")]
     public async Task<IActionResult> Conversation(Guid id, CancellationToken ct)
     {
-        var c = await _leads.GetConversationAsync(id, ct);
+        var c = await _contacts.GetConversationAsync(id, ct);
         if (c is null) return NotFound();
-        var messages = await _leads.MessagesAsync(id, 500, ct);
+        var messages = await _contacts.MessagesAsync(id, 500, ct);
         return Ok(new
         {
-            c.Id, c.ClinicId, c.LeadId, c.Channel, c.Status, c.Mode, c.LastMessageAt, c.ServiceWindowExpiresAt, c.CreatedAt,
+            c.Id, c.ClientId, c.ContactId, c.Channel, c.Status, c.Mode, c.LastMessageAt, c.ServiceWindowExpiresAt, c.CreatedAt,
             messages = messages.Select(m => new
             {
                 m.Id, m.Direction, m.SenderType, m.Origin, m.MessageType, m.Content, m.DeliveryStatus, m.FailureCode,
@@ -176,43 +176,43 @@ public class AdminApiController : ControllerBase
     }
 
     [HttpPost("conversations/{id:guid}/mode")]
-    public Task<IActionResult> ConversationMode(Guid id, ModeBody body, CancellationToken ct) => Write(() => _leads.SetModeAsync(id, body.Mode, ct));
+    public Task<IActionResult> ConversationMode(Guid id, ModeBody body, CancellationToken ct) => Write(() => _contacts.SetModeAsync(id, body.Mode, ct));
 
     [HttpPost("conversations/{id:guid}/status")]
     public Task<IActionResult> ConversationStatus(Guid id, StatusBody body, CancellationToken ct) =>
-        Write(() => _leads.SetStatusAsync(id, body.Status, ct));
+        Write(() => _contacts.SetStatusAsync(id, body.Status, ct));
 
     [HttpGet("messages")]
-    public async Task<IActionResult> Messages(Guid? clinicId, bool failed = false, string? sender = null, string? q = null, int page = 1,
+    public async Task<IActionResult> Messages(Guid? clientId, bool failed = false, string? sender = null, string? q = null, int page = 1,
         CancellationToken ct = default) =>
-        Ok(await _leads.ListMessagesAsync(clinicId, failed, sender, q, page, ct));
+        Ok(await _contacts.ListMessagesAsync(clientId, failed, sender, q, page, ct));
 
-    [HttpGet("appointments")]
-    public async Task<IActionResult> Appointments(Guid? clinicId, Guid? leadId, string? status, bool upcoming = false, int page = 1,
+    [HttpGet("bookings")]
+    public async Task<IActionResult> Bookings(Guid? clientId, Guid? contactId, string? status, bool upcoming = false, int page = 1,
         CancellationToken ct = default) =>
-        Ok(await _leads.ListAppointmentsAsync(clinicId, leadId, status, upcoming, page, ct));
+        Ok(await _contacts.ListBookingsAsync(clientId, contactId, status, upcoming, page, ct));
 
-    [HttpPost("appointments/{id:guid}/status")]
-    public Task<IActionResult> AppointmentStatus(Guid id, StatusBody body, CancellationToken ct) =>
-        Write(() => _leads.SetAppointmentStatusAsync(id, body.Status, ct));
+    [HttpPost("bookings/{id:guid}/status")]
+    public Task<IActionResult> BookingStatus(Guid id, StatusBody body, CancellationToken ct) =>
+        Write(() => _contacts.SetBookingStatusAsync(id, body.Status, ct));
 
     // ------------------------------------------------------------------ channels
 
     [HttpGet("channels")]
-    public async Task<IActionResult> Channels(Guid? clinicId, string? channel, bool problems = false, CancellationToken ct = default) =>
-        Ok(await _channels.ListChannelsAsync(clinicId, channel, problems, ct));
+    public async Task<IActionResult> Channels(Guid? clientId, string? channel, bool problems = false, CancellationToken ct = default) =>
+        Ok(await _channels.ListChannelsAsync(clientId, channel, problems, ct));
 
     [HttpPost("channels/{id:guid}/disconnect")]
     public Task<IActionResult> DisconnectChannel(Guid id, CancellationToken ct) => Write(() => _channels.DisconnectAsync(id, ct));
 
     [HttpGet("calendars")]
-    public async Task<IActionResult> Calendars(Guid? clinicId, CancellationToken ct) => Ok(await _channels.ListCalendarsAsync(clinicId, ct));
+    public async Task<IActionResult> Calendars(Guid? clientId, CancellationToken ct) => Ok(await _channels.ListCalendarsAsync(clientId, ct));
 
     [HttpPost("calendars/{id:guid}/disconnect")]
     public Task<IActionResult> DisconnectCalendar(Guid id, CancellationToken ct) => Write(() => _channels.DisconnectCalendarAsync(id, ct));
 
     [HttpGet("tiktok")]
-    public async Task<IActionResult> TikTok(Guid? clinicId, CancellationToken ct) => Ok(await _channels.ListTikTokAsync(clinicId, ct));
+    public async Task<IActionResult> TikTok(Guid? clientId, CancellationToken ct) => Ok(await _channels.ListTikTokAsync(clientId, ct));
 
     [HttpPost("tiktok/{id:guid}/disconnect")]
     public Task<IActionResult> DisconnectTikTok(Guid id, CancellationToken ct) => Write(() => _channels.DisconnectTikTokAsync(id, ct));
@@ -220,33 +220,33 @@ public class AdminApiController : ControllerBase
     // ------------------------------------------------------------------ content
 
     [HttpGet("campaigns")]
-    public async Task<IActionResult> Campaigns(Guid? clinicId, string? status, int page = 1, CancellationToken ct = default) =>
-        Ok(await _content.ListCampaignsAsync(clinicId, status, page, ct));
+    public async Task<IActionResult> Campaigns(Guid? clientId, string? status, int page = 1, CancellationToken ct = default) =>
+        Ok(await _content.ListCampaignsAsync(clientId, status, page, ct));
 
     [HttpPost("campaigns/{id:guid}/cancel")]
     public Task<IActionResult> CancelCampaign(Guid id, CancellationToken ct) => Write(() => _content.CancelCampaignAsync(id, ct));
 
     [HttpGet("templates")]
-    public async Task<IActionResult> Templates(Guid? clinicId, string? status, CancellationToken ct) =>
-        Ok(await _content.ListTemplatesAsync(clinicId, status, ct));
+    public async Task<IActionResult> Templates(Guid? clientId, string? status, CancellationToken ct) =>
+        Ok(await _content.ListTemplatesAsync(clientId, status, ct));
 
-    [HttpGet("procedures")]
-    public async Task<IActionResult> Procedures(Guid? clinicId, CancellationToken ct) => Ok(await _content.ListProceduresAsync(clinicId, ct));
+    [HttpGet("services")]
+    public async Task<IActionResult> Services(Guid? clientId, CancellationToken ct) => Ok(await _content.ListServicesAsync(clientId, ct));
 
-    [HttpPost("procedures/{id:guid}/active")]
-    public Task<IActionResult> ProcedureActive(Guid id, ActiveBody body, CancellationToken ct) =>
-        Write(() => _content.SetProcedureActiveAsync(id, body.Active, ct));
+    [HttpPost("services/{id:guid}/active")]
+    public Task<IActionResult> ServiceActive(Guid id, ActiveBody body, CancellationToken ct) =>
+        Write(() => _content.SetServiceActiveAsync(id, body.Active, ct));
 
     [HttpGet("knowledge")]
-    public async Task<IActionResult> Knowledge(Guid? clinicId, string? q, bool? active, int page = 1, CancellationToken ct = default) =>
-        Ok(await _content.ListDocumentsAsync(clinicId, q, active, page, ct));
+    public async Task<IActionResult> Knowledge(Guid? clientId, string? q, bool? active, int page = 1, CancellationToken ct = default) =>
+        Ok(await _content.ListDocumentsAsync(clientId, q, active, page, ct));
 
     [HttpPost("knowledge/{id:guid}/active")]
     public Task<IActionResult> KnowledgeActive(Guid id, ActiveBody body, CancellationToken ct) =>
         Write(() => _content.SetDocumentActiveAsync(id, body.Active, ct));
 
     [HttpGet("knowledge/websites")]
-    public async Task<IActionResult> Websites(Guid? clinicId, CancellationToken ct) => Ok(await _content.ListWebsitesAsync(clinicId, ct));
+    public async Task<IActionResult> Websites(Guid? clientId, CancellationToken ct) => Ok(await _content.ListWebsitesAsync(clientId, ct));
 
     // ------------------------------------------------------------------
 

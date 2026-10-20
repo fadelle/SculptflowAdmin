@@ -3,30 +3,31 @@
 Internal admin portal for Omni. A separate .NET 10 Razor Pages app (own repo, own deploy) that reads and
 writes the **same Supabase Postgres database** as the main app (`..\SculptFlowApp`).
 
-- Admins are their own user list (`admin_users`). Clinic staff accounts can never sign in here, and admin accounts are
-  not clinic users.
+- Admins are their own user list (`admin_users`). Client member accounts can never sign in here, and admin accounts are
+  not client users.
 - Every change made here is recorded in `admin_audit_log` (who, what, when, before/after).
-- Internal only: it shows provider details (Meta ids) that clinic-facing pages never show.
+- Internal only: it shows provider details (Meta ids) that client-facing pages never show.
 
 ## What it covers
 
 | Area | See | Change |
 |---|---|---|
-| Dashboard | Totals across clinics, messages per day, a "needs attention" list (broken channels/calendars, failing sends, stuck campaigns, failed website scrapes), newest clinics | |
-| Clinics | Every tenant with counts; per clinic: details, staff, channels, Inbox settings (AI bot switches), KB search settings, admin history | Edit details, activate/deactivate, turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
-| Staff accounts | All main-app users with clinic, membership, sign-in methods | Lock/unlock sign-in, deactivate/reactivate membership, set password, mark email confirmed |
-| Leads | All leads with filters; per lead: conversations, appointments, events | Status, qualification, marketing opt-in, notes |
-| Conversations | All threads; full message timeline | Hand to staff / return to AI, close/reopen |
+| Dashboard | Totals across clients, messages per day, a "needs attention" list (broken channels/calendars, failing sends, stuck campaigns, failed website scrapes), newest clients | |
+| Clients | Every tenant with counts; per client: details, member, channels, Inbox settings (AI bot switches), KB search settings, admin history | Edit details, activate/deactivate, turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
+| Member accounts | All main-app users with client, membership, sign-in methods | Lock/unlock sign-in, deactivate/reactivate membership, set password, mark email confirmed |
+| Contacts | All contacts with filters; per contact: conversations, bookings, events | Status, qualification, marketing opt-in, notes |
+| Conversations | All threads; full message timeline | Hand to member / return to AI, close/reopen |
 | Messages | Every message, failed-only filter | |
-| Appointments | All, in clinic time | Change status |
-| Billing | Every clinic's plan, wallet, included credit; per clinic: subscription, who pays the provider per messaging account, usage this period with provider cost and margin, usage records, ledger, ledger check, price check; plans; rate cards and versioned rates; revenue report | Start/change/cancel/resume plans, top up the wallet, manual adjustments, refunds, set who pays per account, create/edit plans and rate cards, add/end rates. All through the main app's billing API (below) |
+| Bookings | All, in client time | Change status |
+| Billing | Every client's plan, wallet, included credit; per client: subscription, who pays the provider per messaging account, usage this period with provider cost and margin, usage records, ledger, ledger check, price check; plans; rate cards and versioned rates; revenue report | Start/change/cancel/resume plans, top up the wallet, manual adjustments, refunds, set who pays per account, create/edit plans and rate cards, add/end rates. All through the main app's billing API (below) |
 | Channels & integrations | WhatsApp/Instagram/Facebook/Telegram connections with health events; calendars; TikTok | Disconnect; pause/resume calendar sync |
 | WhatsApp token check | Asks Meta what permissions a token has and which client WhatsApp business accounts it sees (embedded-signup diagnostic) | Inspect a token or code (nothing stored) |
 | WhatsApp templates | All templates and their approval status | |
 | Campaigns | Delivery/read/reply/booking funnel, recipients | Cancel |
-| Procedures | Every clinic's catalog | Activate/deactivate |
+| Services | Every client's catalog | Activate/deactivate |
+| Business types | Names, terminology (per language), AI profile and pipeline stages of each business type, and how many clients use it | Create (or duplicate), edit, activate/deactivate; a client's page has **Change business type**, which previews how its contacts' stages move before confirming |
 | Knowledge base | Documents and website sources | Activate/deactivate documents |
-| Search benchmark | One clinic's Knowledge Retrieval Benchmark (pick the clinic in the header): case counts, latest scores (chunk/document Top-1/3/5, MRR, latency), manual cases, generations with rejected questions and n8n's raw reply, run history, per-run results and failed-case analysis | Generate test cases (n8n), stop generating, add/edit/review/delete cases, run the benchmark (all, generated, reviewed or one generation). Through the main app's benchmark API; JSON for the page at `/api/admin/knowledge-benchmark/{clinicId}` |
+| Search benchmark | One client's Knowledge Retrieval Benchmark (pick the client in the header): case counts, latest scores (chunk/document Top-1/3/5, MRR, latency), manual cases, generations with rejected questions and n8n's raw reply, run history, per-run results and failed-case analysis | Generate test cases (n8n), stop generating, add/edit/review/delete cases, run the benchmark (all, generated, reviewed or one generation). Through the main app's benchmark API; JSON for the page at `/api/admin/knowledge-benchmark/{clientId}` |
 | Event log / Admin audit log | The main app's `events`; this portal's own changes | |
 | Admin users | Portal accounts | Add, deactivate, set password |
 | Configuration | The main app's tunable settings by section and key: default, saved value, value in use | Save a value (the main app uses it at once), reset to the default. Through the main app's settings API (below) |

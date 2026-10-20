@@ -1,7 +1,7 @@
 @page
 @model Omni.Admin.Pages.Conversations.IndexModel
 @{ ViewData["Title"] = "Conversations"; }
-<div class="au-page-head"><p class="au-page-head__sub">Every inbox thread across clinics, newest activity first.</p></div>
+<div class="au-page-head"><p class="au-page-head__sub">Every inbox thread across clients, newest activity first.</p></div>
 <form class="filters au-toolbar" method="get">
     <div class="au-toolbar__filters">
         <div class="au-field" style="width:150px">
@@ -14,7 +14,7 @@
             <label class="au-label" for="f-mode">Handled by</label>
             <select class="au-select" id="f-mode" name="mode"><option value="">All</option>
                 <option value="ai" selected="@(Model.Mode == "ai")">AI</option>
-                <option value="human" selected="@(Model.Mode == "human")">Staff</option>
+                <option value="human" selected="@(Model.Mode == "human")">Member</option>
                 <option value="approval" selected="@(Model.Mode == "approval")">Approval</option>
             </select>
         </div>

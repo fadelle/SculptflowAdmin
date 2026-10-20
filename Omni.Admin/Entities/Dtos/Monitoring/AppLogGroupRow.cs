@@ -13,4 +13,4 @@ public record AppLogGroupRow(
     DateTimeOffset FirstSeenAt,
     DateTimeOffset LastSeenAt,
     long LatestId,
-    Guid? LatestClinicId);
+    Guid? LatestClientId);

@@ -2,10 +2,10 @@
 @model Omni.Admin.Pages.Channels.IndexModel
 @{
     ViewData["Title"] = "Channels & integrations";
-    string TabUrl(string tab) => $"?tab={tab}" + (Model.ClinicId.HasValue ? $"&clinicId={Model.ClinicId}" : "");
+    string TabUrl(string tab) => $"?tab={tab}" + (Model.ClientId.HasValue ? $"&clientId={Model.ClientId}" : "");
 }
 <div class="au-page-head">
-    <p class="au-page-head__sub">Messaging connections, calendars and TikTok for every clinic.</p>
+    <p class="au-page-head__sub">Messaging connections, calendars and TikTok for every client.</p>
 </div>
 <div class="au-tabs" style="margin-bottom:16px">
     <a class="au-tab @(Model.Tab == "messaging" ? "is-active" : null)" href="@TabUrl("messaging")"><span class="au-icon" aria-hidden="true">chat</span>Messaging <span class="au-tab__count">@Model.Rows.Count</span></a>
@@ -44,13 +44,13 @@
             <div class="au-table-scroll">
                 <table class="au-table">
                     <thead>
-                        <tr><th>Clinic</th><th>Channel</th><th>Account / number</th><th>Status</th><th>Health</th><th>Last webhook</th><th>Updated</th></tr>
+                        <tr><th>Client</th><th>Channel</th><th>Account / number</th><th>Status</th><th>Health</th><th>Last webhook</th><th>Updated</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var r in Model.Rows)
                         {
                             <tr data-au-href="/Channels/Details?id=@r.Id">
-                                <td><a href="/Clinics/Details?id=@r.ClinicId">@r.ClinicName</a></td>
+                                <td><a href="/Clients/Details?id=@r.ClientId">@r.ClientName</a></td>
                                 <td><a href="/Channels/Details?id=@r.Id">@r.Channel</a></td>
                                 <td><div class="au-cell-2l"><span>@Ui.OrDash(r.SenderId)</span><span>@r.DisplayName</span></div></td>
                                 <td>@Ui.Badge(r.Status) @if (r.WebhookStatus is not null) { <div class="au-caption">webhook @r.WebhookStatus</div> }</td>
@@ -77,13 +77,13 @@
             <div class="au-table-scroll">
                 <table class="au-table">
                     <thead>
-                        <tr><th>Clinic</th><th>Calendar</th><th>Status</th><th>Sync</th><th class="au-right">Failed syncs</th><th>Last synced</th><th class="au-shrink"></th></tr>
+                        <tr><th>Client</th><th>Calendar</th><th>Status</th><th>Sync</th><th class="au-right">Failed syncs</th><th>Last synced</th><th class="au-shrink"></th></tr>
                     </thead>
                     <tbody>
                         @foreach (var c in Model.Calendars)
                         {
                             <tr>
-                                <td><a href="/Clinics/Details?id=@c.ClinicId">@c.ClinicName</a></td>
+                                <td><a href="/Clients/Details?id=@c.ClientId">@c.ClientName</a></td>
                                 <td style="--au-col-max:260px" title="@c.CalendarName">@Ui.OrDash(c.CalendarName)<div class="au-caption">@c.Provider@(string.IsNullOrEmpty(c.Account) ? "" : " · " + c.Account)</div></td>
                                 <td>@Ui.Badge(c.Status) @if (!c.IsHealthy) { <div class="au-caption au-text-error">@c.LastProblemMessage</div> }</td>
                                 <td>@Ui.YesNo(c.SyncEnabled, "on", "off")</td>
@@ -98,7 +98,7 @@
                                         </form>
                                         <form method="post" asp-page-handler="DisconnectCalendar" asp-route-tab="calendars">
                                             <input type="hidden" name="id" value="@c.Id" />
-                                            <button class="au-btn au-btn--danger-outlined au-btn--sm" type="submit" data-confirm="Disconnect this calendar? The clinic will have to reconnect it.">Disconnect</button>
+                                            <button class="au-btn au-btn--danger-outlined au-btn--sm" type="submit" data-confirm="Disconnect this calendar? The client will have to reconnect it.">Disconnect</button>
                                         </form>
                                     }
                                 </span></td>
@@ -121,13 +121,13 @@
             <div class="au-table-scroll">
                 <table class="au-table">
                     <thead>
-                        <tr><th>Clinic</th><th>Account</th><th>Status</th><th>Health</th><th>Token expires</th><th>Updated</th><th class="au-shrink"></th></tr>
+                        <tr><th>Client</th><th>Account</th><th>Status</th><th>Health</th><th>Token expires</th><th>Updated</th><th class="au-shrink"></th></tr>
                     </thead>
                     <tbody>
                         @foreach (var t in Model.TikTok)
                         {
                             <tr>
-                                <td><a href="/Clinics/Details?id=@t.ClinicId">@t.ClinicName</a></td>
+                                <td><a href="/Clients/Details?id=@t.ClientId">@t.ClientName</a></td>
                                 <td>@Ui.OrDash(t.DisplayName)</td>
                                 <td>@Ui.Badge(t.Status)</td>
                                 <td>@Ui.Badge(t.IsHealthy ? "healthy" : "problem") <span class="au-caption">@t.LastProblemMessage</span></td>

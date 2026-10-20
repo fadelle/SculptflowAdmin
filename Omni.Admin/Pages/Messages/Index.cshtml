@@ -1,13 +1,13 @@
 @page
 @model Omni.Admin.Pages.Messages.IndexModel
 @{ ViewData["Title"] = "Messages"; }
-<div class="au-page-head"><p class="au-page-head__sub">Every message in every clinic. Use "Failed only" to find delivery problems.</p></div>
+<div class="au-page-head"><p class="au-page-head__sub">Every message in every client. Use "Failed only" to find delivery problems.</p></div>
 <form class="filters au-toolbar" method="get">
     <div class="au-toolbar__filters">
         <div class="au-field" style="width:140px">
             <label class="au-label" for="f-sender">Sender</label>
             <select class="au-select" id="f-sender" name="sender"><option value="">All</option>
-                @foreach (var s in new[] { "lead", "ai", "staff", "system" }) { <option value="@s" selected="@(s == Model.Sender)">@s</option> }
+                @foreach (var s in new[] { "contact", "ai", "member", "system" }) { <option value="@s" selected="@(s == Model.Sender)">@s</option> }
             </select>
         </div>
         <div class="au-field" style="width:240px">
@@ -32,7 +32,7 @@
         <div class="au-table-scroll">
             <table class="au-table">
                 <thead>
-                    <tr><th>When</th><th>Clinic</th><th>Channel</th><th>From</th><th>Message</th><th>Delivery</th></tr>
+                    <tr><th>When</th><th>Client</th><th>Channel</th><th>From</th><th>Message</th><th>Delivery</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var m in Model.Result.Items)
@@ -40,7 +40,7 @@
                         var text = m.Content ?? "(no text)";
                         <tr data-au-href="/Conversations/Details?id=@m.ConversationId">
                             <td>@Ui.Time(m.CreatedAt)</td>
-                            <td><a href="/Clinics/Details?id=@m.ClinicId">@m.ClinicName</a></td>
+                            <td><a href="/Clients/Details?id=@m.ClientId">@m.ClientName</a></td>
                             <td>@m.Channel</td>
                             <td>@Ui.Badge(m.SenderType) <span class="au-caption">@m.Origin</span></td>
                             <td style="--au-col-max:380px" title="@Ui.Truncate(text, 600)"><a href="/Conversations/Details?id=@m.ConversationId">@Ui.Truncate(text, 140)</a></td>

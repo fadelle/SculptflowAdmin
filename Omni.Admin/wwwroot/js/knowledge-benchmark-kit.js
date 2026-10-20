@@ -1,6 +1,6 @@
 /* Search benchmark — what both benchmark pages share (knowledge-benchmark.js, knowledge-benchmark-generation.js): the API
    call, formatting, chips, the test-case table row, and the detail popup (#bm-dialog, _BenchmarkDialog) with its case
-   editor and failed-case analysis. The API root comes from the page's data-api (/api/admin/knowledge-benchmark/{clinicId}).
+   editor and failed-case analysis. The API root comes from the page's data-api (/api/admin/knowledge-benchmark/{clientId}).
    Every value from the server is written with textContent (never innerHTML), so question/chunk text can't inject markup. */
 (function () {
     'use strict';
@@ -238,7 +238,7 @@
                     ])]));
                 }
 
-                var questionBox = el('textarea', { class: 'au-textarea', rows: '2', maxlength: '500', id: 'bm-edit-question', 'aria-label': 'Patient question' });
+                var questionBox = el('textarea', { class: 'au-textarea', rows: '2', maxlength: '500', id: 'bm-edit-question', 'aria-label': 'Contact question' });
                 questionBox.value = c.question;
                 var status = el('div', { class: 'au-caption', role: 'status', style: 'min-height:1.2em' });
 
@@ -250,7 +250,7 @@
                         .catch(function (e) { status.textContent = e.message; });
                 }
 
-                wrap.appendChild(el('label', { class: 'au-form-field', for: 'bm-edit-question' }, [el('span', { class: 'au-form-label', text: 'Patient question' })]));
+                wrap.appendChild(el('label', { class: 'au-form-field', for: 'bm-edit-question' }, [el('span', { class: 'au-form-label', text: 'Contact question' })]));
                 wrap.appendChild(questionBox);
                 wrap.appendChild(el('div', { class: 'au-row au-row--wrap' }, [
                     el('button', { type: 'button', class: 'au-btn au-btn--primary au-btn--sm', text: 'Save', onclick: function () { save(false); } }),

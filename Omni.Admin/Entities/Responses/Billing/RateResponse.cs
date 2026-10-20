@@ -4,4 +4,4 @@ public record RateResponse(Guid Id, string RateCardCode, string EventType, strin
     string? ProviderBilling, string Unit, decimal ProviderCost, decimal ClientRate, decimal Margin, string Currency,
     DateTimeOffset EffectiveFrom, DateTimeOffset? EffectiveTo, string? Notes, string? CreatedBy, DateTimeOffset CreatedAt);
 
-// ---- clinics: subscription, wallet, provider billing ------------------------------------------------------------
+// ---- clients: subscription, wallet, provider billing ------------------------------------------------------------

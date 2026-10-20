@@ -15,12 +15,12 @@ public static class NavTree
         new("Overview", new[] { new NavItem("Dashboard", "dashboard", "/", Exact: true, Aliases: new[] { "/Index" }) }), // "/" MUST be Exact
         new("Operations", new[]
         {
-            new NavItem("Patients", "groups", Children: new[]
+            new NavItem("Contacts", "groups", Children: new[]
             {
-                new NavItem("Leads", "person_search", "/Leads"),
+                new NavItem("Contacts", "person_search", "/Contacts"),
                 new NavItem("Conversations", "forum", "/Conversations"),
                 new NavItem("Messages", "send", "/Messages"),
-                new NavItem("Appointments", "event", "/Appointments"),
+                new NavItem("Bookings", "event", "/Bookings"),
             }),
             new NavItem("Logs", "receipt_long", Children: new[]
             {
@@ -34,13 +34,13 @@ public static class NavTree
         {
             new NavItem("Tenants", "domain", Children: new[]
             {
-                new NavItem("Clinics", "local_hospital", "/Clinics"),
-                new NavItem("Staff accounts", "badge", "/Staff"),
+                new NavItem("Clients", "domain", "/Clients"),
+                new NavItem("Member accounts", "badge", "/Members"),
             }),
             new NavItem("Billing", "payments", Children: new[]
             {
                 new NavItem("Billing accounts", "account_balance_wallet", "/Billing", Exact: true,
-                    Aliases: new[] { "/Billing/Index", "/Billing/Clinic" }),
+                    Aliases: new[] { "/Billing/Index", "/Billing/Client" }),
                 new NavItem("Plans", "layers", "/Billing/Plans"),
                 new NavItem("Rate cards", "request_quote", "/Billing/RateCards", Aliases: new[] { "/Billing/Rates" }),
                 new NavItem("Revenue report", "monitoring", "/Billing/Report"),
@@ -51,7 +51,8 @@ public static class NavTree
                 new NavItem("WhatsApp token check", "key", "/Channels/TokenDebug"),
                 new NavItem("WhatsApp templates", "article", "/Templates"),
                 new NavItem("Campaigns", "campaign", "/Campaigns"),
-                new NavItem("Procedures", "medical_services", "/Procedures"),
+                new NavItem("Services", "inventory_2", "/Services"),
+                new NavItem("Business types", "category", "/BusinessTypes", Aliases: new[] { "/BusinessTypes/Edit" }),
                 // Exact, so the benchmark (also under /Knowledge) lights up its own tab.
                 new NavItem("Knowledge base", "menu_book", "/Knowledge", Exact: true, Aliases: new[] { "/Knowledge/Index", "/Knowledge/Details" }),
                 new NavItem("Search benchmark", "fact_check", "/Knowledge/Benchmark"),

@@ -1,7 +1,7 @@
 using Omni.Admin.Business.Contracts.Services.Monitoring;
 using Omni.Admin.Business.Contracts.Services.Overview;
 using Omni.Admin.Entities.Responses.Monitoring;
-using Omni.Admin.Entities.Dtos.Clinics;
+using Omni.Admin.Entities.Dtos.Clients;
 using Omni.Admin.Entities.Dtos.Overview;
 using Omni.Admin.Pages.Shared;
 
@@ -29,14 +29,14 @@ public class IndexModel : AdminPageModel
     public AppLogSummary? Errors { get; private set; }
     public List<DailyCount> Daily { get; private set; } = new();
     public List<ProblemRow> Problems { get; private set; } = new();
-    public List<ClinicRow> RecentClinics { get; private set; } = new();
+    public List<ClientRow> RecentClients { get; private set; } = new();
 
     public async Task OnGetAsync(CancellationToken ct)
     {
         Totals = await _overview.TotalsAsync(ct);
         Daily = await _overview.DailyMessagesAsync(14, ct);
         Problems = await _overview.ProblemsAsync(ct);
-        RecentClinics = await _overview.RecentClinicsAsync(8, ct);
+        RecentClients = await _overview.RecentClientsAsync(8, ct);
         Errors = await _logs.TrySummaryAsync(ct);
         Traces = await _traces.TrySummaryAsync(ct);
     }

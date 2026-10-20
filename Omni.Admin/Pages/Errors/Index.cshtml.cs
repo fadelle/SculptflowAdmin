@@ -8,7 +8,7 @@ using Omni.Admin.Pages.Shared;
 namespace Omni.Admin.Pages.Errors;
 
 /// <summary>Read-only: the main app's saved warnings and errors grouped by problem, through its error log API.</summary>
-[ScopeCapability(ScopeCapability.Clinic)]
+[ScopeCapability(ScopeCapability.Client)]
 public class IndexModel : MainAppPageModel
 {
     private readonly IAppLogsAdminService _logs;
@@ -24,7 +24,7 @@ public class IndexModel : MainAppPageModel
     [BindProperty(SupportsGet = true)] public string? Level { get; set; }
     [BindProperty(SupportsGet = true)] public string? Sort { get; set; }
     [BindProperty(SupportsGet = true)] public string? Q { get; set; }
-    [BindProperty(SupportsGet = true)] public Guid? ClinicId { get; set; }
+    [BindProperty(SupportsGet = true)] public Guid? ClientId { get; set; }
     public AppLogGroupReport? Report { get; private set; }
 
     public async Task OnGetAsync(CancellationToken ct)
@@ -33,7 +33,7 @@ public class IndexModel : MainAppPageModel
         Hours = AppLogOptions.Periods.Any(p => p.Hours == Hours) ? Hours : AppLogOptions.DefaultHours;
         Level = AppLogOptions.Levels.Any(l => l.Key == Level) ? Level : AppLogOptions.DefaultLevel;
         Sort = AppLogOptions.Sorts.Any(s => s.Key == Sort) ? Sort : AppLogOptions.DefaultSort;
-        ClinicId ??= _scope.FilterGuid; // the header's clinic scope when the URL names none
-        await LoadAsync(async () => Report = await _logs.GroupsAsync(Hours!.Value, Level!, ClinicId, Clean(Q), Sort!, ct));
+        ClientId ??= _scope.FilterGuid; // the header's client scope when the URL names none
+        await LoadAsync(async () => Report = await _logs.GroupsAsync(Hours!.Value, Level!, ClientId, Clean(Q), Sort!, ct));
     }
 }

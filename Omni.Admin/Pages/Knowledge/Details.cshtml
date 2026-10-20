@@ -8,7 +8,7 @@
     <a class="au-icon-btn au-icon-btn--bordered" href="/Knowledge" aria-label="Back to the knowledge base"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
     <div style="min-width:0">
         <h2 class="au-back-header__title" title="@d.Title">@d.Title</h2>
-        <span class="au-back-header__sub"><a href="/Clinics/Details?id=@d.ClinicId">@d.Clinic?.Name</a> · @KnowledgeCategory.Label(d.Category) · @d.SourceType · updated @Ui.Time(d.UpdatedAt)</span>
+        <span class="au-back-header__sub"><a href="/Clients/Details?id=@d.ClientId">@d.Client?.Name</a> · @KnowledgeCategory.Label(d.Category) · @d.SourceType · updated @Ui.Time(d.UpdatedAt)</span>
     </div>
     <div class="au-row au-row--wrap">
         <form method="post" asp-page-handler="SetActive" asp-route-id="@d.Id">

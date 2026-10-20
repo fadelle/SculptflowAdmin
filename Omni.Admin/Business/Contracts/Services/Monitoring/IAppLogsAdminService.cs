@@ -6,10 +6,10 @@ namespace Omni.Admin.Business.Contracts.Services.Monitoring;
 public interface IAppLogsAdminService
 {
     /// <summary>One row per problem; <paramref name="level"/> is a minimum (warning, error, critical), sort recent or count.</summary>
-    Task<AppLogGroupReport> GroupsAsync(int hours, string level, Guid? clinicId, string? search, string sort, CancellationToken ct);
+    Task<AppLogGroupReport> GroupsAsync(int hours, string level, Guid? clientId, string? search, string sort, CancellationToken ct);
 
     /// <summary>Single rows newest first, optionally one problem (fingerprint) or one trace.</summary>
-    Task<AppLogPage> ListAsync(int hours, string level, Guid? clinicId, string? search, string? fingerprint, string? traceId, int page,
+    Task<AppLogPage> ListAsync(int hours, string level, Guid? clientId, string? search, string? fingerprint, string? traceId, int page,
         CancellationToken ct);
 
     /// <summary>One row in full; null when it doesn't exist (or was purged).</summary>

@@ -1,0 +1,46 @@
+@page
+@model Omni.Admin.Pages.BusinessTypes.IndexModel
+@{ ViewData["Title"] = "Business types"; }
+<div class="au-page-head">
+    <p class="au-page-head__sub">What each kind of business calls its contacts, services and bookings, its pipeline stages and its AI profile. Clients pick one when they sign up.</p>
+    <div class="au-page-head__actions"><a class="au-btn au-btn--primary" href="/BusinessTypes/Edit"><span class="au-icon" aria-hidden="true">add</span>New business type</a></div>
+</div>
+
+<div class="au-table-card">
+    @if (Model.Types.Count == 0)
+    {
+        var empty = new EmptyStateModel("No business types yet.", "category");
+        <partial name="_EmptyState" model="empty" />
+    }
+    else
+    {
+        <div class="au-table-scroll">
+            <table class="au-table">
+                <thead><tr><th>Business type</th><th>Code</th><th class="au-right">Stages</th><th class="au-right">Clients</th><th class="au-right">Sort</th><th>Status</th><th>Updated</th><th class="au-shrink"></th></tr></thead>
+                <tbody>
+                    @foreach (var t in Model.Types)
+                    {
+                        <tr data-au-href="/BusinessTypes/Edit?code=@t.Code">
+                            <td><a href="/BusinessTypes/Edit?code=@t.Code">@(t.Name.GetValueOrDefault("en") ?? t.Code)</a></td>
+                            <td><span class="au-mono">@t.Code</span></td>
+                            <td class="au-right">@t.Stages.Count</td>
+                            <td class="au-right">@t.ClientCount</td>
+                            <td class="au-right">@t.SortOrder</td>
+                            <td>@Ui.Badge(t.IsActive ? "active" : "inactive")</td>
+                            <td>@Ui.Time(t.UpdatedAt)</td>
+                            <td>
+                                <span class="au-row-actions">
+                                    <a class="au-btn au-btn--outlined au-btn--sm" href="/BusinessTypes/Edit?copy=@t.Code"><span class="au-icon" aria-hidden="true">content_copy</span>Duplicate</a>
+                                    <form method="post" asp-page-handler="SetActive">
+                                        <input type="hidden" name="code" value="@t.Code" /><input type="hidden" name="active" value="@(!t.IsActive ? "true" : "false")" />
+                                        <button class="au-btn au-btn--sm @(t.IsActive ? "au-btn--danger-outlined" : "au-btn--outlined")" type="submit" data-confirm="@(t.IsActive ? "Deactivate " + t.Code + "? New clients can no longer pick it; existing clients keep it." : "Activate " + t.Code + "?")">@(t.IsActive ? "Deactivate" : "Activate")</button>
+                                    </form>
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

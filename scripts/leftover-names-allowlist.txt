@@ -4,3 +4,4 @@
 # A single line can also carry the marker "leftover-ok: <reason>".
 token: SculptFlowApp
 token: sculptflowapp.onrender.com
+path: scripts/*

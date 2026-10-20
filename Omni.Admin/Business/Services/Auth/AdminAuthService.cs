@@ -11,8 +11,8 @@ namespace Omni.Admin.Business.Services.Auth;
 
 /// <summary>
 /// Sign-in for admin users (admin_users table). Deliberately separate from the main app's ASP.NET Identity
-/// users: a clinic staff account can never authenticate here, and an admin account is not a clinic user.
-/// Passwords use Identity's PasswordHasher (PBKDF2), the same format the main app uses for staff.
+/// users: a client member account can never authenticate here, and an admin account is not a client user.
+/// Passwords use Identity's PasswordHasher (PBKDF2), the same format the main app uses for member.
 /// </summary>
 public class AdminAuthService : IAdminAuthService
 {

@@ -1,6 +1,6 @@
 using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Services.Overview;
-using Omni.Admin.Entities.Dtos.Clinics;
+using Omni.Admin.Entities.Dtos.Clients;
 using Omni.Admin.Entities.Dtos.Overview;
 using Omni.Admin.Entities.Models;
 using Omni.Admin.Entities.Responses.Paging;
@@ -25,13 +25,13 @@ public class OverviewAdminService : IOverviewAdminService
 
     public Task<List<ProblemRow>> ProblemsAsync(CancellationToken ct = default) => _api.ProblemsAsync(ct);
 
-    public Task<List<ClinicRow>> RecentClinicsAsync(int take, CancellationToken ct = default) => _api.RecentClinicsAsync(take, ct);
+    public Task<List<ClientRow>> RecentClientsAsync(int take, CancellationToken ct = default) => _api.RecentClientsAsync(take, ct);
 
-    public Task<PagedResult<EventRow>> EventsAsync(Guid? clinicId, string? eventType, int page, CancellationToken ct = default) =>
-        _api.EventsAsync(clinicId, eventType, page, ct);
+    public Task<PagedResult<EventRow>> EventsAsync(Guid? clientId, string? eventType, int page, CancellationToken ct = default) =>
+        _api.EventsAsync(clientId, eventType, page, ct);
 
     public Task<List<string>> EventTypesAsync(CancellationToken ct = default) => _api.EventTypesAsync(ct);
 
-    public Task<PagedResult<AdminAuditEntry>> AuditAsync(Guid? clinicId, string? search, int page, CancellationToken ct = default) =>
-        _audit.ListAsync(clinicId, search, page, ct);
+    public Task<PagedResult<AdminAuditEntry>> AuditAsync(Guid? clientId, string? search, int page, CancellationToken ct = default) =>
+        _audit.ListAsync(clientId, search, page, ct);
 }

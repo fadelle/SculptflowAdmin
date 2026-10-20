@@ -1,4 +1,4 @@
-using Omni.Admin.Entities.Dtos.Clinics;
+using Omni.Admin.Entities.Dtos.Clients;
 using Omni.Admin.Entities.Dtos.Overview;
 using Omni.Admin.Entities.Models;
 using Omni.Admin.Entities.Responses.Paging;
@@ -14,11 +14,11 @@ public interface IOverviewAdminService
 
     Task<List<ProblemRow>> ProblemsAsync(CancellationToken ct = default);
 
-    Task<List<ClinicRow>> RecentClinicsAsync(int take, CancellationToken ct = default);
+    Task<List<ClientRow>> RecentClientsAsync(int take, CancellationToken ct = default);
 
-    Task<PagedResult<EventRow>> EventsAsync(Guid? clinicId, string? eventType, int page, CancellationToken ct = default);
+    Task<PagedResult<EventRow>> EventsAsync(Guid? clientId, string? eventType, int page, CancellationToken ct = default);
 
     Task<List<string>> EventTypesAsync(CancellationToken ct = default);
 
-    Task<PagedResult<AdminAuditEntry>> AuditAsync(Guid? clinicId, string? search, int page, CancellationToken ct = default);
+    Task<PagedResult<AdminAuditEntry>> AuditAsync(Guid? clientId, string? search, int page, CancellationToken ct = default);
 }
