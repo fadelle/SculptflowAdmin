@@ -15,8 +15,8 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 | Area | See | Change |
 |---|---|---|
 | Dashboard | Totals across clients, messages per day, a "needs attention" list (broken channels/calendars, failing sends, stuck campaigns, failed website scrapes), newest clients | |
-| Clients | Every tenant with counts; per client: details, member, channels, Inbox settings (AI bot switches), KB search settings, admin history | Edit details, activate/deactivate, turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
-| Member accounts | All main-app users with client, membership, sign-in methods | Lock/unlock sign-in, deactivate/reactivate membership, set password, mark email confirmed |
+| Clients | Every tenant with counts; per client: details, member, channels, dashboard language, Inbox settings (AI bot switches), KB search settings, admin history | Edit details, activate/deactivate, set the dashboard's default language (English, Arabic, French), turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
+| Member accounts | All main-app users with client, membership, sign-in methods, own dashboard language ("Business default" when none) | Lock/unlock sign-in, deactivate/reactivate membership, set password, mark email confirmed |
 | Contacts | All contacts with filters; per contact: conversations, bookings, events | Status, qualification, marketing opt-in, notes |
 | Conversations | All threads; full message timeline | Hand to member / return to AI, close/reopen |
 | Messages | Every message, failed-only filter | |
@@ -27,7 +27,7 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 | WhatsApp templates | All templates and their approval status | |
 | Campaigns | Delivery/read/reply/booking funnel, recipients | Cancel |
 | Services | Every client's catalog | Activate/deactivate |
-| Business types | Names, terminology (per language), AI profile and pipeline stages of each business type, and how many clients use it | Create (or duplicate), edit, activate/deactivate; a client's page has **Change business type**, which previews how its contacts' stages move before confirming |
+| Business types | Names, terminology (per language), AI profile and pipeline stages of each business type, how many clients use it, and a "missing Arabic / missing French" badge when a name, word or stage label is still empty in that language | Create (or duplicate), edit, activate/deactivate; a client's page has **Change business type**, which previews how its contacts' stages move before confirming |
 | Knowledge base | Documents and website sources | Activate/deactivate documents |
 | Search benchmark | One client's Knowledge Retrieval Benchmark (pick the client in the header): case counts, latest scores (chunk/document Top-1/3/5, MRR, latency), manual cases, generations with rejected questions and n8n's raw reply, run history, per-run results and failed-case analysis | Generate test cases (n8n), stop generating, add/edit/review/delete cases, run the benchmark (all, generated, reviewed or one generation). Through the main app's benchmark API; JSON for the page at `/api/admin/knowledge-benchmark/{clientId}` |
 | Event log / Admin audit log | The main app's `events`; this portal's own changes | |

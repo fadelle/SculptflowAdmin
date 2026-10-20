@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Omni.Admin.Business.Contracts.Services.BusinessTypes;
 using Omni.Admin.Business.Mappers.BusinessTypes;
 using Omni.Admin.Common.Exceptions;
+using Omni.Admin.Common.Helpers;
 using Omni.Admin.Entities.Dtos.BusinessTypes;
 using Omni.Admin.Pages.Shared;
 
@@ -20,6 +21,8 @@ public class EditModel : AdminPageModel
     public bool IsNew => string.IsNullOrWhiteSpace(Code);
     public int ClientCount { get; private set; }
     public bool IsActive { get; private set; }
+    /// <summary>The saved type's missing Arabic / French text (empty for a new type).</summary>
+    public IReadOnlyList<TranslationGap> Gaps { get; private set; } = [];
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
@@ -34,6 +37,7 @@ public class EditModel : AdminPageModel
         if (type is null) return NotFound();
         ClientCount = type.ClientCount;
         IsActive = type.IsActive;
+        Gaps = TranslationGaps.Of(type);
         Form = BusinessTypeFormMapper.WithSpareRows(BusinessTypeFormMapper.FromResponse(type));
         return Page();
     }
@@ -67,6 +71,7 @@ public class EditModel : AdminPageModel
             var type = await _types.GetAsync(Code!, ct);
             ClientCount = type?.ClientCount ?? 0;
             IsActive = type?.IsActive ?? false;
+            Gaps = type is null ? [] : TranslationGaps.Of(type);
         }
         return Page();
     }

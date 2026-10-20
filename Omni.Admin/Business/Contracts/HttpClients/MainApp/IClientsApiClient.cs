@@ -25,6 +25,8 @@ public interface IClientsApiClient
 
     Task<PlatformAdminChange> UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct);
 
+    Task<PlatformAdminChange> SetDefaultLanguageAsync(Guid id, string language, CancellationToken ct);
+
     /// <summary>What moving the client to another business type would do to its contacts' stages (changes nothing).</summary>
     Task<BusinessTypeChangePreview> PreviewBusinessTypeAsync(Guid id, string toCode, CancellationToken ct);
 

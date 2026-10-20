@@ -26,6 +26,10 @@ public interface IClientAdminService
 
     Task UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct = default);
 
+    /// <summary>The language the client's dashboard opens in for users who haven't picked their own ("en", "ar" or "fr").
+    /// No call and no audit entry when it is already that language.</summary>
+    Task SetDefaultLanguageAsync(Guid id, string language, CancellationToken ct = default);
+
     /// <summary>What moving the client to another business type would do to its contacts' stages (changes nothing).</summary>
     Task<BusinessTypeChangePreview> PreviewBusinessTypeAsync(Guid id, string toCode, CancellationToken ct = default);
 

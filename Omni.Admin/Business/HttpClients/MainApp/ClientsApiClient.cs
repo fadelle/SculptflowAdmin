@@ -41,6 +41,9 @@ public class ClientsApiClient : MainAppApiClient, IClientsApiClient
     public Task<PlatformAdminChange> UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}/inbox-settings", request, null, false, ct);
 
+    public Task<PlatformAdminChange> SetDefaultLanguageAsync(Guid id, string language, CancellationToken ct) =>
+        WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}/default-language", new DefaultLanguageBody(language), null, false, ct);
+
     public Task<BusinessTypeChangePreview> PreviewBusinessTypeAsync(Guid id, string toCode, CancellationToken ct) =>
         GetRequiredAsync<BusinessTypeChangePreview>($"/{id}/business-type/preview{Query(("to", toCode))}", ct);
 

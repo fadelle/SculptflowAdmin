@@ -12,7 +12,12 @@
         <h2 class="au-back-header__title">@ViewData["Title"]</h2>
         @if (!Model.IsNew)
         {
-            <span class="au-back-header__sub"><span class="au-mono">@Model.Code</span> · @Ui.Count(Model.ClientCount, "client", "clients") use it @Ui.Badge(Model.IsActive ? "active" : "inactive")</span>
+            <span class="au-back-header__sub"><span class="au-mono">@Model.Code</span> · @Ui.Count(Model.ClientCount, "client", "clients") use it @Ui.Badge(Model.IsActive ? "active" : "inactive")
+                @foreach (var gap in Model.Gaps) { @Ui.Badge("warning", TranslationGaps.Badge(gap)) }</span>
+            @if (Model.Gaps.Count > 0)
+            {
+                <span class="au-caption">Still to translate: @string.Join("; ", Model.Gaps.Select(TranslationGaps.Describe)). Empty text falls back to English.</span>
+            }
         }
     </div>
 </div>

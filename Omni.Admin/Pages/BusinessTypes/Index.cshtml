@@ -16,7 +16,7 @@
     {
         <div class="au-table-scroll">
             <table class="au-table">
-                <thead><tr><th>Business type</th><th>Code</th><th class="au-right">Stages</th><th class="au-right">Clients</th><th class="au-right">Sort</th><th>Status</th><th>Updated</th><th class="au-shrink"></th></tr></thead>
+                <thead><tr><th>Business type</th><th>Code</th><th class="au-right">Stages</th><th class="au-right">Clients</th><th class="au-right">Sort</th><th>Translations</th><th>Status</th><th>Updated</th><th class="au-shrink"></th></tr></thead>
                 <tbody>
                     @foreach (var t in Model.Types)
                     {
@@ -26,6 +26,11 @@
                             <td class="au-right">@t.Stages.Count</td>
                             <td class="au-right">@t.ClientCount</td>
                             <td class="au-right">@t.SortOrder</td>
+                            <td>
+                                @{ var gaps = TranslationGaps.Of(t); }
+                                @if (gaps.Count == 0) { @Ui.Badge("completed", "complete") }
+                                @foreach (var gap in gaps) { <span title="@TranslationGaps.Describe(gap)">@Ui.Badge("warning", TranslationGaps.Badge(gap))</span> }
+                            </td>
                             <td>@Ui.Badge(t.IsActive ? "active" : "inactive")</td>
                             <td>@Ui.Time(t.UpdatedAt)</td>
                             <td>

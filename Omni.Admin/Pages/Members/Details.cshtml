@@ -28,6 +28,7 @@
             <div class="au-detail-row"><dt>Email confirmed</dt><dd>@Ui.YesNo(s.EmailConfirmed)</dd></div>
             <div class="au-detail-row"><dt>Failed sign-ins</dt><dd class="au-num">@s.AccessFailedCount</dd></div>
             <div class="au-detail-row"><dt>Sign-in methods</dt><dd>@Ui.OrDash(methods)</dd></div>
+            <div class="au-detail-row"><dt>Dashboard language</dt><dd>@AppLanguage.ForUser(s.Language)</dd></div>
             <div class="au-detail-row"><dt>Joined client</dt><dd>@Ui.Time(s.JoinedAt)</dd></div>
         </dl>
     </section>

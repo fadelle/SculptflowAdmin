@@ -74,6 +74,9 @@ public class DetailsModel : AdminPageModel
         RunAsync(() => _clients.UpdateInboxSettingsAsync(Id, new UpdateInboxSettingsRequest(newConversations, reopenedConversations), ct),
             "Inbox settings saved.", new { id = Id });
 
+    public Task<IActionResult> OnPostDefaultLanguageAsync(string language, CancellationToken ct) =>
+        RunAsync(() => _clients.SetDefaultLanguageAsync(Id, language, ct), "Default language saved.", new { id = Id });
+
     public Task<IActionResult> OnPostSearchSettingsAsync(int topK, double minimumSimilarity, CancellationToken ct) =>
         RunAsync(() => _content.UpdateSearchSettingsAsync(Id, topK, minimumSimilarity, ct), "Knowledge search settings saved.", new { id = Id });
 }

@@ -5,7 +5,7 @@
     var name = l.FullName ?? $"{l.FirstName} {l.LastName}".Trim();
     if (string.IsNullOrWhiteSpace(name)) name = "(no name)";
     ViewData["Title"] = name;
-    var where = string.Join(" · ", new[] { l.PreferredLanguage, l.CountryCode, l.City }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    var where = string.Join(" · ", new[] { l.CountryCode, l.City }.Where(x => !string.IsNullOrWhiteSpace(x)));
     var source = string.Join(" · ", new[] { l.Source, l.SourceDetail }.Where(x => !string.IsNullOrWhiteSpace(x)));
 }
 <div class="au-back-header">
@@ -34,7 +34,8 @@
                 <div class="au-detail-row"><dt>Source</dt><dd>@Ui.OrDash(source)</dd></div>
                 <div class="au-detail-row"><dt>Ad campaign</dt><dd>@Ui.OrDash(l.CampaignName)</dd></div>
                 <div class="au-detail-row"><dt>External contact id</dt><dd><span class="au-mono">@Ui.OrDash(l.ExternalContactId)</span></dd></div>
-                <div class="au-detail-row"><dt>Language / country / city</dt><dd>@Ui.OrDash(where)</dd></div>
+                <div class="au-detail-row"><dt>Language</dt><dd>@Ui.OrDash(AppLanguage.ContactLanguage(l.PreferredLanguage))</dd></div>
+                <div class="au-detail-row"><dt>Country / city</dt><dd>@Ui.OrDash(where)</dd></div>
             </dl>
             <dl class="au-detail-rows">
                 <div class="au-detail-row"><dt>Timeline</dt><dd>@Ui.OrDash(l.DesiredTimeline)</dd></div>

@@ -92,7 +92,7 @@
                 {
                     <div class="au-table-scroll">
                         <table class="au-table">
-                            <thead><tr><th>Name</th><th>Membership</th><th>Login</th></tr></thead>
+                            <thead><tr><th>Name</th><th>Membership</th><th>Login</th><th>Language</th></tr></thead>
                             <tbody>
                                 @foreach (var s in Model.Members)
                                 {
@@ -100,6 +100,7 @@
                                         <td><a href="/Members/Details?id=@s.UserId">@(s.FullName ?? s.Email)</a><div class="au-caption">@s.Email</div></td>
                                         <td>@Ui.Badge(s.MembershipActive ? "active" : "inactive")</td>
                                         <td>@Ui.Badge(s.LoginLocked ? "locked" : "active", s.LoginLocked ? "locked" : "can sign in")</td>
+                                        <td>@AppLanguage.ForUser(s.Language)</td>
                                     </tr>
                                 }
                             </tbody>
@@ -144,6 +145,23 @@
                     </div>
                 }
             </section>
+
+            <form class="au-panel au-panel--round au-panel--pad" method="post" asp-page-handler="DefaultLanguage" asp-route-id="@c.Id">
+                <div class="au-panel__head"><h3 class="au-panel__title">Dashboard language</h3></div>
+                <div class="au-form-grid">
+                    <div class="au-form-field">
+                        <label class="au-form-label" for="cl-lang">Default language</label>
+                        <select class="au-select" id="cl-lang" name="language">
+                            @foreach (var lang in AppLanguage.All)
+                            {
+                                <option value="@lang" selected="@(lang == c.DefaultLanguage)">@AppLanguage.Label(lang)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <span class="au-help">What the client's dashboard opens in for users who haven't picked their own language. The client's owner can also change it on Business info. The dashboard shows the change once the client cache clears.</span>
+                <div class="au-form-actions"><button class="au-btn au-btn--primary" type="submit">Save language</button></div>
+            </form>
 
             <form class="au-panel au-panel--round au-panel--pad" method="post" asp-page-handler="InboxSettings" asp-route-id="@c.Id">
                 <div class="au-panel__head"><h3 class="au-panel__title">Inbox settings</h3></div>

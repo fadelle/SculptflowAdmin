@@ -1,6 +1,7 @@
 using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Managers;
 using Omni.Admin.Business.Contracts.Services.Clients;
+using Omni.Admin.Common.Enums;
 using Omni.Admin.Entities.Dtos.BusinessTypes;
 using Omni.Admin.Entities.Dtos.Clients;
 using Omni.Admin.Entities.Requests.Clients;
@@ -51,6 +52,17 @@ public class ClientAdminService : IClientAdminService
         var change = await _api.UpdateInboxSettingsAsync(id, request, ct);
         await _audit.LogAsync("client.inbox_settings_updated", "client", id, change.ClientId,
             new { before = new { before.AiBotNewConversations, before.AiBotReopenedConversations }, after = request }, ct);
+    }
+
+    public async Task SetDefaultLanguageAsync(Guid id, string language, CancellationToken ct = default)
+    {
+        var code = (language ?? "").Trim().ToLowerInvariant();
+        if (!AppLanguage.All.Contains(code)) throw new ArgumentException("Pick English, Arabic or French.");
+        var before = await _api.GetAsync(id, ct) ?? throw new KeyNotFoundException();
+        if (before.DefaultLanguage == code) return;
+        var change = await _api.SetDefaultLanguageAsync(id, code, ct);
+        await _audit.LogAsync("client.default_language_changed", "client", id, change.ClientId,
+            new { from = before.DefaultLanguage, to = code }, ct);
     }
 
     public Task<BusinessTypeChangePreview> PreviewBusinessTypeAsync(Guid id, string toCode, CancellationToken ct = default) =>
