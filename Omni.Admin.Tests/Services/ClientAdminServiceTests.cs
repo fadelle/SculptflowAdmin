@@ -11,7 +11,7 @@ public class ClientAdminServiceTests
     private static readonly Guid Id = Guid.Parse("c1000000-0000-4000-8000-000000000001");
 
     private static readonly ClientDetail English = new(Id, "Demo", "demo", null, null, null, null, "UTC", null, null, null, true,
-        DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "clinic", "en");
+        DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "general", "en");
 
     private readonly Mock<IClientsApiClient> _api = new(MockBehavior.Strict);
     private readonly Mock<IAdminAudit> _audit = new();

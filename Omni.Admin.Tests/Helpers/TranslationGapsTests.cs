@@ -14,9 +14,9 @@ public class TranslationGapsTests
         Dictionary<string, string>? name = null,
         Dictionary<string, IReadOnlyDictionary<string, TermForms>>? terms = null,
         params PipelineStageResponse[] stages) =>
-        new("clinic",
-            name ?? new() { ["en"] = "Clinic", ["ar"] = "عيادة", ["fr"] = "Clinique" },
-            terms ?? new() { ["en"] = Words("patient", "patients"), ["ar"] = Words("مريض", "مرضى"), ["fr"] = Words("patient", "patients") },
+        new("clinic", // leftover-ok: the built-in business type's code and words as test data
+            name ?? new() { ["en"] = "Clinic", ["ar"] = "عيادة", ["fr"] = "Clinique" }, // leftover-ok: the built-in business type's code and words as test data
+            terms ?? new() { ["en"] = Words("patient", "patients"), ["ar"] = Words("مريض", "مرضى"), ["fr"] = Words("patient", "patients") }, // leftover-ok: the built-in business type's code and words as test data
             "", true, 1,
             stages.Length > 0 ? stages : [new("new", "open", new Dictionary<string, string> { ["en"] = "New", ["ar"] = "جديد", ["fr"] = "Nouveau" }, 1)],
             0, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
@@ -41,9 +41,9 @@ public class TranslationGapsTests
     [Fact]
     public void A_blank_form_of_one_word_or_one_blank_stage_label_counts_for_that_language_only()
     {
-        var french = Words("patient", "patients").ToDictionary(p => p.Key, p => p.Value);
+        var french = Words("patient", "patients").ToDictionary(p => p.Key, p => p.Value); // leftover-ok: the built-in business type's code and words as test data
         french[TermName.Booking] = new TermForms("rendez-vous", " ");
-        var type = Type(terms: new() { ["en"] = Words("patient", "patients"), ["ar"] = Words("مريض", "مرضى"), ["fr"] = french },
+        var type = Type(terms: new() { ["en"] = Words("patient", "patients"), ["ar"] = Words("مريض", "مرضى"), ["fr"] = french }, // leftover-ok: the built-in business type's code and words as test data
             stages: new PipelineStageResponse("new", "open", new Dictionary<string, string> { ["en"] = "New", ["ar"] = "", ["fr"] = "Nouveau" }, 1));
 
         var gaps = TranslationGaps.Of(type);

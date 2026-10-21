@@ -37,7 +37,7 @@ public class ClientsApiClientTests
             {"id":"{{ClientId}}","name":"Demo","slug":"demo","phone":null,"email":null,"website":null,"countryCode":null,
              "timezone":"UTC","address":null,"operatingHours":null,"bookingInfo":null,"isActive":true,
              "createdAt":"2026-10-20T07:00:00+00:00","updatedAt":"2026-10-20T07:00:00+00:00",
-             "businessTypeCode":"clinic","defaultLanguage":"fr"}
+             "businessTypeCode":"general","defaultLanguage":"fr"}
             """);
 
         var client = await Client().GetAsync(ClientId, default);
