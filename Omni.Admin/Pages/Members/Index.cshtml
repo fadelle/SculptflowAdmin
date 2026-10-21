@@ -47,3 +47,34 @@
     }
     <partial name="_Pager" model="PagerModel.From(Model.Result)" />
 </div>
+@if (Model.Invites.Count > 0)
+{
+    <section class="au-panel au-panel--round au-panel--pad" style="margin-top:24px">
+    <div class="au-panel__head"><h3 class="au-panel__title">Invites waiting</h3></div>
+    <p class="au-muted" style="font-size:0.8125rem">Sent by the client's account owner. An invite whose link still works holds a seat; cancelling frees it.</p>
+    <div class="au-table-card">
+        <div class="au-table-scroll">
+            <table class="au-table">
+                <thead><tr><th>Email</th><th>Name</th><th>Sent</th><th>Link</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var invite in Model.Invites)
+                    {
+                        <tr>
+                            <td>@invite.Email</td>
+                            <td>@Ui.OrDash(invite.FullName)</td>
+                            <td>@Ui.Time(invite.CreatedAt)</td>
+                            <td>@if (invite.IsExpired) { @Ui.Badge("inactive", "expired") } else { <span>works until @Ui.Time(invite.ExpiresAt)</span> }</td>
+                            <td>
+                                <form method="post" asp-page-handler="RevokeInvite" asp-route-clientId="@Model.ClientId">
+                                    <input type="hidden" name="inviteId" value="@invite.Id" />
+                                    <button class="au-btn au-btn--danger-outlined au-btn--sm" type="submit" data-confirm="Cancel the invite to @invite.Email?">Cancel invite</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </section>
+}

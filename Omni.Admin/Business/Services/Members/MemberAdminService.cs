@@ -2,6 +2,7 @@ using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Managers;
 using Omni.Admin.Business.Contracts.Services.Members;
 using Omni.Admin.Entities.Dtos.Members;
+using Omni.Admin.Entities.Responses.Members;
 using Omni.Admin.Entities.Responses.Paging;
 
 namespace Omni.Admin.Business.Services.Members;
@@ -44,5 +45,19 @@ public class MemberAdminService : IMemberAdminService
     {
         var change = await _api.SetEmailConfirmedAsync(userId, confirmed, ct);
         await _audit.LogAsync(confirmed ? "member.email_confirmed" : "member.email_unconfirmed", "identity_user", userId, change.ClientId, ct: ct);
+    }
+
+    public async Task SendPasswordResetEmailAsync(string userId, CancellationToken ct = default)
+    {
+        var change = await _api.SendPasswordResetEmailAsync(userId, ct);
+        await _audit.LogAsync("member.password_reset_email_sent", "identity_user", userId, change.ClientId, ct: ct);
+    }
+
+    public Task<IReadOnlyList<InviteResponse>> ListInvitesAsync(Guid clientId, CancellationToken ct = default) => _api.ListInvitesAsync(clientId, ct);
+
+    public async Task RevokeInviteAsync(Guid inviteId, CancellationToken ct = default)
+    {
+        var change = await _api.RevokeInviteAsync(inviteId, ct);
+        await _audit.LogAsync("member.invite_revoked", "member_invite", inviteId.ToString(), change.ClientId, ct: ct);
     }
 }

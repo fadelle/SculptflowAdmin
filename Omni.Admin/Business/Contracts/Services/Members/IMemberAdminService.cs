@@ -1,4 +1,5 @@
 using Omni.Admin.Entities.Dtos.Members;
+using Omni.Admin.Entities.Responses.Members;
 using Omni.Admin.Entities.Responses.Paging;
 
 namespace Omni.Admin.Business.Contracts.Services.Members;
@@ -18,4 +19,11 @@ public interface IMemberAdminService
     Task SetPasswordAsync(string userId, string password, CancellationToken ct = default);
 
     Task SetEmailConfirmedAsync(string userId, bool confirmed, CancellationToken ct = default);
+
+    /// <summary>The main app emails a one-time reset link (the person chooses the password themselves).</summary>
+    Task SendPasswordResetEmailAsync(string userId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<InviteResponse>> ListInvitesAsync(Guid clientId, CancellationToken ct = default);
+
+    Task RevokeInviteAsync(Guid inviteId, CancellationToken ct = default);
 }

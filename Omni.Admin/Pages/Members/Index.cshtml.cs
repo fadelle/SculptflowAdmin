@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Omni.Admin.Business.Contracts.Services.Members;
 using Omni.Admin.Common.Enums;
 using Omni.Admin.Entities.Dtos.Members;
+using Omni.Admin.Entities.Responses.Members;
 using Omni.Admin.Entities.Responses.Paging;
 using Omni.Admin.Pages.Shared;
 
@@ -23,10 +24,16 @@ public class IndexModel : AdminPageModel
     [BindProperty(SupportsGet = true)] public string? Q { get; set; }
     [BindProperty(SupportsGet = true, Name = "p")] public int PageNumber { get; set; } = 1;
     public PagedResult<MemberRow> Result { get; private set; } = null!;
+    /// <summary>The client's invites waiting to be accepted; only loaded when one client is shown.</summary>
+    public IReadOnlyList<InviteResponse> Invites { get; private set; } = [];
 
     public async Task OnGetAsync(CancellationToken ct)
     {
         ClientId ??= _scope.FilterGuid; // the header's client scope when the URL names none
         Result = await _members.ListAsync(ClientId, Q, PageNumber, ct);
+        if (ClientId is { } clientId) Invites = await _members.ListInvitesAsync(clientId, ct);
     }
+
+    public Task<IActionResult> OnPostRevokeInviteAsync(Guid inviteId, CancellationToken ct) =>
+        RunAsync(() => _members.RevokeInviteAsync(inviteId, ct), "Invite cancelled. Its link no longer works.", new { clientId = ClientId });
 }

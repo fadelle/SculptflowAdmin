@@ -33,6 +33,9 @@ public class DetailsModel : AdminPageModel
     public Task<IActionResult> OnPostPasswordAsync(string password, CancellationToken ct) =>
         RunAsync(() => _members.SetPasswordAsync(Id, password, ct), "Password changed. Tell the user their new password.", new { id = Id });
 
+    public Task<IActionResult> OnPostResetEmailAsync(CancellationToken ct) =>
+        RunAsync(() => _members.SendPasswordResetEmailAsync(Id, ct), "Password reset link emailed. It works once, for the time set in Accounts:ResetLinkMinutes.", new { id = Id });
+
     public Task<IActionResult> OnPostEmailConfirmedAsync(bool confirmed, CancellationToken ct) =>
         RunAsync(() => _members.SetEmailConfirmedAsync(Id, confirmed, ct), "Email confirmation updated.", new { id = Id });
 }

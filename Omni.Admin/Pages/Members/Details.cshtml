@@ -54,6 +54,9 @@
                 <input type="hidden" name="confirmed" value="@(!s.EmailConfirmed ? "true" : "false")" />
                 <button class="au-btn au-btn--outlined" type="submit">@(s.EmailConfirmed ? "Mark email unconfirmed" : "Mark email confirmed")</button>
             </form>
+            <form method="post" asp-page-handler="ResetEmail" asp-route-id="@s.UserId">
+                <button class="au-btn au-btn--outlined" type="submit" data-confirm="Email @s.Email a link to choose a new password?">Email a reset link</button>
+            </form>
             <button class="au-btn au-btn--outlined" type="button" data-open="set-password"><span class="au-icon" aria-hidden="true">password</span>Set password</button>
         </div>
     </section>

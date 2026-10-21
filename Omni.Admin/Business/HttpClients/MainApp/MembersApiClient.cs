@@ -5,6 +5,7 @@ using Omni.Admin.Entities.Dtos.Members;
 using Omni.Admin.Entities.Requests.Content;
 using Omni.Admin.Entities.Requests.PlatformAdmin;
 using Omni.Admin.Entities.Requests.Members;
+using Omni.Admin.Entities.Responses.Members;
 using Omni.Admin.Entities.Responses.Paging;
 using Omni.Admin.Entities.Responses.PlatformAdmin;
 
@@ -36,4 +37,13 @@ public class MembersApiClient : MainAppApiClient, IMembersApiClient
 
     public Task<PlatformAdminChange> SetEmailConfirmedAsync(string userId, bool confirmed, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{Esc(userId)}/email-confirmed", new FlagBody(confirmed), null, false, ct);
+
+    public Task<PlatformAdminChange> SendPasswordResetEmailAsync(string userId, CancellationToken ct) =>
+        WriteForAsync<PlatformAdminChange>(HttpMethod.Post, $"/{Esc(userId)}/password-reset-email", null, null, false, ct);
+
+    public async Task<IReadOnlyList<InviteResponse>> ListInvitesAsync(Guid clientId, CancellationToken ct) =>
+        await GetRequiredAsync<List<InviteResponse>>("/invites" + Query(("clientId", clientId)), ct);
+
+    public Task<PlatformAdminChange> RevokeInviteAsync(Guid inviteId, CancellationToken ct) =>
+        WriteForAsync<PlatformAdminChange>(HttpMethod.Delete, $"/invites/{inviteId}", null, null, false, ct);
 }
