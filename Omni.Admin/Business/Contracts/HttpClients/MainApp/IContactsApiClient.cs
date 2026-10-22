@@ -15,6 +15,12 @@ public interface IContactsApiClient
 
     Task<PlatformAdminChange> UpdateContactAsync(Guid id, ContactUpdate update, CancellationToken ct);
 
+    /// <summary>Everything the main app holds about the contact, as indented JSON (passed through, not copied); null when unknown.</summary>
+    Task<string?> ExportContactAsync(Guid id, CancellationToken ct);
+
+    /// <summary>Deletes the contact and all its data in the main app, for good.</summary>
+    Task<PlatformAdminChange> DeleteContactAsync(Guid id, CancellationToken ct);
+
     Task<PagedResult<ConversationRow>> ListConversationsAsync(Guid? clientId, Guid? contactId, string? channel, string? mode, string? status,
         int page, CancellationToken ct);
 

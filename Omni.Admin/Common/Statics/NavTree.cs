@@ -42,6 +42,7 @@ public static class NavTree
                 new NavItem("Billing accounts", "account_balance_wallet", "/Billing", Exact: true,
                     Aliases: new[] { "/Billing/Index", "/Billing/Client" }),
                 new NavItem("Plans", "layers", "/Billing/Plans"),
+                new NavItem("Add-ons", "extension", "/Billing/Addons"),
                 new NavItem("Rate cards", "request_quote", "/Billing/RateCards", Aliases: new[] { "/Billing/Rates" }),
                 new NavItem("Revenue report", "monitoring", "/Billing/Report"),
             }),

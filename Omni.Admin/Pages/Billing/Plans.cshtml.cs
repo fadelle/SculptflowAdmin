@@ -32,12 +32,12 @@ public class PlansModel : MainAppPageModel
     }
 
     public Task<IActionResult> OnPostSaveAsync(string? originalCode, string? code, string? name, string? description, decimal price,
-        string? billingPeriod, decimal includedUsageCredit, string? rateCardCode, bool isActive, int sortOrder, CancellationToken ct) =>
+        string? billingPeriod, decimal includedUsageCredit, string? rateCardCode, bool isActive, int sortOrder, int? trialDays, CancellationToken ct) =>
         RunAsync(async () =>
         {
             var entitlements = ReadEntitlements(await _billing.EntitlementsAsync(ct));
             var request = new PlanRequest((originalCode ?? code ?? "").Trim(), (name ?? "").Trim(), Clean(description), price,
-                billingPeriod ?? "month", includedUsageCredit, Clean(rateCardCode), isActive, sortOrder, entitlements);
+                billingPeriod ?? "month", includedUsageCredit, Clean(rateCardCode), isActive, sortOrder, entitlements, trialDays);
             if (string.IsNullOrWhiteSpace(originalCode)) await _billing.CreatePlanAsync(request, ct);
             else await _billing.UpdatePlanAsync(originalCode, request, ct);
         }, string.IsNullOrWhiteSpace(originalCode) ? "Plan created." : "Plan saved. Price and credit changes apply from each subscriber's next renewal.",

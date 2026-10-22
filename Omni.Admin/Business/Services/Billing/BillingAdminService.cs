@@ -37,6 +37,7 @@ public class BillingAdminService : IBillingAdminService
     public Task<List<PlanResponse>> PlansAsync(CancellationToken ct) => _api.PlansAsync(ct);
     public Task<PlanResponse?> PlanAsync(string code, CancellationToken ct) => _api.PlanAsync(code, ct);
     public Task<List<EntitlementDefinition>> EntitlementsAsync(CancellationToken ct) => _api.EntitlementsAsync(ct);
+    public Task<List<AddonResponse>> AddonsAsync(CancellationToken ct) => _api.AddonsAsync(ct);
     public Task<List<RateCardResponse>> RateCardsAsync(CancellationToken ct) => _api.RateCardsAsync(ct);
     public Task<List<RateResponse>?> RatesAsync(string code, bool history, CancellationToken ct) => _api.RatesAsync(code, history, ct);
     public Task<ProviderBillingModes> ProviderBillingModesAsync(CancellationToken ct) => _api.ProviderBillingModesAsync(ct);
@@ -65,6 +66,20 @@ public class BillingAdminService : IBillingAdminService
     {
         await _api.UpdatePlanAsync(code, r, ct);
         await _audit.LogAsync("billing.plan_update", "billing_plan", code, null, r, ct);
+    }
+
+    public async Task SaveAddonAsync(string code, AddonRequest r, CancellationToken ct)
+    {
+        await _api.SaveAddonAsync(code, r, ct);
+        await _audit.LogAsync("billing.addon_save", "billing_addon", code, null, r, ct);
+    }
+
+    public async Task SetClientAddonAsync(Guid clientId, string code, int quantity, string opId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(code)) throw new ArgumentException("Choose an add-on.");
+        if (quantity < 0) throw new ArgumentException("Units can't be negative (0 removes the add-on).");
+        await _api.SetClientAddonAsync(clientId, code.Trim(), new SetClientAddonRequest(quantity), opId, ct);
+        await _audit.LogAsync("billing.client_addon_set", "billing_client_addon", code.Trim(), clientId, new { quantity }, ct);
     }
 
     public async Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct)

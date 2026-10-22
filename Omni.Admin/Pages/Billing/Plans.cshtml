@@ -35,7 +35,7 @@
                         {
                             <tr>
                                 <td><span class="au-strong">@p.Name</span> <div class="au-caption"><span class="au-mono">@p.Code</span>@if (p.Description is not null) { <text> · @p.Description</text> }</div></td>
-                                <td class="au-right">@BillingUi.Money(p.Price, p.Currency) <div class="au-caption">per @p.BillingPeriod</div></td>
+                                <td class="au-right">@BillingUi.Money(p.Price, p.Currency) <div class="au-caption">@(p.TrialDays is int days ? $"free trial · {days} days, no renewal" : $"per {p.BillingPeriod}")</div></td>
                                 <td class="au-right">@BillingUi.Money(p.IncludedUsageCredit)</td>
                                 <td>@if (p.RateCardCode is null) { <span class="au-muted">default</span> } else { <a href="/Billing/Rates?code=@p.RateCardCode">@p.RateCardCode</a> }</td>
                                 <td class="au-wrap" style="min-width:260px">
@@ -77,6 +77,7 @@
                     <div class="au-form-field"><label class="au-form-label" for="pl-desc">Description (optional)</label><input class="au-input" id="pl-desc" name="description" value="@e?.Description" maxlength="500" /></div>
                     <div class="au-form-field"><label class="au-form-label" for="pl-credit">Included usage credit per period<span class="au-required">*</span></label><input class="au-input" id="pl-credit" type="number" name="includedUsageCredit" min="0" step="0.01" value="@(e is null ? "0" : BillingUi.Input(e.IncludedUsageCredit))" required /><span class="au-help">Money, spent before the wallet.</span></div>
                     <div class="au-form-field"><label class="au-form-label" for="pl-sort">Sort order</label><input class="au-input" id="pl-sort" type="number" name="sortOrder" value="@(e?.SortOrder ?? 0)" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="pl-trial">Free trial days (optional)</label><input class="au-input" id="pl-trial" type="number" name="trialDays" min="1" max="90" value="@e?.TrialDays" /><span class="au-help">Blank = a normal plan. A trial costs 0, lasts this many days and then ends instead of renewing.</span></div>
                     <div class="au-form-field"><label class="au-form-label" for="pl-card">Rate card</label>
                         <select class="au-select" id="pl-card" name="rateCardCode"><option value="">Default card</option>
                             @foreach (var rc in Model.RateCards.Where(c => c.ClientId is null && !c.IsDefault)) { <option value="@rc.Code" selected="@(rc.Code == e?.RateCardCode)">@rc.Name (@rc.Code)</option> }

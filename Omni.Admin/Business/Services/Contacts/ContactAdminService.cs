@@ -51,6 +51,37 @@ public class ContactAdminService : IContactAdminService
             new { before = new { before.StageKey, before.Qualification, before.MarketingOptIn, before.Notes }, after = update }, ct);
     }
 
+    public async Task<string?> ExportContactAsync(Guid id, CancellationToken ct = default)
+    {
+        // Read the contact first so the audit entry is filed under its client.
+        if (await _api.GetContactAsync(id, ct) is not { } contact) return null;
+        var json = await _api.ExportContactAsync(id, ct);
+        if (json is not null) await _audit.LogAsync("contact.exported", "contact", id, contact.ClientId, null, ct);
+        return json;
+    }
+
+    public async Task<Guid> DeleteContactAsync(Guid id, string? confirmation, CancellationToken ct = default)
+    {
+        var contact = await _api.GetContactAsync(id, ct) ?? throw new KeyNotFoundException();
+        var expected = ConfirmationWord(contact);
+        if (!string.Equals(Normalize(confirmation), Normalize(expected), StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException($"Type \"{expected}\" to confirm the delete.");
+        var change = await _api.DeleteContactAsync(id, ct);
+        await _audit.LogAsync("contact.deleted", "contact", id, change.ClientId, new { name = DisplayName(contact), contact.Phone }, ct);
+        return change.ClientId ?? contact.ClientId;
+    }
+
+    /// <summary>What the admin types to confirm a delete: the contact's name, or "delete" when it has none.</summary>
+    public static string ConfirmationWord(ContactDetail contact) => DisplayName(contact) ?? "delete";
+
+    private static string? DisplayName(ContactDetail c)
+    {
+        var name = c.FullName ?? $"{c.FirstName} {c.LastName}".Trim();
+        return string.IsNullOrWhiteSpace(name) ? null : name.Trim();
+    }
+
+    private static string Normalize(string? value) => string.Join(' ', (value ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
     public async Task SetModeAsync(Guid id, string mode, CancellationToken ct = default)
     {
         var change = await _api.SetModeAsync(id, mode, ct);

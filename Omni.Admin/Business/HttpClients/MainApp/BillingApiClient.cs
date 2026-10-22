@@ -30,6 +30,9 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
     public Task<List<PlanResponse>> PlansAsync(CancellationToken ct) => GetRequiredAsync<List<PlanResponse>>("plans", ct);
     public Task<PlanResponse?> PlanAsync(string code, CancellationToken ct) => GetAsync<PlanResponse>($"plans/{Esc(code)}", ct);
     public Task<List<EntitlementDefinition>> EntitlementsAsync(CancellationToken ct) => GetRequiredAsync<List<EntitlementDefinition>>("entitlements", ct);
+    public Task<List<AddonResponse>> AddonsAsync(CancellationToken ct) => GetRequiredAsync<List<AddonResponse>>("addons", ct);
+    public Task<List<ClientAddonRow>> ClientAddonsAsync(Guid clientId, CancellationToken ct) =>
+        GetRequiredAsync<List<ClientAddonRow>>($"clients/{clientId}/addons", ct);
     public Task<List<RateCardResponse>> RateCardsAsync(CancellationToken ct) => GetRequiredAsync<List<RateCardResponse>>("rate-cards", ct);
     public Task<List<RateResponse>?> RatesAsync(string code, bool history, CancellationToken ct) =>
         GetAsync<List<RateResponse>>($"rate-cards/{Esc(code)}/rates?history={(history ? "true" : "false")}", ct);
@@ -63,6 +66,12 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
 
     public Task UpdatePlanAsync(string code, PlanRequest r, CancellationToken ct) =>
         WriteAsync(HttpMethod.Put, $"plans/{Esc(code)}", r, null, false, ct);
+
+    public Task SaveAddonAsync(string code, AddonRequest r, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Put, $"addons/{Esc(code)}", r, null, true, ct);
+
+    public Task<List<ClientAddonRow>> SetClientAddonAsync(Guid clientId, string code, SetClientAddonRequest r, string opId, CancellationToken ct) =>
+        WriteForAsync<List<ClientAddonRow>>(HttpMethod.Put, $"clients/{clientId}/addons/{Esc(code)}", r, opId, false, ct);
 
     public Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct) =>
         WriteAsync(HttpMethod.Post, "rate-cards", r, null, true, ct);

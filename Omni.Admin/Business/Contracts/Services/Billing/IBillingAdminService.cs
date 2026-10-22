@@ -24,6 +24,8 @@ public interface IBillingAdminService
 
     Task<List<EntitlementDefinition>> EntitlementsAsync(CancellationToken ct);
 
+    Task<List<AddonResponse>> AddonsAsync(CancellationToken ct);
+
     Task<List<RateCardResponse>> RateCardsAsync(CancellationToken ct);
 
     Task<List<RateResponse>?> RatesAsync(string code, bool history, CancellationToken ct);
@@ -45,6 +47,11 @@ public interface IBillingAdminService
     Task CreatePlanAsync(PlanRequest r, CancellationToken ct);
 
     Task UpdatePlanAsync(string code, PlanRequest r, CancellationToken ct);
+
+    Task SaveAddonAsync(string code, AddonRequest r, CancellationToken ct);
+
+    /// <summary>Sets a client's units of an add-on (0 removes it; added units are charged from the wallet now).</summary>
+    Task SetClientAddonAsync(Guid clientId, string code, int quantity, string opId, CancellationToken ct);
 
     Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct);
 

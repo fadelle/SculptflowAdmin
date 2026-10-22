@@ -69,6 +69,7 @@
                                 <div class="au-detail-row"><dt>Plan</dt><dd>@sub.PlanName <span class="au-caption au-mono">@sub.PlanCode</span></dd></div>
                                 <div class="au-detail-row"><dt>Status</dt><dd>@Ui.Badge(sub.Status) @if (sub.CancelAtPeriodEnd) { @Ui.Badge("pending", "ends at period end") }</dd></div>
                                 <div class="au-detail-row"><dt>Current period</dt><dd>@Ui.Time(sub.CurrentPeriodStart) → @Ui.Time(sub.CurrentPeriodEnd)</dd></div>
+                                @if (s.TrialDays is int trialDays) { <div class="au-detail-row"><dt>Free trial</dt><dd>@trialDays days; it ends at the period end instead of renewing. Start a paid plan before then.</dd></div> }
                                 @if (sub.PastDueSince is not null) { <div class="au-detail-row"><dt>Past due since</dt><dd>@Ui.Time(sub.PastDueSince) · grace ends @Ui.Time(s.GraceEndsAt)</dd></div> }
                                 @if (sub.EndedAt is not null) { <div class="au-detail-row"><dt>Ended</dt><dd>@Ui.Time(sub.EndedAt)</dd></div> }
                                 @if (o.CustomRateCardCode is not null) { <div class="au-detail-row"><dt>Custom prices</dt><dd><a href="/Billing/Rates?code=@o.CustomRateCardCode">@o.CustomRateCardCode</a></dd></div> }
@@ -111,6 +112,29 @@
                 </div>
 
                 <div class="au-stack">
+                    <section class="au-table-card">
+                        <div class="au-panel__head"><h3 class="au-panel__title">Add-ons</h3><button class="au-btn au-btn--outlined au-btn--sm" type="button" data-open="set-addon"><span class="au-icon" aria-hidden="true">extension</span>Change add-ons</button></div>
+                        @if (s.Addons is not { Count: > 0 } addons)
+                        {
+                            var noAddons = new EmptyStateModel("No add-ons: the plan's limits apply as they are.", "extension");
+                            <partial name="_EmptyState" model="noAddons" />
+                        }
+                        else
+                        {
+                            <div class="au-table-scroll">
+                                <table class="au-table">
+                                    <thead><tr><th>Add-on</th><th class="au-right">Units</th><th class="au-right">Per period</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var a in addons)
+                                        {
+                                            <tr><td>@a.Name <div class="au-caption au-mono">@a.EntitlementKey</div></td><td class="au-right">+@a.Quantity</td><td class="au-right">@BillingUi.Money(a.PeriodPrice, a.Currency) <div class="au-caption">@BillingUi.Money(a.UnitPrice) each</div></td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </section>
+
                     <section class="au-table-card">
                         <div class="au-panel__head"><h3 class="au-panel__title">Recent transactions</h3>@if (s.RecentTransactions.Count > 0) { <a class="au-panel__link" href="@TabUrl("ledger")">Full ledger →</a> }</div>
                         @if (s.RecentTransactions.Count == 0)
@@ -303,7 +327,7 @@
                                 <option value="">Choose…</option>
                                 @foreach (var p in Model.Plans.Where(p => p.IsActive))
                                 {
-                                    <option value="@p.Code" selected="@(p.Code == sub?.PlanCode)">@p.Name (@p.Code): @BillingUi.Money(p.Price, p.Currency) / @p.BillingPeriod, credit @BillingUi.Money(p.IncludedUsageCredit)</option>
+                                    <option value="@p.Code" selected="@(p.Code == sub?.PlanCode)">@p.Name (@p.Code): @(p.TrialDays is int days ? $"{days}-day free trial" : $"{BillingUi.Money(p.Price, p.Currency)} / {p.BillingPeriod}"), credit @BillingUi.Money(p.IncludedUsageCredit)</option>
                                 }
                             </select>
                         </div>
@@ -312,6 +336,28 @@
                     </div>
                 </div>
                 <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Start this plan for @o.ClientName now?">@(sub is null ? "Start plan" : "Change plan")</button></div>
+            </form>
+        </dialog>
+        <dialog class="au-dialog au-dialog--sm" id="set-addon" aria-labelledby="set-addon-title">
+            <form method="post" asp-page-handler="SetAddon" asp-route-id="@Model.Id">
+                <h2 class="au-dialog__title" id="set-addon-title">Change add-ons<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+                <div class="au-dialog__content">
+                    <p class="au-help" style="margin-bottom:16px">Sets how many units of an add-on the client has. Added units are charged from the wallet now (no proration), and every period charges the plan and its add-ons together. Fewer units refund nothing; 0 removes the add-on. Needs an active subscription.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="au-stack" style="--au-gap:16px">
+                        <div class="au-form-field"><label class="au-form-label" for="sa-code">Add-on<span class="au-required">*</span></label>
+                            <select class="au-select" id="sa-code" name="addonCode" required>
+                                <option value="">Choose…</option>
+                                @foreach (var a in Model.Addons.Where(a => a.IsActive || s.Addons?.Any(x => x.Code == a.Code) == true).OrderBy(a => a.SortOrder))
+                                {
+                                    var has = s.Addons?.FirstOrDefault(x => x.Code == a.Code)?.Quantity ?? 0;
+                                    <option value="@a.Code">@a.Name: @BillingUi.Money(a.UnitPrice, a.Currency) per unit · has @has</option>
+                                }
+                            </select></div>
+                        <div class="au-form-field"><label class="au-form-label" for="sa-qty">Units in total<span class="au-required">*</span></label><input class="au-input" id="sa-qty" type="number" name="quantity" min="0" max="1000" step="1" value="1" required /></div>
+                    </div>
+                </div>
+                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Set these add-on units for @o.ClientName? Added units are charged from the wallet now.">Set units</button></div>
             </form>
         </dialog>
         <dialog class="au-dialog" id="top-up" aria-labelledby="top-up-title">

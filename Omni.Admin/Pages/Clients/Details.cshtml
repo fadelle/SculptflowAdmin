@@ -171,6 +171,10 @@
                         <div class="au-detail-row"><dt>Plan includes the AI agent</dt><dd>@(bot.PlanIncludesAiBot ? "Yes" : "No: every conversation goes to a member")</dd></div>
                         <div class="au-detail-row"><dt>New conversations</dt><dd>@(bot.AiBotAnswersNew ? "AI bot answers" : "Go to a member")</dd></div>
                         <div class="au-detail-row"><dt>Reopened conversations</dt><dd>@(bot.AiBotAnswersReopened ? "AI bot keeps answering" : "Go to a member")</dd></div>
+                        @if (bot.PlanIncludesAiBot)
+                        {
+                            <div class="au-detail-row"><dt>AI bots</dt><dd>@(bot.AiBotLimit is int limit ? $"{limit} (plan + add-ons)" : "No limit")@if (bot.ChannelsWithoutAiBot is { Count: > 0 } without) { <div class="au-caption au-text-error">No AI on @string.Join(", ", without): those conversations go to a member. Add an AI bot add-on on its billing page.</div> }</dd></div>
+                        }
                     </dl>
                     <div class="au-form-grid">
                         <label class="au-check au-span-2"><input type="checkbox" class="au-switch" role="switch" name="newConversations" value="true" checked="@bot.AiBotNewConversations" /> AI bot answers new conversations</label>

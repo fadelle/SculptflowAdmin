@@ -31,6 +31,7 @@ public class ClientModel : MainAppPageModel
 
     public AdminBillingOverview? Overview { get; private set; }
     public List<PlanResponse> Plans { get; private set; } = new();
+    public List<AddonResponse> Addons { get; private set; } = new();
     public ProviderBillingModes? Modes { get; private set; }
     public PagedResponse<AdminUsageRow>? Usage { get; private set; }
     public PagedResponse<AdminLedgerRow>? Ledger { get; private set; }
@@ -53,6 +54,7 @@ public class ClientModel : MainAppPageModel
             if (Tab == "overview")
             {
                 Plans = await _billing.PlansAsync(ct);
+                Addons = await _billing.AddonsAsync(ct);
                 Modes = await _billing.ProviderBillingModesAsync(ct);
                 if (!string.IsNullOrWhiteSpace(QuoteEvent))
                 {
@@ -74,6 +76,10 @@ public class ClientModel : MainAppPageModel
             if (string.IsNullOrWhiteSpace(planCode)) throw new ArgumentException("Choose a plan.");
             return _billing.StartSubscriptionAsync(Id, new StartSubscriptionApiRequest(planCode.Trim(), chargeFirstPeriod, Clean(reason)), opId ?? "", ct);
         }, chargeFirstPeriod ? "Plan started; its price was charged from the wallet." : "Plan started without charging the first period.", Back);
+
+    public Task<IActionResult> OnPostSetAddonAsync(string? addonCode, int quantity, string? opId, CancellationToken ct) =>
+        RunAsync(() => _billing.SetClientAddonAsync(Id, addonCode ?? "", quantity, opId ?? "", ct),
+            quantity == 0 ? "Add-on removed (nothing is refunded)." : "Add-on units set. Added units were charged from the wallet.", Back);
 
     public Task<IActionResult> OnPostCancelAsync(bool immediately, string? reason, CancellationToken ct) =>
         RunAsync(() => _billing.CancelSubscriptionAsync(Id, new CancelSubscriptionRequest(immediately, Clean(reason)), ct),

@@ -1,3 +1,6 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
 using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Common.Configs;
@@ -28,6 +31,15 @@ public class ContactsApiClient : MainAppApiClient, IContactsApiClient
 
     public Task<PlatformAdminChange> UpdateContactAsync(Guid id, ContactUpdate update, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}", update, null, false, ct);
+
+    // A file for a person to read: indented, with Arabic, accents and "+" written as they are (not \u-escaped).
+    private static readonly JsonSerializerOptions Indented = new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+    public async Task<string?> ExportContactAsync(Guid id, CancellationToken ct) =>
+        (await GetAsync<JsonNode>($"/{id}/export", ct))?.ToJsonString(Indented);
+
+    public Task<PlatformAdminChange> DeleteContactAsync(Guid id, CancellationToken ct) =>
+        WriteForAsync<PlatformAdminChange>(HttpMethod.Delete, $"/{id}", null, null, false, ct);
 
     public Task<PagedResult<ConversationRow>> ListConversationsAsync(Guid? clientId, Guid? contactId, string? channel, string? mode,
         string? status, int page, CancellationToken ct) =>

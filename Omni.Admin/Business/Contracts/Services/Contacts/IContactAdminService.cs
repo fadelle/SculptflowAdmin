@@ -29,6 +29,14 @@ public interface IContactAdminService
 
     Task UpdateContactAsync(Guid id, ContactUpdate update, CancellationToken ct = default);
 
+    /// <summary>The contact's data as JSON for a privacy request (audited); null when the contact doesn't exist.</summary>
+    Task<string?> ExportContactAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Deletes the contact and all its data for good (audited with its name), once <paramref name="confirmation"/>
+    /// is its name (or "delete" for a contact without one): ArgumentException otherwise, KeyNotFoundException when it's
+    /// gone. Returns the contact's client.</summary>
+    Task<Guid> DeleteContactAsync(Guid id, string? confirmation, CancellationToken ct = default);
+
     Task SetModeAsync(Guid id, string mode, CancellationToken ct = default);
 
     Task SetStatusAsync(Guid id, string status, CancellationToken ct = default);

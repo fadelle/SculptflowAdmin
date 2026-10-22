@@ -17,6 +17,10 @@ public interface IBillingApiClient
 
     Task<List<EntitlementDefinition>> EntitlementsAsync(CancellationToken ct);
 
+    Task<List<AddonResponse>> AddonsAsync(CancellationToken ct);
+
+    Task<List<ClientAddonRow>> ClientAddonsAsync(Guid clientId, CancellationToken ct);
+
     Task<List<RateCardResponse>> RateCardsAsync(CancellationToken ct);
 
     Task<List<RateResponse>?> RatesAsync(string code, bool history, CancellationToken ct);
@@ -38,6 +42,12 @@ public interface IBillingApiClient
     Task CreatePlanAsync(PlanRequest r, CancellationToken ct);
 
     Task UpdatePlanAsync(string code, PlanRequest r, CancellationToken ct);
+
+    /// <summary>Creates or changes a catalog add-on.</summary>
+    Task SaveAddonAsync(string code, AddonRequest r, CancellationToken ct);
+
+    /// <summary>Sets a client's units of an add-on; added units are charged now, so it carries an Idempotency-Key.</summary>
+    Task<List<ClientAddonRow>> SetClientAddonAsync(Guid clientId, string code, SetClientAddonRequest r, string opId, CancellationToken ct);
 
     Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct);
 

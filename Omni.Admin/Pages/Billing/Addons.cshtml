@@ -1,0 +1,74 @@
+@page
+@model Omni.Admin.Pages.Billing.AddonsModel
+@{
+    ViewData["Title"] = "Add-ons";
+    var e = Model.Editing;
+}
+<div class="au-page-head">
+    <p class="au-page-head__sub">Extra units of a plan limit a client can pay for on top of its plan. A client's limit is its plan's value plus its units; added units are charged from the wallet at once, and every period charges the plan and its add-ons together. Set a client's units on its billing page.</p>
+    @if (Model.LoadError is null)
+    {
+        <div class="au-page-head__actions">
+            @if (e is null) { <button class="au-btn au-btn--primary" type="button" data-open="addon-form"><span class="au-icon" aria-hidden="true">add</span>New add-on</button> }
+            else { <a class="au-btn au-btn--primary" href="/Billing/Addons?new=1"><span class="au-icon" aria-hidden="true">add</span>New add-on</a> }
+        </div>
+    }
+</div>
+
+@if (Model.LoadError is null)
+{
+    <div class="au-table-card">
+        @if (Model.Addons.Count == 0)
+        {
+            var empty = new EmptyStateModel("No add-ons yet. Run Database/seed-billing.sql in the main app, or use “New add-on”.", "extension");
+            <partial name="_EmptyState" model="empty" />
+        }
+        else
+        {
+            <div class="au-table-scroll">
+                <table class="au-table">
+                    <thead><tr><th>Add-on</th><th>Raises</th><th class="au-right">Price per unit and period</th><th class="au-right">Clients</th><th>Status</th><th class="au-shrink"></th></tr></thead>
+                    <tbody>
+                        @foreach (var a in Model.Addons.OrderBy(a => a.SortOrder).ThenBy(a => a.Name))
+                        {
+                            <tr>
+                                <td><span class="au-strong">@a.Name</span> <div class="au-caption au-mono">@a.Code</div></td>
+                                <td>@Model.LimitLabel(a.EntitlementKey) <div class="au-caption au-mono">@a.EntitlementKey</div></td>
+                                <td class="au-right">@BillingUi.Money(a.UnitPrice, a.Currency)</td>
+                                <td class="au-right">@a.Clients</td>
+                                <td>@Ui.Badge(a.IsActive ? "active" : "inactive")</td>
+                                <td><a class="au-btn au-btn--outlined au-btn--sm" href="/Billing/Addons?edit=@a.Code"><span class="au-icon" aria-hidden="true">edit</span>Edit</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <dialog class="au-dialog au-dialog--sm" id="addon-form" aria-labelledby="addon-form-title" @(e is not null || Request.Query["new"] == "1" ? "data-autoopen" : "")>
+        <form method="post" asp-page-handler="Save">
+            <h2 class="au-dialog__title" id="addon-form-title">@(e is null ? "New add-on" : $"Edit {e.Name}")<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+            <div class="au-dialog__content">
+                @if (e is not null)
+                {
+                    <input type="hidden" name="originalCode" value="@e.Code" />
+                    <p class="au-help" style="margin-bottom:16px">The code and the limit it raises can't change. A new price applies from each client's next period; switching it off stops new units, existing ones stay.</p>
+                }
+                <div class="au-stack" style="--au-gap:16px">
+                    <div class="au-form-field"><label class="au-form-label" for="ad-code">Code (lowercase, e.g. extra-user)<span class="au-required">*</span></label><input class="au-input" id="ad-code" name="code" value="@e?.Code" required pattern="[a-z0-9_\-]+" maxlength="50" disabled="@(e is not null)" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ad-name">Name<span class="au-required">*</span></label><input class="au-input" id="ad-name" name="name" value="@e?.Name" required maxlength="100" /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ad-key">Raises<span class="au-required">*</span></label>
+                        <select class="au-select" id="ad-key" name="entitlementKey" required disabled="@(e is not null)">
+                            <option value="">Choose a limit…</option>
+                            @foreach (var l in Model.Limits) { <option value="@l.Key" selected="@(l.Key == e?.EntitlementKey)">@l.Label (@l.Key)</option> }
+                        </select><span class="au-help">One add-on per limit.</span></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ad-price">Price per unit and period<span class="au-required">*</span></label><input class="au-input" id="ad-price" type="number" name="unitPrice" min="0" step="0.01" value="@(e is null ? "0" : BillingUi.Input(e.UnitPrice))" required /></div>
+                    <div class="au-form-field"><label class="au-form-label" for="ad-sort">Sort order</label><input class="au-input" id="ad-sort" type="number" name="sortOrder" value="@(e?.SortOrder ?? 0)" /></div>
+                    <label class="au-check"><input type="checkbox" name="isActive" value="true" checked="@(e?.IsActive ?? true)" /> Active (can be added to clients)</label>
+                </div>
+            </div>
+            <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">@(e is null ? "Create add-on" : "Save add-on")</button></div>
+        </form>
+    </dialog>
+}

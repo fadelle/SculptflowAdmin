@@ -1,7 +1,10 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Omni.Admin.Business.Contracts.Services.BusinessTypes;
 using Omni.Admin.Business.Contracts.Services.Clients;
 using Omni.Admin.Business.Contracts.Services.Contacts;
+using Omni.Admin.Business.Services.Contacts;
+using Omni.Admin.Common.Exceptions;
 using Omni.Admin.Entities.Dtos.Contacts;
 using Omni.Admin.Entities.Responses.PlatformAdmin;
 using Omni.Admin.Entities.Requests.Contacts;
@@ -43,6 +46,31 @@ public class DetailsModel : AdminPageModel
         var type = client is null ? null : await _types.GetAsync(client.BusinessTypeCode, ct);
         Stages = type?.Stages.OrderBy(s => s.SortOrder).Select(s => (s.Key, s.Labels.GetValueOrDefault("en") ?? s.Key)).ToList() ?? [];
         return Page();
+    }
+
+    /// <summary>What the admin types to confirm a delete (the contact's name, or "delete").</summary>
+    public string DeleteWord => ContactAdminService.ConfirmationWord(Contact);
+
+    /// <summary>Downloads everything the main app holds about the contact (privacy request).</summary>
+    public async Task<IActionResult> OnGetExportAsync(CancellationToken ct)
+    {
+        var json = await _contacts.ExportContactAsync(Id, ct);
+        return json is null ? NotFound() : File(Encoding.UTF8.GetBytes(json), "application/json", $"contact-{Id}.json");
+    }
+
+    /// <summary>Deletes the contact and all its data for good, then goes to the client's contact list.</summary>
+    public async Task<IActionResult> OnPostDeleteAsync(string? confirmation, CancellationToken ct)
+    {
+        try
+        {
+            var clientId = await _contacts.DeleteContactAsync(Id, confirmation, ct);
+            Flash = "The contact and all its data were deleted.";
+            return RedirectToPage("/Contacts/Index", new { clientId });
+        }
+        catch (ArgumentException ex) { FlashError = ex.Message; }
+        catch (AdminRuleException ex) { FlashError = ex.Message; }
+        catch (KeyNotFoundException) { FlashError = "That contact no longer exists."; }
+        return RedirectToPage(new { id = Id });
     }
 
     public Task<IActionResult> OnPostUpdateAsync(string stageKey, string qualification, bool marketingOptIn, string? notes,

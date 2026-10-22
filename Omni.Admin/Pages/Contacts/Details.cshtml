@@ -15,6 +15,8 @@
         <span class="au-back-header__sub"><a href="/Clients/Details?id=@l.ClientId">@l.Client?.Name</a> · created @Ui.Time(l.CreatedAt)</span>
     </div>
     <div class="au-row au-row--wrap">
+        <a class="au-btn au-btn--outlined" href="/Contacts/Details?id=@l.Id&handler=Export"><span class="au-icon" aria-hidden="true">download</span>Export data</a>
+        <button class="au-btn au-btn--danger-outlined" type="button" data-open="delete-contact"><span class="au-icon" aria-hidden="true">delete</span>Delete</button>
         <button class="au-btn au-btn--outlined" type="button" data-open="edit-contact"><span class="au-icon" aria-hidden="true">edit</span>Edit</button>
     </div>
 </div>
@@ -41,7 +43,7 @@
                 <div class="au-detail-row"><dt>Timeline</dt><dd>@Ui.OrDash(l.DesiredTimeline)</dd></div>
                 <div class="au-detail-row"><dt>Last contact</dt><dd>@Ui.Time(l.LastContactAt)</dd></div>
                 <div class="au-detail-row"><dt>Next follow-up</dt><dd>@Ui.Time(l.NextFollowupAt)</dd></div>
-                <div class="au-detail-row"><dt>Opted out at</dt><dd>@Ui.Time(l.OptedOutAt)</dd></div>
+                <div class="au-detail-row"><dt>Opted out at</dt><dd>@Ui.Time(l.OptedOutAt) @if (l.OptedOutAt is not null) { <span class="au-caption">(sent a stop word: no campaigns or templates)</span> }</dd></div>
                 <div class="au-detail-row"><dt>Qualification</dt><dd>@Ui.Badge(l.Qualification)</dd></div>
                 <div class="au-detail-row"><dt>Marketing</dt><dd>@Ui.YesNo(l.MarketingOptIn, "opted in", "opted out")</dd></div>
                 <div class="au-detail-row"><dt>Notes</dt><dd style="white-space:pre-line">@Ui.OrDash(l.Notes)</dd></div>
@@ -64,6 +66,17 @@
         <partial name="_EventTable" model="Model.Events.Select(e => new EventRow(e.Id, l.ClientId, l.Client?.Name ?? string.Empty, e.EventType, e.Source, e.ContactId, e.ConversationId, e.BookingId, e.Metadata, e.CreatedAt)).ToList()" />
     </section>
 </div>
+
+<dialog class="au-dialog au-dialog--sm" id="delete-contact" aria-labelledby="delete-contact-title">
+    <form method="post" asp-page-handler="Delete" asp-route-id="@l.Id">
+        <h2 class="au-dialog__title" id="delete-contact-title">Delete this contact for good<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+        <div class="au-dialog__content">
+            <p class="au-help" style="margin-bottom:16px">For a privacy request. Deletes the contact with its conversations, messages, bookings, orders, events and notifications in the main app. It can't be undone; export the data first if the person asked for a copy. Billing records keep their amounts without the contact.</p>
+            <div class="au-form-field"><label class="au-form-label" for="dc-confirm">Type <span class="au-mono">@Model.DeleteWord</span> to confirm<span class="au-required">*</span></label><input class="au-input" id="dc-confirm" name="confirmation" required autocomplete="off" /></div>
+        </div>
+        <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--danger" type="submit">Delete for good</button></div>
+    </form>
+</dialog>
 
 <dialog class="au-dialog au-dialog--sm" id="edit-contact" aria-labelledby="edit-contact-title">
     <form method="post" asp-page-handler="Update" asp-route-id="@l.Id">
