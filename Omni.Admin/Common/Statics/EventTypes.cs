@@ -9,6 +9,12 @@ public static class EventTypes
     /// <summary>A manual (dashboard) or AI stage change whose new stage's category has no event of its own; metadata
     /// {"from","to"} holds the stage keys.</summary>
     public const string ContactStageChanged = "contact_stage_changed";
+    /// <summary>A contact opted out of business-started messages (a stop word, or a member on the contact page).</summary>
+    public const string ContactOptedOut = "contact_opted_out";
+    /// <summary>A contact opted back in (a start word, or a member on the contact page).</summary>
+    public const string ContactOptedIn = "contact_opted_in";
+    /// <summary>A contact and its data were deleted for a privacy request (the event keeps no link to the contact).</summary>
+    public const string ContactDeleted = "contact_deleted";
     public const string BookingCreated = "booking_created";
     public const string BookingAttended = "booking_attended";
     public const string BookingNoShow = "booking_no_show";
@@ -26,6 +32,12 @@ public static class EventTypes
     public const string MemberMessageSentWhatsAppApp = "member_message_sent_whatsapp_app";
     public const string AiMessageSent = "ai_message_sent";
     public const string CampaignMessageSent = "campaign_message_sent";
+    /// <summary>A booking reminder went out (BookingReminderWorker).</summary>
+    public const string BookingReminderSent = "booking_reminder_sent";
+    /// <summary>A channel's automatic reply went out; metadata {"trigger": "new" | "reopened"} (AutoReplyTrigger).</summary>
+    public const string AutoReplySent = "auto_reply_sent";
+    /// <summary>The bot's handoff message went out after it handed the conversation to the team; metadata {"botId": ...}.</summary>
+    public const string HandoffMessageSent = "handoff_message_sent";
 
     // AI assistant tool surface — see Controllers/Integrations/AiController.cs.
     public const string BookingRescheduled = "booking_rescheduled";
