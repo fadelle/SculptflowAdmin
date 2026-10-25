@@ -46,12 +46,18 @@ public class ClientAdminService : IClientAdminService
 
     public Task<InboxSettingsDto?> GetInboxSettingsAsync(Guid id, CancellationToken ct = default) => _api.GetInboxSettingsAsync(id, ct);
 
-    public async Task UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct = default)
+    public async Task UpdateAccountAiAsync(Guid id, Guid channelIntegrationId, UpdateAccountAiRequest request, CancellationToken ct = default)
     {
-        var before = await _api.GetInboxSettingsAsync(id, ct) ?? throw new KeyNotFoundException();
-        var change = await _api.UpdateInboxSettingsAsync(id, request, ct);
-        await _audit.LogAsync("client.inbox_settings_updated", "client", id, change.ClientId,
-            new { before = new { before.AiBotNewConversations, before.AiBotReopenedConversations }, after = request }, ct);
+        var settings = await _api.GetInboxSettingsAsync(id, ct) ?? throw new KeyNotFoundException();
+        var before = settings.Accounts.FirstOrDefault(a => a.ChannelIntegrationId == channelIntegrationId) ?? throw new KeyNotFoundException();
+        var change = await _api.UpdateAccountAiAsync(id, channelIntegrationId, request, ct);
+        await _audit.LogAsync("client.account_ai_updated", "client", id, change.ClientId,
+            new
+            {
+                account = channelIntegrationId,
+                before = new { before.AiEnabled, before.BotId, before.AiBotNewConversations, before.AiBotReopenedConversations },
+                after = request
+            }, ct);
     }
 
     public async Task SetDefaultLanguageAsync(Guid id, string language, CancellationToken ct = default)

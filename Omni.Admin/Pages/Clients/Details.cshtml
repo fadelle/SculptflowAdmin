@@ -163,27 +163,49 @@
                 <div class="au-form-actions"><button class="au-btn au-btn--primary" type="submit">Save language</button></div>
             </form>
 
-            <form class="au-panel au-panel--round au-panel--pad" method="post" asp-page-handler="InboxSettings" asp-route-id="@c.Id">
-                <div class="au-panel__head"><h3 class="au-panel__title">Inbox settings</h3></div>
-                @if (Model.InboxSettings is { } bot)
+            <section class="au-panel au-panel--round au-panel--pad">
+                <div class="au-panel__head"><h3 class="au-panel__title">AI per account</h3></div>
+                @if (Model.InboxSettings is { } inbox)
                 {
                     <dl class="au-detail-rows" style="margin-bottom:16px">
-                        <div class="au-detail-row"><dt>Plan includes the AI agent</dt><dd>@(bot.PlanIncludesAiBot ? "Yes" : "No: every conversation goes to a member")</dd></div>
-                        <div class="au-detail-row"><dt>New conversations</dt><dd>@(bot.AiBotAnswersNew ? "AI bot answers" : "Go to a member")</dd></div>
-                        <div class="au-detail-row"><dt>Reopened conversations</dt><dd>@(bot.AiBotAnswersReopened ? "AI bot keeps answering" : "Go to a member")</dd></div>
-                        @if (bot.PlanIncludesAiBot)
-                        {
-                            <div class="au-detail-row"><dt>AI bots</dt><dd>@(bot.AiBotLimit is int limit ? $"{limit} (plan + add-ons)" : "No limit")@if (bot.ChannelsWithoutAiBot is { Count: > 0 } without) { <div class="au-caption au-text-error">No AI on @string.Join(", ", without): those conversations go to a member. Add an AI bot add-on on its billing page.</div> }</dd></div>
-                        }
+                        <div class="au-detail-row"><dt>Plan includes the AI assistant</dt><dd>@(inbox.PlanIncludesAiBot ? "Yes" : "No: every conversation goes to a member")</dd></div>
+                        <div class="au-detail-row"><dt>Active bots allowed</dt><dd>@(inbox.ActiveBotLimit is int limit ? $"{limit} (plan + add-ons)" : "No limit")</dd></div>
+                        <div class="au-detail-row"><dt>Bots</dt><dd>@(inbox.Bots.Count == 0 ? "None yet" : string.Join(", ", inbox.Bots.Select(b => $"{b.Name} ({b.Status})")))</dd></div>
                     </dl>
-                    <div class="au-form-grid">
-                        <label class="au-check au-span-2"><input type="checkbox" class="au-switch" role="switch" name="newConversations" value="true" checked="@bot.AiBotNewConversations" /> AI bot answers new conversations</label>
-                        <label class="au-check au-span-2"><input type="checkbox" class="au-switch" role="switch" name="reopenedConversations" value="true" checked="@bot.AiBotReopenedConversations" /> AI bot answers reopened conversations</label>
-                    </div>
-                    <span class="au-help">The client's own choice, also shown on its Client Info page. It only takes effect while the plan includes the AI agent.</span>
-                    <div class="au-form-actions"><button class="au-btn au-btn--primary" type="submit">Save inbox settings</button></div>
+                    @if (inbox.Accounts.Count == 0)
+                    {
+                        var noAccounts = new EmptyStateModel("No connected accounts.", "hub");
+                        <partial name="_EmptyState" model="noAccounts" />
+                    }
+                    @foreach (var account in inbox.Accounts)
+                    {
+                        <form method="post" asp-page-handler="AccountAi" asp-route-id="@c.Id" class="au-panel au-panel--pad" style="margin-bottom:12px">
+                            <input type="hidden" name="channelIntegrationId" value="@account.ChannelIntegrationId" />
+                            <div class="au-panel__head">
+                                <h4 class="au-panel__title">@account.Channel @(string.IsNullOrWhiteSpace(account.DisplayName) ? "" : "· " + account.DisplayName)</h4>
+                                <span class="au-badge">@(account.BotAnswers ? $"Answered by {account.BotName}" : $"Team answers ({account.BlockReason})")</span>
+                            </div>
+                            <div class="au-form-grid">
+                                <label class="au-check au-span-2"><input type="checkbox" class="au-switch" role="switch" name="aiEnabled" value="true" checked="@account.AiEnabled" /> AI answers on this account</label>
+                                <div class="au-form-field au-span-2">
+                                    <label class="au-form-label" for="bot-@account.ChannelIntegrationId">Bot</label>
+                                    <select class="au-select" id="bot-@account.ChannelIntegrationId" name="botId">
+                                        <option value="" selected="@(account.BotId is null)">No bot (members answer)</option>
+                                        @foreach (var b in inbox.Bots)
+                                        {
+                                            <option value="@b.Id" selected="@(account.BotId == b.Id)">@b.Name (@b.Status)</option>
+                                        }
+                                    </select>
+                                </div>
+                                <label class="au-check au-span-2"><input type="checkbox" class="au-switch" role="switch" name="newConversations" value="true" checked="@account.AiBotNewConversations" /> Bot answers new conversations</label>
+                                <label class="au-check au-span-2"><input type="checkbox" class="au-switch" role="switch" name="reopenedConversations" value="true" checked="@account.AiBotReopenedConversations" /> Bot answers reopened conversations</label>
+                            </div>
+                            <div class="au-form-actions"><button class="au-btn au-btn--primary" type="submit">Save account AI</button></div>
+                        </form>
+                    }
+                    <span class="au-help">The client's own choice, also on its Inbox settings page. Turning AI on needs an active bot and the AI assistant in the plan; the client makes bots on its Bots page.</span>
                 }
-            </form>
+            </section>
 
             <form class="au-panel au-panel--round au-panel--pad" method="post" asp-page-handler="SearchSettings" asp-route-id="@c.Id">
                 <div class="au-panel__head"><h3 class="au-panel__title">Knowledge search (AI retrieval)</h3></div>

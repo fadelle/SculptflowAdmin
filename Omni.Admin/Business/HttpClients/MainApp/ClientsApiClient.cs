@@ -38,8 +38,8 @@ public class ClientsApiClient : MainAppApiClient, IClientsApiClient
 
     public Task<InboxSettingsDto?> GetInboxSettingsAsync(Guid id, CancellationToken ct) => GetAsync<InboxSettingsDto>($"/{id}/inbox-settings", ct);
 
-    public Task<PlatformAdminChange> UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct) =>
-        WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}/inbox-settings", request, null, false, ct);
+    public Task<PlatformAdminChange> UpdateAccountAiAsync(Guid id, Guid channelIntegrationId, UpdateAccountAiRequest request, CancellationToken ct) =>
+        WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}/inbox-settings/{channelIntegrationId}", request, null, false, ct);
 
     public Task<PlatformAdminChange> SetDefaultLanguageAsync(Guid id, string language, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}/default-language", new DefaultLanguageBody(language), null, false, ct);

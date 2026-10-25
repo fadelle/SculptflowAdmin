@@ -69,10 +69,12 @@ public class DetailsModel : AdminPageModel
     public Task<IActionResult> OnPostSetActiveAsync(bool active, CancellationToken ct) =>
         RunAsync(() => _clients.SetActiveAsync(Id, active, ct), active ? "Client activated." : "Client deactivated.", new { id = Id });
 
-    /// <summary>Unchecked switches aren't posted, so they bind as false.</summary>
-    public Task<IActionResult> OnPostInboxSettingsAsync(bool newConversations, bool reopenedConversations, CancellationToken ct) =>
-        RunAsync(() => _clients.UpdateInboxSettingsAsync(Id, new UpdateInboxSettingsRequest(newConversations, reopenedConversations), ct),
-            "Inbox settings saved.", new { id = Id });
+    /// <summary>One connected account's AI. Unchecked switches aren't posted, so they bind as false; an empty bot is none.</summary>
+    public Task<IActionResult> OnPostAccountAiAsync(Guid channelIntegrationId, bool aiEnabled, Guid? botId, bool newConversations,
+        bool reopenedConversations, CancellationToken ct) =>
+        RunAsync(() => _clients.UpdateAccountAiAsync(Id, channelIntegrationId,
+                new UpdateAccountAiRequest(aiEnabled, botId, newConversations, reopenedConversations), ct),
+            "Account AI settings saved.", new { id = Id });
 
     public Task<IActionResult> OnPostDefaultLanguageAsync(string language, CancellationToken ct) =>
         RunAsync(() => _clients.SetDefaultLanguageAsync(Id, language, ct), "Default language saved.", new { id = Id });

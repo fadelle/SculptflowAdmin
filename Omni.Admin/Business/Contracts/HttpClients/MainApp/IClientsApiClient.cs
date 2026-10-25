@@ -23,7 +23,8 @@ public interface IClientsApiClient
     /// <summary>Null when the client doesn't exist.</summary>
     Task<InboxSettingsDto?> GetInboxSettingsAsync(Guid id, CancellationToken ct);
 
-    Task<PlatformAdminChange> UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct);
+    /// <summary>Saves one connected account's AI settings (PUT clients/{id}/inbox-settings/{channelIntegrationId}).</summary>
+    Task<PlatformAdminChange> UpdateAccountAiAsync(Guid id, Guid channelIntegrationId, UpdateAccountAiRequest request, CancellationToken ct);
 
     Task<PlatformAdminChange> SetDefaultLanguageAsync(Guid id, string language, CancellationToken ct);
 

@@ -21,10 +21,13 @@ public interface IClientAdminService
 
     Task SetActiveAsync(Guid id, bool active, CancellationToken ct = default);
 
-    /// <summary>The client's AI bot switches and whether its plan includes the bot; null when the client doesn't exist.</summary>
+    /// <summary>The client's connected accounts with their AI settings, its bots and its plan's AI limits; null when the client
+    /// doesn't exist.</summary>
     Task<InboxSettingsDto?> GetInboxSettingsAsync(Guid id, CancellationToken ct = default);
 
-    Task UpdateInboxSettingsAsync(Guid id, UpdateInboxSettingsRequest request, CancellationToken ct = default);
+    /// <summary>Saves one connected account's AI settings (the main app checks the bot and the plan) and audits it as
+    /// client.account_ai_updated with the account's settings before and after.</summary>
+    Task UpdateAccountAiAsync(Guid id, Guid channelIntegrationId, UpdateAccountAiRequest request, CancellationToken ct = default);
 
     /// <summary>The language the client's dashboard opens in for users who haven't picked their own ("en", "ar" or "fr").
     /// No call and no audit entry when it is already that language.</summary>
