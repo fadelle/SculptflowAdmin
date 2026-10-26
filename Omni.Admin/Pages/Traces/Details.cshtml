@@ -61,8 +61,9 @@
         </table>
     }
 </div>
-<p class="au-caption">Steps are recorded as the message moves through the app. The bot's own steps (n8n's tool calls and its reply) join this
-    trace only when n8n sends the <span class="au-mono">traceparent</span> it received back on its calls.</p>
+<p class="au-caption">Steps are recorded as the message moves through the app. With the bot in code (Ai / BotEngine = code) every bot step
+    (model calls, tools, decision, reply) is in this trace; with n8n, the bot's tool calls and reply join it only when n8n sends the
+    <span class="au-mono">traceparent</span> it received back on its calls.</p>
 
 @functions {
     private static Microsoft.AspNetCore.Html.IHtmlContent Outcome(string outcome, string kind) => new Microsoft.AspNetCore.Html.HtmlString(

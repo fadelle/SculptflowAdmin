@@ -15,4 +15,6 @@ public record SettingResponse(
     string? Note,
     string? UpdatedBy,
     DateTimeOffset? UpdatedAt,
-    bool IsSecret);
+    bool IsSecret,
+    /// <summary>The only values allowed (the n8n-or-code switches), shown as a dropdown; null = free text or a number.</summary>
+    IReadOnlyList<string>? Choices = null);

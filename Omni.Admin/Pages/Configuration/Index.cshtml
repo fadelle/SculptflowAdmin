@@ -84,6 +84,18 @@
                                                             <input type="hidden" name="isSecret" value="true" />
                                                             <div class="au-form-field"><label class="au-form-label" for="cfg-value-@s.Section-@s.Key">New value<span class="au-required">*</span></label><input class="au-input" id="cfg-value-@s.Section-@s.Key" type="password" name="value" autocomplete="new-password" placeholder="@(string.IsNullOrEmpty(s.StoredValue) ? "not set" : "set; type to replace")" maxlength="4000" required /></div>
                                                         }
+                                                        else if (s.Choices is { Count: > 0 } choices)
+                                                        {
+                                                            var current = s.StoredValue ?? s.EffectiveValue;
+                                                            <div class="au-form-field"><label class="au-form-label" for="cfg-value-@s.Section-@s.Key">Value<span class="au-required">*</span></label>
+                                                                <select class="au-select au-mono" id="cfg-value-@s.Section-@s.Key" name="value" required>
+                                                                    @foreach (var choice in choices)
+                                                                    {
+                                                                        <option value="@choice" selected="@(choice == current)">@choice@(choice == s.DefaultValue ? " (default)" : "")</option>
+                                                                    }
+                                                                </select>
+                                                            </div>
+                                                        }
                                                         else
                                                         {
                                                             <div class="au-form-field"><label class="au-form-label" for="cfg-value-@s.Section-@s.Key">Value<span class="au-required">*</span></label><input class="au-input au-mono" id="cfg-value-@s.Section-@s.Key" name="value" value="@s.StoredValue" placeholder="@s.DefaultValue" maxlength="4000" required /></div>
