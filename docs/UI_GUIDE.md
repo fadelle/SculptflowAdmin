@@ -68,6 +68,10 @@ of them (put those in the page's `.cshtml.css` isolation file or `site.css`).
 ### 0.4 Omni Admin — how this project applies the guide
 This portal had its own hand-rolled CSS/JS before Aurora. Where the rest of this guide is generic, **this section wins**.
 
+- **Brand: violet** (`data-brand="violet"` on `<html>` in both layouts; the ramp lives in the kit, §4). The sidebar is
+  violet (`#4c1d95 → #2e1065`) in light mode and the usual dark sidebar in dark mode; buttons and other fills are the
+  same violet in both modes. `_BrandMark.cshtml` and `wwwroot/logo.svg` use the violet gradient. It is deliberately a
+  different colour from the main app (navy), so it's always clear which product you're in.
 - **No Bootstrap, jQuery or unobtrusive validation.** Appendix B is *not* installed: `aurora-bootstrap.css` targets
   `.btn`/`.card`/`.badge`/`.alert`, which this project also uses with its own modifiers. Forms post plain `name=` fields
   (HTML5 `required`); rule errors come back as flash messages.
@@ -357,9 +361,11 @@ Grid gaps 12–16px; dashboard sections 24px apart.
 **Motion:** hover 0.15s; button press `scale(.98)`; page enter 260ms `cubic-bezier(.2,.8,.3,1)`
 from 6px below; dropdowns 0.16s fade-slide; drawer 0.26s slide. All off under reduced motion.
 
-**Alternate brand (optional):** `<html data-brand="teal">` swaps only the brand ramp to
+**Alternate brands (optional):** `<html data-brand="teal">` swaps only the brand ramp to
 teal→cyan (`#0d9488 → #0891b2 → #06b6d4`) — the same mechanism the Omni portal uses for its Bot
-sub‑portal. Everything else stays identical.
+sub‑portal. `<html data-brand="violet">` is a solid violet ramp (`#7c3aed → #6d28d9`, the same fill in light and
+dark; `--au-primary` is `#6d28d9` as text on white and `#c4b5fd` on the dark paper) with a violet sidebar in light mode.
+Everything else stays identical. A coloured sidebar sets `--au-side-active-bar` (white) and `--au-side-scroll-thumb`.
 
 ---
 
@@ -1549,6 +1555,8 @@ maintain both portals.
   --au-side-active-text: #e0e7ff;
   --au-side-active-icon: #a5b4fc;
   --au-side-border: rgba(148, 163, 184, 0.1);
+  --au-side-active-bar: var(--au-gradient); /* the short bar beside the selected row */
+  --au-side-scroll-thumb: #33415a;
 
   /* --- shape ------------------------------------------------------------- */
   --au-r-xs: 8px; /* chips, menu items, toggle buttons, tooltips */
@@ -1685,6 +1693,56 @@ maintain both portals.
   --au-secondary-dark: #06b6d4;
   --au-gradient-soft: linear-gradient(135deg, rgba(45, 212, 191, 0.14), rgba(34, 211, 238, 0.1));
   --au-focus-ring: 0 0 0 3px rgba(45, 212, 191, 0.24);
+}
+
+/* Optional alternate brand ramp (violet), used by the Admin Portal. Put data-brand="violet" on <html>.
+   Fills (buttons, switches, avatars: the gradient) are the same violet in light and dark; --au-primary is the shade that
+   reads as text in each mode. The sidebar is violet in light mode and keeps the usual dark sidebar in dark mode. */
+:root[data-brand='violet'] {
+  --au-primary: #6d28d9;
+  --au-primary-light: #a78bfa;
+  --au-primary-dark: #5b21b6;
+  --au-on-primary: #ffffff;
+  --au-secondary: #8b5cf6;
+  --au-secondary-light: #c4b5fd;
+  --au-secondary-dark: #7c3aed;
+  --au-gradient: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  --au-gradient-soft: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(167, 139, 250, 0.08));
+  --au-brand-glow: rgba(124, 58, 237, 0.45);
+  --au-brand-glow-strong: rgba(124, 58, 237, 0.6);
+  --au-focus-ring: 0 0 0 3px rgba(124, 58, 237, 0.22);
+  --au-aurora: radial-gradient(1000px 520px at 88% -12%, rgba(124, 58, 237, 0.08), transparent 62%),
+    radial-gradient(820px 460px at -8% 28%, rgba(167, 139, 250, 0.08), transparent 60%);
+}
+:root[data-brand='violet']:not([data-theme='dark']) {
+  --au-side-bg: linear-gradient(180deg, #4c1d95 0%, #2e1065 100%);
+  --au-side-bg-solid: #4c1d95;
+  --au-side-hover: rgba(255, 255, 255, 0.1);
+  --au-side-text: rgba(255, 255, 255, 0.88);
+  --au-side-text-strong: #ffffff;
+  --au-side-section: #c4b5fd;
+  --au-side-active-bg: rgba(255, 255, 255, 0.18);
+  --au-side-active-text: #ffffff;
+  --au-side-active-icon: #ffffff;
+  --au-side-active-bar: linear-gradient(#ffffff, #ffffff);
+  --au-side-border: rgba(255, 255, 255, 0.16);
+  --au-side-scroll-thumb: rgba(255, 255, 255, 0.3);
+}
+:root[data-brand='violet'][data-theme='dark'] {
+  --au-primary: #c4b5fd;
+  --au-primary-light: #ddd6fe;
+  --au-primary-dark: #a78bfa;
+  --au-secondary: #a78bfa;
+  --au-secondary-light: #c4b5fd;
+  --au-secondary-dark: #8b5cf6;
+  --au-gradient-soft: linear-gradient(135deg, rgba(167, 139, 250, 0.14), rgba(196, 181, 253, 0.1));
+  --au-focus-ring: 0 0 0 3px rgba(196, 181, 253, 0.26);
+  --au-aurora: radial-gradient(1000px 520px at 88% -12%, rgba(124, 58, 237, 0.16), transparent 62%),
+    radial-gradient(820px 460px at -8% 28%, rgba(167, 139, 250, 0.1), transparent 60%);
+  --au-side-active-bg: linear-gradient(calc(90deg * var(--au-x)), rgba(124, 58, 237, 0.45) 0%, rgba(124, 58, 237, 0.12) 100%);
+  --au-side-active-text: #ffffff;
+  --au-side-active-icon: #c4b5fd;
+  --au-side-active-bar: linear-gradient(#c4b5fd, #c4b5fd);
 }
 
 /* Right-to-left (Arabic): pages set <html dir="rtl">. Layout uses logical properties (margin-inline-start,
@@ -4126,10 +4184,10 @@ dialog.au-drawer[open] {
   flex: 1;
   overflow-y: auto;
   padding: 4px 0 8px;
-  scrollbar-color: #33415a transparent;
+  scrollbar-color: var(--au-side-scroll-thumb) transparent;
 }
 .au-side-scroll::-webkit-scrollbar-thumb {
-  background-color: #33415a;
+  background-color: var(--au-side-scroll-thumb);
 }
 /* section divider: tiny uppercase caption + hairline */
 .au-side-section {
@@ -4189,7 +4247,7 @@ dialog.au-drawer[open] {
   width: 3px;
   height: 0;
   border-radius: 999px;
-  background-image: var(--au-gradient);
+  background-image: var(--au-side-active-bar);
   transform: translateY(-50%);
   transition: height 0.18s ease;
 }

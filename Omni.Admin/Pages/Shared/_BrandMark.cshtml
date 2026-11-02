@@ -1,11 +1,11 @@
 @model int
-@* The brand mark: the Omni "S" (from logo.svg) stroked in the Aurora gradient on a dark tile. The only other place
+@* The brand mark: the Omni "S" (from logo.svg) stroked in the violet brand gradient on a dark tile. The only other place
    raw colours are allowed (docs/UI_GUIDE.md §6). Model = size in px. *@
 @{ var gid = "au-mark-" + Guid.NewGuid().ToString("N")[..8]; }
 <svg width="@Model" height="@Model" viewBox="0 0 32 32" role="img" aria-label="Omni Admin">
     <defs>
         <linearGradient id="@(gid)" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#6366f1" /><stop offset=".55" stop-color="#8b5cf6" /><stop offset="1" stop-color="#a855f7" />
+            <stop offset="0" stop-color="#7c3aed" /><stop offset=".55" stop-color="#a78bfa" /><stop offset="1" stop-color="#c4b5fd" />
         </linearGradient>
     </defs>
     <rect x="1" y="1" width="30" height="30" rx="8" fill="#0d1117" stroke="url(#@(gid))" stroke-width="2" />
