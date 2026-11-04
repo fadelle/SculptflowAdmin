@@ -19,7 +19,7 @@
             @if (c.IsActive)
             {
                 <input type="hidden" name="active" value="false" />
-                <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Deactivate @c.Name? It is marked inactive here; see the note on this page about what the main app does with it.">Deactivate</button>
+                <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Deactivate @c.Name? Its people are signed out and can't sign in, and its AI, campaigns and reminders stop until you activate it again.">Deactivate</button>
             }
             else
             {
@@ -39,7 +39,7 @@
     {
         <div class="au-alert" role="status">
             <span class="au-icon au-alert__icon" aria-hidden="true">info</span>
-            <div class="au-alert__body">This client is marked inactive. The main app does not check this flag yet, so its members can still sign in and its AI still replies. To cut access now, lock its member accounts below and disconnect its channels.</div>
+            <div class="au-alert__body">This client is inactive: its people can't sign in (open sessions end on their next page), its AI doesn't reply and its campaigns and booking reminders don't send. Messages from its customers are still saved. Activate it to restore everything.</div>
         </div>
     }
 

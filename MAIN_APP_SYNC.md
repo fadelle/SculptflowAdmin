@@ -47,8 +47,6 @@ editor reads the main app's catalog (`GET billing/entitlements`).
 
 ## Known gaps in the main app that limit admin control
 
-- **`clients.is_active` is not enforced.** Deactivating a client marks it, but the main app still lets its member in and
-  its AI keep replying. Fix in the main app: check it in `CurrentClientContext` and before AI triggers.
 - **No security-stamp check on the member cookie.** Locking a member account renews its security stamp, but an open
   session lasts until its cookie expires. Fix in the main app: add `SecurityStampValidator` to the Identity cookie.
 - Contact edits, client edits and conversation status changes from the portal don't send SignalR events, so a client's
