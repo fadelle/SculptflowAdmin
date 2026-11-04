@@ -1,0 +1,85 @@
+@page
+@model Omni.Admin.Pages.Traces.NoAnswerModel
+@using Omni.Admin.Common.Statics
+@{
+    ViewData["Title"] = "No answer";
+    var r = Model.Result;
+}
+<div class="au-page-head">
+    <p class="au-page-head__sub">Conversations whose last message is the customer's and nothing was sent after it, with what that message's
+        trace came to: skipped and why, failed, or the bot never replied. A conversation handed to the team stays here until someone answers.</p>
+</div>
+<partial name="_TracesTabs" model="@("unanswered")" />
+
+<form class="filters au-toolbar" method="get" data-au-autosubmit>
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:170px">
+            <label class="au-label" for="f-hours">Sent in</label>
+            <select class="au-select" id="f-hours" name="hours">
+                @foreach (var p in MessageTraceOptions.Periods) { <option value="@p.Hours" selected="@(p.Hours == Model.Hours)">@p.Label</option> }
+            </select>
+        </div>
+        <div class="au-field" style="width:170px">
+            <label class="au-label" for="f-minutes">Waiting longer than</label>
+            <select class="au-select" id="f-minutes" name="minutes">
+                @foreach (var w in Omni.Admin.Pages.Traces.NoAnswerModel.Waits) { <option value="@w.Minutes" selected="@(w.Minutes == Model.Minutes)">@w.Label</option> }
+            </select>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        @if (r is not null) { <span class="au-toolbar__meta">@Ui.Count(r.Total, "conversation", "conversations")</span> }
+        <partial name="_FilterActions" />
+    </div>
+</form>
+
+@if (Model.LoadError is not null)
+{
+    <div class="au-alert au-alert--error" role="alert">
+        <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
+        <div class="au-alert__body"><div class="au-alert__title">Couldn't load the unanswered conversations</div>@Model.LoadError</div>
+    </div>
+}
+
+@if (r is not null)
+{
+    <div class="au-table-card">
+        @if (r.Items.Count == 0)
+        {
+            <partial name="_EmptyState" model="@(new EmptyStateModel("Every customer message in this period got an answer.", "task_alt"))" />
+        }
+        else
+        {
+            <div class="au-table-scroll" style="--au-table-max-h: calc(100vh - 340px)">
+                <table class="au-table">
+                    <thead><tr>
+                        <th>Waiting since</th>
+                        <th>Client</th>
+                        <th>Contact</th>
+                        <th>Last message</th>
+                        <th>What happened</th>
+                        <th>Mode</th>
+                        <th>Links</th>
+                    </tr></thead>
+                    <tbody>
+                        @foreach (var u in r.Items)
+                        {
+                            <tr>
+                                <td>@Ui.Time(u.LastCustomerMessageAt)</td>
+                                <td><a href="/Clients/Details?id=@u.ClientId">@u.ClientName</a></td>
+                                <td dir="auto">@Ui.OrDash(u.ContactName)</td>
+                                <td>@Ui.OrDash(u.MessageType) <span class="au-caption">@u.Channel</span></td>
+                                <td><partial name="_Outcome" model="@((u.Outcome, u.OutcomeReason))" /></td>
+                                <td>@u.Mode</td>
+                                <td>
+                                    <a href="/Conversations/Details?id=@u.ConversationId">conversation</a>
+                                    @if (u.TraceId is not null) { <a href="/Traces/Details?traceId=@u.TraceId">trace</a> }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <partial name="_Pager" model="PagerModel.From(Model.Paged)" />
+        }
+    </div>
+}

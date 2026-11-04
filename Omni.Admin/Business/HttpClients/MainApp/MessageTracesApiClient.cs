@@ -27,4 +27,11 @@ public class MessageTracesApiClient : MainAppApiClient, IMessageTracesApiClient
 
     public Task<MessageTraceSummary> SummaryAsync(int hours, CancellationToken ct) =>
         GetRequiredAsync<MessageTraceSummary>("/summary" + Query(("hours", hours)), ct);
+
+    public Task<UnansweredPage> UnansweredAsync(int hours, int minutes, Guid? clientId, int page, int pageSize, CancellationToken ct) =>
+        GetRequiredAsync<UnansweredPage>("/unanswered" + Query(("hours", hours), ("minutes", minutes), ("clientId", clientId), ("page", page),
+            ("pageSize", pageSize)), ct);
+
+    public Task<AiUsageReport> AiUsageAsync(int days, Guid? clientId, CancellationToken ct) =>
+        GetRequiredAsync<AiUsageReport>("/ai-usage" + Query(("days", days), ("clientId", clientId)), ct);
 }

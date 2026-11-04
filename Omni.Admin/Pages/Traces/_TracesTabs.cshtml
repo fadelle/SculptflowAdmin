@@ -1,0 +1,7 @@
+@model string
+@* The Message traces pages (QA t7-10): every trace, conversations nobody answered, and what the AI costs. Model = the active tab. *@
+<nav class="au-tabs" aria-label="Message traces views" style="margin-bottom:16px">
+    <a class="au-tab @(Model == "all" ? "is-active" : "")" href="/Traces" aria-current="@(Model == "all" ? "page" : null)"><span class="au-icon" aria-hidden="true">route</span>All traces</a>
+    <a class="au-tab @(Model == "unanswered" ? "is-active" : "")" href="/Traces/NoAnswer" aria-current="@(Model == "unanswered" ? "page" : null)"><span class="au-icon" aria-hidden="true">speaker_notes_off</span>No answer</a>
+    <a class="au-tab @(Model == "ai" ? "is-active" : "")" href="/Traces/AiUsage" aria-current="@(Model == "ai" ? "page" : null)"><span class="au-icon" aria-hidden="true">smart_toy</span>AI usage</a>
+</nav>

@@ -9,6 +9,7 @@
     <p class="au-page-head__sub">Each row is one message's story through the app: webhook in, inbox, bot (n8n or code) and its tools, the send to
         WhatsApp or Telegram, and anything that failed on the way. Open one for its timeline, or search by trace id, message id or WhatsApp/Telegram message id.</p>
 </div>
+<partial name="_TracesTabs" model="@("all")" />
 
 <form class="filters au-toolbar" method="get" data-au-autosubmit>
     <div class="au-toolbar__filters">
@@ -68,7 +69,7 @@
                     <table class="au-table">
                         <thead><tr>
                             <th>Last activity</th>
-                            <th>Result</th>
+                            <th>Outcome</th>
                             <th>Started with</th>
                             <th>What failed</th>
                             <th class="au-right">Steps</th>
@@ -78,10 +79,9 @@
                         <tbody>
                             @foreach (var t in r.Items)
                             {
-                                var failed = t.FailedSteps > 0 || t.Errors > 0;
                                 <tr>
                                     <td><a href="/Traces/Details?traceId=@t.TraceId">@Ui.Time(t.EndedAt)</a></td>
-                                    <td>@if (failed) { <span class="au-chip au-chip--error au-chip--soft">Failed</span> } else { <span class="au-chip au-chip--success au-chip--soft">OK</span> }</td>
+                                    <td><partial name="_Outcome" model="@((t.Outcome, t.OutcomeReason))" /></td>
                                     <td class="au-mono">@t.FirstStep</td>
                                     <td style="--au-col-max:380px">@if (t.FailedStep is not null) { <span class="au-mono">@t.FailedStep</span> <span class="au-caption">@Ui.Truncate(t.FailedDetail, 120)</span> }
                                         else if (t.Errors > 0) { <span>@Ui.Count(t.Errors, "error logged", "errors logged")</span> } else { <span class="au-muted">—</span> }</td>

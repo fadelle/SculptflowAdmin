@@ -1,0 +1,83 @@
+@page
+@model Omni.Admin.Pages.Traces.AiUsageModel
+@{
+    ViewData["Title"] = "AI usage";
+    var r = Model.Result;
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+}
+<div class="au-page-head">
+    <p class="au-page-head__sub">What each client's AI bot used, from the message trace: runs, model calls and tokens, what that likely cost
+        the platform at the configured token prices, and what the client was charged for AI replies.</p>
+</div>
+<partial name="_TracesTabs" model="@("ai")" />
+
+<form class="filters au-toolbar" method="get" data-au-autosubmit>
+    <div class="au-toolbar__filters">
+        <div class="au-field" style="width:170px">
+            <label class="au-label" for="f-days">Period</label>
+            <select class="au-select" id="f-days" name="days">
+                @foreach (var p in Omni.Admin.Pages.Traces.AiUsageModel.Periods) { <option value="@p.Days" selected="@(p.Days == Model.Days)">@p.Label</option> }
+            </select>
+        </div>
+    </div>
+    <div class="au-toolbar__actions">
+        @if (r is not null) { <span class="au-toolbar__meta">@Ui.Count(r.Rows.Count, "client", "clients")</span> }
+        <partial name="_FilterActions" />
+    </div>
+</form>
+
+@if (Model.LoadError is not null)
+{
+    <div class="au-alert au-alert--error" role="alert">
+        <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
+        <div class="au-alert__body"><div class="au-alert__title">Couldn't load AI usage</div>@Model.LoadError</div>
+    </div>
+}
+
+@if (r is not null)
+{
+    <div class="au-stack">
+        <div class="au-table-card">
+            @if (r.Rows.Count == 0)
+            {
+                <partial name="_EmptyState" model="@(new EmptyStateModel("No AI bot ran in this period.", "smart_toy"))" />
+            }
+            else
+            {
+                <div class="au-table-scroll">
+                    <table class="au-table">
+                        <thead><tr>
+                            <th>Client</th>
+                            <th class="au-right">Runs</th>
+                            <th class="au-right">Failed runs</th>
+                            <th class="au-right">Model calls</th>
+                            <th class="au-right">Input tokens</th>
+                            <th class="au-right">Output tokens</th>
+                            <th class="au-right">Estimated model cost</th>
+                            <th class="au-right">Charged for AI replies</th>
+                        </tr></thead>
+                        <tbody>
+                            @foreach (var u in r.Rows)
+                            {
+                                <tr>
+                                    <td><a href="/Clients/Details?id=@u.ClientId">@u.ClientName</a></td>
+                                    <td class="au-right">@u.Runs.ToString("N0", inv)</td>
+                                    <td class="au-right">@u.FailedRuns.ToString("N0", inv)</td>
+                                    <td class="au-right">@u.ModelCalls.ToString("N0", inv)</td>
+                                    <td class="au-right">@u.InputTokens.ToString("N0", inv)</td>
+                                    <td class="au-right">@u.OutputTokens.ToString("N0", inv)</td>
+                                    <td class="au-right au-mono">$@u.EstimatedModelCostUsd.ToString("0.0000", inv)</td>
+                                    <td class="au-right au-mono">@u.AiReplyRevenue.ToString("0.00", inv) @u.RevenueCurrency</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        <p class="au-caption">Estimated at $@r.InputTokenPriceUsdPerMillion.ToString("0.##", inv) per million input tokens and
+            $@r.OutputTokenPriceUsdPerMillion.ToString("0.##", inv) per million output tokens (Ai → InputTokenPriceUsdPerMillion and
+            OutputTokenPriceUsdPerMillion on the <a asp-page="/Configuration/Index">Configuration</a> page). Only what the trace still holds is
+            counted: steps are kept @r.TraceRetentionDays days. Bot test runs are included; AI reply charges are the settled ones after refunds.</p>
+    </div>
+}

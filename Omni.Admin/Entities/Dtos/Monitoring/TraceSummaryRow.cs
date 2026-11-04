@@ -13,4 +13,7 @@ public record TraceSummaryRow(
     string? Channel,
     string FirstStep,
     string? FailedStep,
-    string? FailedDetail);
+    string? FailedDetail,
+    // What the trace came to (replied, handed_off, failed, skipped, no_reply, in_progress, received, other) and why (QA t7-10).
+    string Outcome = "other",
+    string? OutcomeReason = null);

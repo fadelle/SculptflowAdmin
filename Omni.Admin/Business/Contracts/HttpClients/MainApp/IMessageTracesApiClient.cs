@@ -16,4 +16,10 @@ public interface IMessageTracesApiClient
     Task<TraceReference?> ResolveAsync(string query, CancellationToken ct);
 
     Task<MessageTraceSummary> SummaryAsync(int hours, CancellationToken ct);
+
+    /// <summary>Conversations left without an answer (GET message-traces/unanswered, QA t7-10).</summary>
+    Task<UnansweredPage> UnansweredAsync(int hours, int minutes, Guid? clientId, int page, int pageSize, CancellationToken ct);
+
+    /// <summary>AI bot use per client (GET message-traces/ai-usage, QA t7-10).</summary>
+    Task<AiUsageReport> AiUsageAsync(int days, Guid? clientId, CancellationToken ct);
 }

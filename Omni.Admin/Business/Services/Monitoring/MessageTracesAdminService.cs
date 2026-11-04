@@ -18,6 +18,11 @@ public class MessageTracesAdminService : IMessageTracesAdminService
     public Task<MessageTracePage> ListAsync(int hours, Guid? clientId, bool failedOnly, int page, CancellationToken ct) =>
         _api.ListAsync(hours, clientId, null, failedOnly, page, MessageTraceOptions.PageSize, ct);
 
+    public Task<UnansweredPage> UnansweredAsync(int hours, int minutes, Guid? clientId, int page, CancellationToken ct) =>
+        _api.UnansweredAsync(hours, minutes, clientId, page, MessageTraceOptions.PageSize, ct);
+
+    public Task<AiUsageReport> AiUsageAsync(int days, Guid? clientId, CancellationToken ct) => _api.AiUsageAsync(days, clientId, ct);
+
     public Task<MessageTrace?> GetAsync(string? traceId, Guid? messageId, CancellationToken ct) =>
         messageId is { } id ? _api.ForMessageAsync(id, ct)
         : string.IsNullOrWhiteSpace(traceId) ? Task.FromResult<MessageTrace?>(null)

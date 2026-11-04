@@ -1,0 +1,18 @@
+@model (string? Outcome, string? Reason)
+@* What a message trace came to (the main app's TraceResults, QA t7-10), as a chip with its reason. *@
+@{
+    var (label, tone) = Model.Outcome switch
+    {
+        "replied" => ("Replied", "success"),
+        "handed_off" => ("Handed to the team", "info"),
+        "failed" => ("Failed", "error"),
+        "skipped" => ("Not answered", "warning"),
+        "no_reply" => ("No reply", "error"),
+        "in_progress" => ("In progress", "info"),
+        "received" => ("Received", "neutral"),
+        null => ("No trace", "neutral"),
+        _ => ("Other", "neutral")
+    };
+}
+<span class="au-chip @(tone == "neutral" ? "" : "au-chip--" + tone) au-chip--soft">@label</span>
+@if (!string.IsNullOrWhiteSpace(Model.Reason)) { <span class="au-caption au-mono">@Model.Reason.Replace('_', ' ')</span> }
