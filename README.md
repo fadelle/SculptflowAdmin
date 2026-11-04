@@ -7,7 +7,7 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
   (`/api/platform-admin/auth`) and keeps their accounts (`/api/platform-admin/admins`); this portal issues its own cookie and
   asks the main app on every request (remembered for a minute) whether the admin is still active. Client and member accounts
   can never sign in here, and admin accounts can never sign in to the client app.
-- Every change made here is recorded in `admin_audit_log` (who, what, when, before/after).
+- Every change made here is recorded in `admin_audit_log` (who, what, when, before/after), shown as readable "field: old → new" lines.
 - Internal only: it shows provider details (Meta ids) that client-facing pages never show.
 
 ## What it covers

@@ -82,6 +82,14 @@ a.au-stat:hover { border-color: var(--au-primary-light); transform: translateY(-
 .bm-chunks-list { margin: 6px 0 0 18px; padding: 0; font-size: 0.8125rem; }
 .bm-details-list { margin: 6px 0 0 18px; padding: 0; font-size: 0.8125rem; }
 
+/* ---------- Audit log details (_AuditTable; QA t6-admin-10) ---------- */
+.au-table th.au-audit-details, .au-table td.au-audit-details { min-width: 22rem; max-width: 40rem; white-space: normal; }
+.au-audit-lines { margin: 0; padding: 0; list-style: none; font-size: 0.8125rem; }
+.au-audit-lines li { padding: 1px 0; overflow-wrap: anywhere; }
+.au-audit-label { color: var(--au-text-2); margin-inline-end: 4px; }
+.au-audit-more summary { color: var(--au-primary); font-size: 0.8125rem; cursor: pointer; }
+.au-audit-admin { display: inline-block; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+
 /* ---------- Sign-in (login.js hooks) ---------- */
 .login-pw { position: relative; display: block; }
 .login-pw .au-input { padding-right: 44px; }

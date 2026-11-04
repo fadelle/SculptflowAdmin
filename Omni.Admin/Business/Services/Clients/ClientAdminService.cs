@@ -36,7 +36,11 @@ public class ClientAdminService : IClientAdminService
         var before = await _api.GetAsync(id, ct) ?? throw new KeyNotFoundException();
         await _api.UpdateAsync(id, update, ct);
         await _audit.LogAsync("client.updated", "client", id, id,
-            new { before = new { before.Name, before.Phone, before.Email, before.Website, before.CountryCode, before.Timezone }, after = update }, ct);
+            new
+            {
+                before = new { before.Name, before.Phone, before.Email, before.Website, before.CountryCode, before.Timezone, before.Address, before.OperatingHours, before.BookingInfo },
+                after = update
+            }, ct);
     }
 
     public async Task SetActiveAsync(Guid id, bool active, CancellationToken ct = default)

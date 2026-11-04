@@ -120,6 +120,12 @@ This portal had its own hand-rolled CSS/JS before Aurora. Where the rest of this
   - *Shared table partials* (`_ClientTable`, `_BookingTable`, `_AuditTable`, `_ConversationTable`, `_EventTable`)
     render only `.au-table-scroll` + table (or the empty state); the caller wraps them in `.au-table-card`, with the
     pager on lists or a `.au-panel__head` title row on detail pages.
+  - *Audit details* (`_AuditTable`): never raw JSON. `AuditDetails.Describe` turns a row's details into lines
+    (`{before, after}` → "Field: old → new" for changed fields, `{from, to}` → "old → new", other objects → "Field: value");
+    each side of a change is a `<bdi>` so Arabic can't reorder it; more than four lines fold into a `<details>` "Show all".
+    The column has `.au-audit-details` (min 22rem); the Admin cell shows the email's name part with the full email as title.
+    `AdminAudit` writes details with `AuditDetails.Json` (relaxed escaping), and a "before" should list the same fields
+    as its "after" so every change shows (QA t6-admin-10).
   - *Detail* (`Clients/Details`): `.au-back-header` (← back, title, sub, actions on the right) → a chips row (status +
     copyable id) → `.au-stack` of panels (`.au-panel--round --pad` with `.au-detail-rows`) and titled table cards.
   - *Popup form*: `<dialog class="au-dialog [--sm|--md]">` › `form` › `h2.au-dialog__title` (+ close `data-close`) ›

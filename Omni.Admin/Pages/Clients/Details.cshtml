@@ -260,15 +260,15 @@
         <h2 class="au-dialog__title" id="edit-client-title">Edit client details<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
         <div class="au-dialog__content">
             <div class="au-form-grid">
-                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-name">Name<span class="au-required">*</span></label><input class="au-input" id="ec-name" name="Edit.Name" value="@Model.Edit.Name" required /></div>
-                <div class="au-form-field"><label class="au-form-label" for="ec-email">Email</label><input class="au-input" id="ec-email" name="Edit.Email" value="@Model.Edit.Email" /></div>
-                <div class="au-form-field"><label class="au-form-label" for="ec-phone">Phone</label><input class="au-input" id="ec-phone" name="Edit.Phone" value="@Model.Edit.Phone" /></div>
-                <div class="au-form-field"><label class="au-form-label" for="ec-web">Website</label><input class="au-input" id="ec-web" name="Edit.Website" value="@Model.Edit.Website" /></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-name">Name<span class="au-required">*</span></label><input class="au-input" id="ec-name" name="Edit.Name" value="@Model.Edit.Name" maxlength="200" required /></div>
+                <div class="au-form-field"><label class="au-form-label" for="ec-email">Email</label><input class="au-input" id="ec-email" name="Edit.Email" value="@Model.Edit.Email" maxlength="200" type="email" /></div>
+                <div class="au-form-field"><label class="au-form-label" for="ec-phone">Phone</label><input class="au-input" id="ec-phone" name="Edit.Phone" value="@Model.Edit.Phone" maxlength="50" /></div>
+                <div class="au-form-field"><label class="au-form-label" for="ec-web">Website</label><input class="au-input" id="ec-web" name="Edit.Website" value="@Model.Edit.Website" maxlength="300" /></div>
                 <div class="au-form-field"><label class="au-form-label" for="ec-cc">Country code</label><input class="au-input" id="ec-cc" name="Edit.CountryCode" value="@Model.Edit.CountryCode" maxlength="2" /></div>
                 <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-tz">Time zone<span class="au-required">*</span></label><input class="au-input" id="ec-tz" name="Edit.Timezone" value="@Model.Edit.Timezone" required /><span class="au-help">IANA name, e.g. Asia/Beirut</span></div>
-                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-addr">Address</label><textarea class="au-textarea" id="ec-addr" name="Edit.Address">@Model.Edit.Address</textarea></div>
-                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-hours">Operating hours</label><textarea class="au-textarea" id="ec-hours" name="Edit.OperatingHours">@Model.Edit.OperatingHours</textarea><span class="au-help">Free text the AI reads</span></div>
-                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-consult">Booking info</label><textarea class="au-textarea" id="ec-consult" name="Edit.BookingInfo">@Model.Edit.BookingInfo</textarea></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-addr">Address</label><textarea class="au-textarea" id="ec-addr" name="Edit.Address" maxlength="500">@Model.Edit.Address</textarea></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-hours">Operating hours</label><textarea class="au-textarea" id="ec-hours" name="Edit.OperatingHours" maxlength="2000">@Model.Edit.OperatingHours</textarea><span class="au-help">Free text the AI reads</span></div>
+                <div class="au-form-field au-span-2"><label class="au-form-label" for="ec-consult">Booking info</label><textarea class="au-textarea" id="ec-consult" name="Edit.BookingInfo" maxlength="2000">@Model.Edit.BookingInfo</textarea></div>
             </div>
         </div>
         <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Save details</button></div>

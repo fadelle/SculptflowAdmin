@@ -1,5 +1,6 @@
 @model IReadOnlyList<Omni.Admin.Entities.Models.AdminAuditEntry>
-@* Admin audit entries as table rows (audit log, client details). The caller wraps it in .au-table-card. *@
+@* Admin audit entries as table rows (audit log, client details). The caller wraps it in .au-table-card. Details read as
+   "Field: old → new" lines (AuditDetails; QA t6-admin-10); more than four lines fold into "Show all". *@
 @if (Model.Count == 0)
 {
     var empty = new EmptyStateModel(Context.Request.HasFilters() ? "No admin changes match your filters." : "No admin changes yet.", "verified_user");
@@ -10,20 +11,48 @@ else
     <div class="au-table-scroll">
         <table class="au-table">
             <thead>
-                <tr><th>When</th><th>Admin</th><th>Action</th><th>Record</th><th>Details</th></tr>
+                <tr><th>When</th><th>Admin</th><th>Action</th><th>Record</th><th class="au-audit-details">Details</th></tr>
             </thead>
             <tbody>
                 @foreach (var a in Model)
                 {
                     <tr>
                         <td>@Ui.Time(a.CreatedAt)</td>
-                        <td>@a.AdminEmail</td>
-                        <td class="au-strong">@a.Action</td>
+                        <td><span class="au-audit-admin" title="@a.AdminEmail">@(a.AdminEmail.Split('@')[0])</span></td>
+                        <td class="au-strong nowrap">@a.Action</td>
                         <td>
-                            <div class="au-cell-2l"><span title="@a.EntityId">@a.EntityId</span><span>@a.EntityType</span></div>
+                            <div class="au-cell-2l"><span class="au-mono" title="@a.EntityId">@(a.EntityId is { Length: > 12 } id ? id[..8] + "…" : a.EntityId)</span><span>@a.EntityType</span></div>
                             @if (a.ClientId.HasValue) { <a class="au-caption" href="/Clients/Details?id=@a.ClientId">client</a> }
                         </td>
-                        <td class="au-wrap"><span class="au-mono">@Ui.Truncate(a.Details, 300)</span></td>
+                        <td class="au-audit-details">
+                            @{ var lines = AuditDetails.Describe(a.Details); }
+                            @if (lines.Count == 0)
+                            {
+                                <span class="au-faint">—</span>
+                            }
+                            else
+                            {
+                                var shown = lines.Count > 4 ? lines.Take(3).ToList() : lines.ToList();
+                                <ul class="au-audit-lines">
+                                    @foreach (var line in shown)
+                                    {
+                                        @AuditDetails.Html(line)
+                                    }
+                                </ul>
+                                @if (lines.Count > 4)
+                                {
+                                    <details class="au-audit-more">
+                                        <summary>Show all @lines.Count</summary>
+                                        <ul class="au-audit-lines">
+                                            @foreach (var line in lines.Skip(3))
+                                            {
+                                                @AuditDetails.Html(line)
+                                            }
+                                        </ul>
+                                    </details>
+                                }
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>

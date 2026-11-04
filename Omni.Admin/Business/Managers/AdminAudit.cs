@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Omni.Admin.Business.Contracts.Managers;
+using Omni.Admin.Common.Helpers;
 using Omni.Admin.Common.Statics;
 using Omni.Admin.Entities.Models;
 using Omni.Admin.Persistence.Contracts;
@@ -37,7 +38,8 @@ public class AdminAudit : IAdminAudit
             EntityType = entityType,
             EntityId = entityId?.ToString(),
             ClientId = clientId,
-            Details = details is null ? null : details as string ?? JsonSerializer.Serialize(details),
+            // Relaxed escaping: Arabic, accents and "+" are stored as themselves, not \u0639 (QA t6-admin-10).
+            Details = details is null ? null : details as string ?? JsonSerializer.Serialize(details, AuditDetails.Json),
             CreatedAt = DateTimeOffset.UtcNow
         });
         await _adminUnitOfWork.SaveChangesAsync(ct);
