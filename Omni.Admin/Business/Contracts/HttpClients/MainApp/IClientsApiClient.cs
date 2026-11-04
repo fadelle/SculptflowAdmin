@@ -14,6 +14,12 @@ public interface IClientsApiClient
 
     Task<ClientDetail?> GetAsync(Guid id, CancellationToken ct);
 
+    /// <summary>Opens a client and emails its owner an invite (POST clients, QA t6-admin-20).</summary>
+    Task<ClientCreated> CreateAsync(CreateClientRequest request, CancellationToken ct);
+
+    /// <summary>A new owner invite link (POST clients/{id}/owner-invite).</summary>
+    Task<OwnerInviteSent> ResendOwnerInviteAsync(Guid id, CancellationToken ct);
+
     Task<ClientCounts> CountsAsync(Guid id, CancellationToken ct);
 
     Task<PlatformAdminChange> UpdateAsync(Guid id, ClientUpdate update, CancellationToken ct);

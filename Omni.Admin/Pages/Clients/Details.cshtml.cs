@@ -76,6 +76,10 @@ public class DetailsModel : AdminPageModel
                 new UpdateAccountAiRequest(aiEnabled, botId, newConversations, reopenedConversations), ct),
             "Account AI settings saved.", new { id = Id });
 
+    /// <summary>A new owner invite link (QA t6-admin-20); the main app refuses when the owner already joined or was never invited.</summary>
+    public Task<IActionResult> OnPostResendOwnerInviteAsync(CancellationToken ct) =>
+        RunAsync(() => _clients.ResendOwnerInviteAsync(Id, ct), "A new owner invite was sent.", new { id = Id });
+
     public Task<IActionResult> OnPostDefaultLanguageAsync(string language, CancellationToken ct) =>
         RunAsync(() => _clients.SetDefaultLanguageAsync(Id, language, ct), "Default language saved.", new { id = Id });
 

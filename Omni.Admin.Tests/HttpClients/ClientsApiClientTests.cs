@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using Omni.Admin.Business.HttpClients.MainApp;
+using Omni.Admin.Entities.Requests.Clients;
 using Omni.Admin.Tests.Support;
 
 namespace Omni.Admin.Tests.HttpClients;
@@ -43,5 +44,33 @@ public class ClientsApiClientTests
         var client = await Client().GetAsync(ClientId, default);
 
         Assert.Equal("fr", client!.DefaultLanguage);
+    }
+
+    [Fact]
+    public async Task Create_posts_the_new_client_and_reads_what_happened()
+    {
+        // QA t6-admin-20.
+        _http.Enqueue(HttpStatusCode.Created, $$"""{"clientId":"{{ClientId}}","slug":"glow","planCode":"growth","planStarted":true,"inviteSent":false,"inviteExpiresAt":null}""");
+
+        var created = await Client().CreateAsync(new CreateClientRequest("Glow", "clinic", "olga@x.com", "Olga", "growth", "ar"), default);
+
+        Assert.Equal((ClientId, "glow", "growth", true, false), (created.ClientId, created.Slug, created.PlanCode, created.PlanStarted, created.InviteSent));
+        Assert.Equal(HttpMethod.Post, _http.Requests[0].Method);
+        Assert.Equal($"{TestKit.BaseUrl}/api/platform-admin/clients", _http.Requests[0].Uri.ToString().TrimEnd('/'));
+        using var body = JsonDocument.Parse(_http.Requests[0].Body!);
+        Assert.Equal(("Glow", "clinic", "olga@x.com", "growth", "ar"), (body.RootElement.GetProperty("name").GetString(), body.RootElement.GetProperty("businessTypeCode").GetString(),
+            body.RootElement.GetProperty("ownerEmail").GetString(), body.RootElement.GetProperty("planCode").GetString(), body.RootElement.GetProperty("language").GetString()));
+    }
+
+    [Fact]
+    public async Task ResendOwnerInvite_posts_to_the_clients_owner_invite()
+    {
+        _http.Enqueue(HttpStatusCode.OK, $$"""{"clientId":"{{ClientId}}","email":"olga@x.com","expiresAt":"2026-11-11T12:00:00+00:00"}""");
+
+        var sent = await Client().ResendOwnerInviteAsync(ClientId, default);
+
+        Assert.Equal("olga@x.com", sent.Email);
+        Assert.Equal($"{TestKit.BaseUrl}/api/platform-admin/clients/{ClientId}/owner-invite", _http.Requests[0].Uri.ToString());
+        Assert.Equal(HttpMethod.Post, _http.Requests[0].Method);
     }
 }

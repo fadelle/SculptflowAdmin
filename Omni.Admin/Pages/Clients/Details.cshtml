@@ -35,6 +35,17 @@
 </div>
 
 <div class="au-stack">
+    @if (Model.Counts.Members == 0)
+    {
+        @* A client the portal opened has no users until its owner accepts the emailed invite (QA t6-admin-20). *@
+        <div class="au-alert" role="status" id="owner-invite">
+            <span class="au-icon au-alert__icon" aria-hidden="true">mail</span>
+            <span>Nobody has joined this client yet. If the owner didn't get the invite, or the link expired, send a new one (the old link stops working).</span>
+            <form method="post" asp-page-handler="ResendOwnerInvite" asp-route-id="@c.Id" style="margin-inline-start:auto">
+                <button class="au-btn au-btn--outlined au-btn--sm" type="submit">Send the owner invite again</button>
+            </form>
+        </div>
+    }
     @if (!c.IsActive)
     {
         <div class="au-alert" role="status">

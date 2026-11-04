@@ -17,6 +17,13 @@ public interface IClientAdminService
 
     Task<ClientCounts> CountsAsync(Guid id, CancellationToken ct = default);
 
+    /// <summary>Opens a client for a sale and invites its owner (the main app checks every field and refuses with the reason),
+    /// audited as client.created with what was asked and what happened.</summary>
+    Task<ClientCreated> CreateAsync(CreateClientRequest request, CancellationToken ct = default);
+
+    /// <summary>Emails the client's owner a new invite link, audited as client.owner_invite_sent.</summary>
+    Task<OwnerInviteSent> ResendOwnerInviteAsync(Guid id, CancellationToken ct = default);
+
     Task UpdateAsync(Guid id, ClientUpdate update, CancellationToken ct = default);
 
     Task SetActiveAsync(Guid id, bool active, CancellationToken ct = default);

@@ -2,6 +2,7 @@ using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Managers;
 using Omni.Admin.Business.Contracts.Services.Clients;
 using Omni.Admin.Common.Enums;
+using Omni.Admin.Common.Exceptions;
 using Omni.Admin.Entities.Dtos.BusinessTypes;
 using Omni.Admin.Entities.Dtos.Clients;
 using Omni.Admin.Entities.Requests.Clients;
@@ -58,6 +59,29 @@ public class ClientAdminService : IClientAdminService
                 before = new { before.AiEnabled, before.BotId, before.AiBotNewConversations, before.AiBotReopenedConversations },
                 after = request
             }, ct);
+    }
+
+    public async Task<ClientCreated> CreateAsync(CreateClientRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (string.IsNullOrWhiteSpace(request.Name)) throw new AdminRuleException("Enter the client's name.");
+        if (string.IsNullOrWhiteSpace(request.OwnerEmail)) throw new AdminRuleException("Enter the owner's email: they get the invite.");
+        if (string.IsNullOrWhiteSpace(request.BusinessTypeCode)) throw new AdminRuleException("Pick the business type.");
+        var created = await _api.CreateAsync(request, ct);
+        await _audit.LogAsync("client.created", "client", created.ClientId, created.ClientId,
+            new
+            {
+                name = request.Name.Trim(), businessType = request.BusinessTypeCode, ownerEmail = request.OwnerEmail.Trim(), language = request.Language,
+                plan = created.PlanCode, created.PlanStarted, created.InviteSent
+            }, ct);
+        return created;
+    }
+
+    public async Task<OwnerInviteSent> ResendOwnerInviteAsync(Guid id, CancellationToken ct = default)
+    {
+        var sent = await _api.ResendOwnerInviteAsync(id, ct);
+        await _audit.LogAsync("client.owner_invite_sent", "client", id, sent.ClientId, new { email = sent.Email, expiresAt = sent.ExpiresAt }, ct);
+        return sent;
     }
 
     public async Task SetDefaultLanguageAsync(Guid id, string language, CancellationToken ct = default)

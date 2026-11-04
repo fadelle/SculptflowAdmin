@@ -1,0 +1,68 @@
+@page
+@model Omni.Admin.Pages.Clients.NewModel
+@{ ViewData["Title"] = "New client"; }
+<div class="au-back-header">
+    <a class="au-icon-btn au-icon-btn--bordered" href="/Clients" aria-label="Back to clients"><span class="au-icon" aria-hidden="true">arrow_back</span></a>
+    <div style="min-width:0">
+        <h2 class="au-back-header__title">New client</h2>
+        <span class="au-back-header__sub">Open an account for someone you sold to. The owner gets an email to set their password and sign in.</span>
+    </div>
+</div>
+
+@if (Model.Error is not null)
+{
+    <div class="au-alert au-alert--error" role="alert" id="new-client-error" style="margin-bottom:16px"><span class="au-icon au-alert__icon" aria-hidden="true">error</span><span>@Model.Error</span></div>
+}
+
+<section class="au-panel au-panel--round au-panel--pad">
+    <form method="post" id="new-client-form" class="au-stack">
+        <div class="au-form-grid">
+            <div class="au-form-field">
+                <label class="au-form-label" for="nc-name">Client name</label>
+                <input class="au-input" id="nc-name" name="Name" value="@Model.Name" maxlength="200" required dir="auto" autocomplete="off" />
+            </div>
+            <div class="au-form-field">
+                <label class="au-form-label" for="nc-type">Business type</label>
+                <select class="au-select" id="nc-type" name="BusinessTypeCode" required>
+                    <option value="">(choose a business type)</option>
+                    @foreach (var t in Model.Types)
+                    {
+                        <option value="@t.Code" selected="@(t.Code == Model.BusinessTypeCode)">@(t.Name.GetValueOrDefault("en") ?? t.Code) (@t.Code)</option>
+                    }
+                </select>
+            </div>
+            <div class="au-form-field">
+                <label class="au-form-label" for="nc-owner-email">Owner's email</label>
+                <input class="au-input" type="email" id="nc-owner-email" name="OwnerEmail" value="@Model.OwnerEmail" maxlength="256" required dir="ltr" autocomplete="off" />
+                <span class="au-caption">They get the invite and become the account owner (they manage the team, channels and plan).</span>
+            </div>
+            <div class="au-form-field">
+                <label class="au-form-label" for="nc-owner-name">Owner's name <span class="au-caption">optional</span></label>
+                <input class="au-input" id="nc-owner-name" name="OwnerName" value="@Model.OwnerName" maxlength="200" dir="auto" autocomplete="off" />
+            </div>
+            <div class="au-form-field">
+                <label class="au-form-label" for="nc-plan">Plan</label>
+                <select class="au-select" id="nc-plan" name="PlanCode">
+                    <option value="">The sign-up plan (Billing:SignupPlanCode)</option>
+                    @foreach (var p in Model.Plans)
+                    {
+                        <option value="@p.Code" selected="@(p.Code == Model.PlanCode)">@p.Name (@p.Code)@(p.TrialDays is > 0 ? $" — {p.TrialDays}-day trial" : "")</option>
+                    }
+                </select>
+                <span class="au-caption">The first period is free; change it later on the client's Billing page.</span>
+            </div>
+            <div class="au-form-field">
+                <label class="au-form-label" for="nc-language">Dashboard and email language</label>
+                <select class="au-select" id="nc-language" name="Language">
+                    <option value="en" selected="@(Model.Language == "en")">English</option>
+                    <option value="ar" selected="@(Model.Language == "ar")">Arabic</option>
+                    <option value="fr" selected="@(Model.Language == "fr")">French</option>
+                </select>
+            </div>
+        </div>
+        <div class="au-row au-row--wrap">
+            <button class="au-btn au-btn--primary" type="submit"><span class="au-icon" aria-hidden="true">add</span>Open the client and invite the owner</button>
+            <a class="au-btn" href="/Clients">Cancel</a>
+        </div>
+    </form>
+</section>

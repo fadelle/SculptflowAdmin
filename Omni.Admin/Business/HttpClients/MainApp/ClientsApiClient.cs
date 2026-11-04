@@ -30,6 +30,12 @@ public class ClientsApiClient : MainAppApiClient, IClientsApiClient
 
     public Task<ClientCounts> CountsAsync(Guid id, CancellationToken ct) => GetRequiredAsync<ClientCounts>($"/{id}/counts", ct);
 
+    public Task<ClientCreated> CreateAsync(CreateClientRequest request, CancellationToken ct) =>
+        WriteForAsync<ClientCreated>(HttpMethod.Post, "", request, null, true, ct);
+
+    public Task<OwnerInviteSent> ResendOwnerInviteAsync(Guid id, CancellationToken ct) =>
+        WriteForAsync<OwnerInviteSent>(HttpMethod.Post, $"/{id}/owner-invite", null, null, false, ct);
+
     public Task<PlatformAdminChange> UpdateAsync(Guid id, ClientUpdate update, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/{id}", update, null, false, ct);
 

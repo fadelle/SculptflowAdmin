@@ -15,7 +15,7 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 | Area | See | Change |
 |---|---|---|
 | Dashboard | Totals across clients, messages per day, a "needs attention" list (broken channels/calendars, failing sends, stuck campaigns, failed website scrapes), newest clients | |
-| Clients | Every tenant with counts; per client: details, member, channels, dashboard language, Inbox settings (AI bot switches), KB search settings, admin history | Edit details, activate/deactivate, set the dashboard's default language (English, Arabic, French), turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
+| Clients | Every tenant with counts; per client: details, member, channels, dashboard language, Inbox settings (AI bot switches), KB search settings, admin history | **New client** (name, business type, plan, language, owner email: the main app opens it and emails the owner a link to set their password; "Send the owner invite again" on a client nobody has joined yet), edit details, activate/deactivate, set the dashboard's default language (English, Arabic, French), turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
 | Member accounts | All main-app users with client, membership, sign-in methods, own dashboard language ("Business default" when none) | Lock/unlock sign-in, deactivate/reactivate membership, set password, mark email confirmed |
 | Contacts | All contacts with filters; per contact: conversations, bookings, events, opt-out | Status, qualification, marketing opt-in, notes; export a contact's data (JSON) and delete it for good for a privacy request |
 | Conversations | All threads; full message timeline | Hand to member / return to AI, close/reopen |

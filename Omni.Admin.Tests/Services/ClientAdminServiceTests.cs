@@ -2,6 +2,8 @@ using Moq;
 using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Managers;
 using Omni.Admin.Business.Services.Clients;
+using Omni.Admin.Common.Exceptions;
+using Omni.Admin.Entities.Requests.Clients;
 using Omni.Admin.Entities.Responses.PlatformAdmin;
 
 namespace Omni.Admin.Tests.Services;
@@ -61,5 +63,42 @@ public class ClientAdminServiceTests
         _api.Setup(a => a.GetAsync(Id, It.IsAny<CancellationToken>())).ReturnsAsync((ClientDetail?)null);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => Service().SetDefaultLanguageAsync(Id, "fr"));
+    }
+
+    [Fact]
+    public async Task Create_opens_the_client_in_the_main_app_and_audits_what_was_asked_and_what_happened()
+    {
+        // QA t6-admin-20.
+        var request = new CreateClientRequest(" Glow ", "clinic", " olga@x.com ", "Olga", null, "ar");
+        _api.Setup(a => a.CreateAsync(request, It.IsAny<CancellationToken>())).ReturnsAsync(new ClientCreated(Id, "glow", "starter", true, true, DateTimeOffset.UtcNow));
+        object? details = null;
+        _audit.Setup(a => a.LogAsync("client.created", "client", Id, Id, It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string, object?, Guid?, object?, CancellationToken>((_, _, _, _, d, _) => details = d)
+            .Returns(Task.CompletedTask);
+
+        var created = await Service().CreateAsync(request);
+
+        Assert.Equal("glow", created.Slug);
+        Assert.Equal("{ name = Glow, businessType = clinic, ownerEmail = olga@x.com, language = ar, plan = starter, PlanStarted = True, InviteSent = True }", details?.ToString());
+    }
+
+    [Theory]
+    [InlineData(" ", "clinic", "o@x.com")]
+    [InlineData("Glow", "", "o@x.com")]
+    [InlineData("Glow", "clinic", " ")]
+    public async Task Create_needs_a_name_a_business_type_and_the_owners_email_before_calling_the_main_app(string name, string type, string email)
+    {
+        await Assert.ThrowsAsync<AdminRuleException>(() => Service().CreateAsync(new CreateClientRequest(name, type, email, null, null, "en")));
+        _audit.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task ResendOwnerInvite_is_audited_under_the_client()
+    {
+        _api.Setup(a => a.ResendOwnerInviteAsync(Id, It.IsAny<CancellationToken>())).ReturnsAsync(new OwnerInviteSent(Id, "olga@x.com", DateTimeOffset.UtcNow.AddDays(7)));
+
+        await Service().ResendOwnerInviteAsync(Id);
+
+        _audit.Verify(a => a.LogAsync("client.owner_invite_sent", "client", Id, Id, It.IsAny<object?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }
