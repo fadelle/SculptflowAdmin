@@ -49,6 +49,9 @@ public interface IBillingApiClient
     /// <summary>Sets a client's units of an add-on; added units are charged now, so it carries an Idempotency-Key.</summary>
     Task<List<ClientAddonRow>> SetClientAddonAsync(Guid clientId, string code, SetClientAddonRequest r, string opId, CancellationToken ct);
 
+    /// <summary>PUT clients/{id}/addons/{code}/renewal: whether the add-on renews with the plan.</summary>
+    Task<List<ClientAddonRow>> SetClientAddonRenewalAsync(Guid clientId, string code, SetAddonRenewalRequest r, CancellationToken ct);
+
     Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct);
 
     Task UpdateRateCardAsync(string code, RateCardUpdateRequest r, CancellationToken ct);
@@ -56,6 +59,9 @@ public interface IBillingApiClient
     Task AddRateAsync(string code, AddRateRequest r, CancellationToken ct);
 
     Task CloseRateAsync(Guid rateId, CancellationToken ct);
+
+    /// <summary>DELETE rates/{id}: withdraws a version that hasn't started (QA t2-billing-04).</summary>
+    Task CancelScheduledRateAsync(Guid rateId, CancellationToken ct);
 
     Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
 

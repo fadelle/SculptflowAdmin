@@ -60,4 +60,8 @@ public class RatesModel : MainAppPageModel
 
     public Task<IActionResult> OnPostCloseRateAsync(Guid rateId, CancellationToken ct) =>
         RunAsync(() => _billing.CloseRateAsync(rateId, ct), "Rate closed: it no longer prices new usage.", Back);
+
+    /// <summary>An upcoming version can't be "ended" before it starts; it is cancelled instead (QA t2-billing-04).</summary>
+    public Task<IActionResult> OnPostCancelScheduledRateAsync(Guid rateId, CancellationToken ct) =>
+        RunAsync(() => _billing.CancelScheduledRateAsync(rateId, ct), "Scheduled version cancelled: the current price keeps applying.", Back);
 }

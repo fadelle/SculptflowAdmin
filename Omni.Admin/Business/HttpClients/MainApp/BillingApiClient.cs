@@ -73,6 +73,9 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
     public Task<List<ClientAddonRow>> SetClientAddonAsync(Guid clientId, string code, SetClientAddonRequest r, string opId, CancellationToken ct) =>
         WriteForAsync<List<ClientAddonRow>>(HttpMethod.Put, $"clients/{clientId}/addons/{Esc(code)}", r, opId, false, ct);
 
+    public Task<List<ClientAddonRow>> SetClientAddonRenewalAsync(Guid clientId, string code, SetAddonRenewalRequest r, CancellationToken ct) =>
+        WriteForAsync<List<ClientAddonRow>>(HttpMethod.Put, $"clients/{clientId}/addons/{Esc(code)}/renewal", r, null, false, ct);
+
     public Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct) =>
         WriteAsync(HttpMethod.Post, "rate-cards", r, null, true, ct);
 
@@ -84,6 +87,9 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
 
     public Task CloseRateAsync(Guid rateId, CancellationToken ct) =>
         WriteAsync(HttpMethod.Post, $"rates/{rateId}/close", new CloseRateRequest(null), null, false, ct);
+
+    public Task CancelScheduledRateAsync(Guid rateId, CancellationToken ct) =>
+        WriteAsync(HttpMethod.Delete, $"rates/{rateId}", null, null, false, ct);
 
     public Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct) =>
         WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription", r, opId, false, ct);

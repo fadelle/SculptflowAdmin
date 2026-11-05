@@ -123,15 +123,27 @@
                         {
                             <div class="au-table-scroll">
                                 <table class="au-table">
-                                    <thead><tr><th>Add-on</th><th class="au-right">Units</th><th class="au-right">Per period</th></tr></thead>
+                                    <thead><tr><th>Add-on</th><th class="au-right">Units</th><th class="au-right">Per period</th><th>At renewal</th></tr></thead>
                                     <tbody>
                                         @foreach (var a in addons)
                                         {
-                                            <tr><td>@a.Name <div class="au-caption au-mono">@a.EntitlementKey</div></td><td class="au-right">+@a.Quantity</td><td class="au-right">@BillingUi.Money(a.PeriodPrice, a.Currency) <div class="au-caption">@BillingUi.Money(a.UnitPrice) each</div></td></tr>
+                                            <tr><td>@a.Name <div class="au-caption au-mono">@a.EntitlementKey</div></td><td class="au-right">+@a.Quantity</td><td class="au-right">@BillingUi.Money(a.PeriodPrice, a.Currency) <div class="au-caption">@BillingUi.Money(a.UnitPrice) each</div></td>
+                                                <td>
+                                                    <form method="post" asp-page-handler="AddonRenewal" asp-route-id="@Model.Id">
+                                                        <input type="hidden" name="addonCode" value="@a.Code" />
+                                                        <select class="au-select au-select--sm" name="choice" aria-label="At renewal: @a.Name" onchange="this.form.requestSubmit()">
+                                                            <option value="default" selected="@(a.AutoRenew is null)">Default (@(a.AutoRenew is null ? (a.Renews ? "renews" : "ends") : "setting"))</option>
+                                                            <option value="yes" selected="@(a.AutoRenew == true)">Renews (charged)</option>
+                                                            <option value="no" selected="@(a.AutoRenew == false)">Ends</option>
+                                                        </select>
+                                                        <noscript><button class="au-btn au-btn--outlined au-btn--sm" type="submit">Save</button></noscript>
+                                                    </form>
+                                                </td></tr>
                                         }
                                     </tbody>
                                 </table>
                             </div>
+                            <p class="au-help" style="margin:8px 16px">At each renewal an add-on that doesn't renew ends (its units go, nothing is charged). One that renews is charged with the plan; if the wallet can't pay it, it ends and the plan still renews. "Default" follows the Billing:AddonsRenewByDefault setting.</p>
                         }
                     </section>
 

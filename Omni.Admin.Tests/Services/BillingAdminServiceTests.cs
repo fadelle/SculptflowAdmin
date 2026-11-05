@@ -38,6 +38,40 @@ public class BillingAdminServiceTests
         _audit.VerifyNoOtherCalls();
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public async Task An_add_ons_renewal_choice_is_sent_to_the_main_app_and_audited(bool? autoRenew)
+    {
+        // Decided 2026-11-05: add-ons end at renewal unless set to renew; null follows Billing:AddonsRenewByDefault.
+        _api.Setup(a => a.SetClientAddonRenewalAsync(_clientId, "extra-user", It.IsAny<SetAddonRenewalRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ClientAddonRow>());
+
+        await Sut().SetClientAddonRenewalAsync(_clientId, " extra-user ", autoRenew, default);
+
+        _api.Verify(a => a.SetClientAddonRenewalAsync(_clientId, "extra-user", new SetAddonRenewalRequest(autoRenew), It.IsAny<CancellationToken>()), Times.Once);
+        _audit.Verify(a => a.LogAsync("billing.client_addon_renewal", "billing_client_addon", "extra-user", _clientId, It.IsAny<object?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task A_renewal_choice_without_an_add_on_never_reaches_the_main_app()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => Sut().SetClientAddonRenewalAsync(_clientId, " ", true, default));
+        _api.VerifyNoOtherCalls();
+        _audit.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task Cancelling_a_scheduled_rate_goes_to_the_main_app_and_is_audited()
+    {
+        // QA t2-billing-04: an upcoming version couldn't be withdrawn ("End now" always failed).
+        var rateId = Guid.NewGuid();
+        await Sut().CancelScheduledRateAsync(rateId, default);
+        _api.Verify(a => a.CancelScheduledRateAsync(rateId, It.IsAny<CancellationToken>()), Times.Once);
+        _audit.Verify(a => a.LogAsync("billing.rate_cancel_scheduled", "billing_rate", rateId, null, null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task Saving_a_catalog_add_on_is_audited_under_its_code()
     {

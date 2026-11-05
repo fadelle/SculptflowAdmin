@@ -53,6 +53,10 @@ public interface IBillingAdminService
     /// <summary>Sets a client's units of an add-on (0 removes it; added units are charged from the wallet now).</summary>
     Task SetClientAddonAsync(Guid clientId, string code, int quantity, string opId, CancellationToken ct);
 
+    /// <summary>Whether a client's add-on renews with the plan: true, false, or null = the main app's default
+    /// (Billing:AddonsRenewByDefault). One that doesn't renew ends at the next renewal, uncharged.</summary>
+    Task SetClientAddonRenewalAsync(Guid clientId, string code, bool? autoRenew, CancellationToken ct);
+
     Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct);
 
     Task UpdateRateCardAsync(string code, RateCardUpdateRequest r, CancellationToken ct);
@@ -60,6 +64,9 @@ public interface IBillingAdminService
     Task AddRateAsync(string code, AddRateRequest r, CancellationToken ct);
 
     Task CloseRateAsync(Guid rateId, CancellationToken ct);
+
+    /// <summary>Withdraws a rate version that hasn't started; the previous version keeps applying (audited).</summary>
+    Task CancelScheduledRateAsync(Guid rateId, CancellationToken ct);
 
     Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
 

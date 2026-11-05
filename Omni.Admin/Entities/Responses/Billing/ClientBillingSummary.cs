@@ -28,4 +28,5 @@ public record ClientBillingSummary(
     IReadOnlyList<ClientChannelBillingRow> ChannelAccounts,
     IReadOnlyList<ProviderDirectUsageRow> ProviderDirectUsage,
     int? TrialDays = null,
-    IReadOnlyList<ClientAddonRow>? Addons = null);
+    IReadOnlyList<ClientAddonRow>? Addons = null,
+    DateTimeOffset? EndedAt = null);

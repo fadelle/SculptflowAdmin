@@ -38,6 +38,19 @@ public class BillingApiClientTests
     }
 
     [Fact]
+    public async Task An_add_ons_renewal_choice_is_put_and_the_rows_carry_it()
+    {
+        var clientId = Guid.NewGuid();
+        _http.Enqueue(HttpStatusCode.OK, """[{"code":"extra-user","name":"Extra user","entitlementKey":"max_users","quantity":1,"unitPrice":8.00,"currency":"USD","periodPrice":8.00,"autoRenew":null,"renews":false}]""");
+
+        var rows = await Client().SetClientAddonRenewalAsync(clientId, "extra-user", new SetAddonRenewalRequest(null), default);
+
+        Assert.Equal(((bool?)null, false), (Assert.Single(rows).AutoRenew, rows[0].Renews));
+        Assert.Equal((HttpMethod.Put, $"/api/platform-admin/billing/clients/{clientId}/addons/extra-user/renewal"), (_http.Requests[0].Method, _http.Requests[0].Uri.AbsolutePath));
+        Assert.Contains("\"autoRenew\":null", _http.Requests[0].Body);
+    }
+
+    [Fact]
     public async Task A_plan_carries_its_trial_days_both_ways()
     {
         _http.Enqueue(HttpStatusCode.OK, """[{"id":"6f1c0000-0000-4000-8000-000000000001","code":"trial","name":"Free Trial","description":null,"price":0,"currency":"USD","billingPeriod":"month","includedUsageCredit":0,"rateCardCode":null,"isActive":true,"sortOrder":0,"entitlements":{"max_ai_bots":"0"},"subscribers":4,"trialDays":7}]""");

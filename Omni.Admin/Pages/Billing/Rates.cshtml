@@ -62,7 +62,14 @@
                                     <div>@Ui.Badge(current ? "active" : upcoming ? "scheduled" : "inactive", current ? "current" : upcoming ? "upcoming" : "ended")</div></td>
                                 <td class="au-wrap">@Ui.OrDash(r.Notes) @if (r.CreatedBy is not null) { <div class="au-caption">by @r.CreatedBy</div> }</td>
                                 <td>
-                                    @if (current || upcoming)
+                                    @if (upcoming)
+                                    {
+                                        <form method="post" asp-page-handler="CancelScheduledRate" asp-route-code="@c.Code" asp-route-history="@Model.History">
+                                            <input type="hidden" name="rateId" value="@r.Id" />
+                                            <button class="au-btn au-btn--danger-outlined au-btn--sm" type="submit" data-confirm="Cancel this scheduled version? It will never apply, and the current price stays in force.">Cancel</button>
+                                        </form>
+                                    }
+                                    else if (current)
                                     {
                                         <form method="post" asp-page-handler="CloseRate" asp-route-code="@c.Code" asp-route-history="@Model.History">
                                             <input type="hidden" name="rateId" value="@r.Id" />

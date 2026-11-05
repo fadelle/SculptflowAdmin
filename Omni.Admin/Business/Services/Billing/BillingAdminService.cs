@@ -82,6 +82,13 @@ public class BillingAdminService : IBillingAdminService
         await _audit.LogAsync("billing.client_addon_set", "billing_client_addon", code.Trim(), clientId, new { quantity }, ct);
     }
 
+    public async Task SetClientAddonRenewalAsync(Guid clientId, string code, bool? autoRenew, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(code)) throw new ArgumentException("Choose an add-on.");
+        await _api.SetClientAddonRenewalAsync(clientId, code.Trim(), new SetAddonRenewalRequest(autoRenew), ct);
+        await _audit.LogAsync("billing.client_addon_renewal", "billing_client_addon", code.Trim(), clientId, new { autoRenew }, ct);
+    }
+
     public async Task CreateRateCardAsync(RateCardRequest r, CancellationToken ct)
     {
         await _api.CreateRateCardAsync(r, ct);
@@ -104,6 +111,12 @@ public class BillingAdminService : IBillingAdminService
     {
         await _api.CloseRateAsync(rateId, ct);
         await _audit.LogAsync("billing.rate_close", "billing_rate", rateId, null, null, ct);
+    }
+
+    public async Task CancelScheduledRateAsync(Guid rateId, CancellationToken ct)
+    {
+        await _api.CancelScheduledRateAsync(rateId, ct);
+        await _audit.LogAsync("billing.rate_cancel_scheduled", "billing_rate", rateId, null, null, ct);
     }
 
     public async Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct)

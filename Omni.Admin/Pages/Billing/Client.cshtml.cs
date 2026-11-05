@@ -81,6 +81,19 @@ public class ClientModel : MainAppPageModel
         RunAsync(() => _billing.SetClientAddonAsync(Id, addonCode ?? "", quantity, opId ?? "", ct),
             quantity == 0 ? "Add-on removed (nothing is refunded)." : "Add-on units set. Added units were charged from the wallet.", Back);
 
+    public Task<IActionResult> OnPostAddonRenewalAsync(string? addonCode, string? choice, CancellationToken ct) =>
+        RunAsync(() =>
+        {
+            bool? autoRenew = choice switch
+            {
+                "yes" => true,
+                "no" => false,
+                "default" => null,
+                _ => throw new ArgumentException("Choose whether the add-on renews."),
+            };
+            return _billing.SetClientAddonRenewalAsync(Id, addonCode ?? "", autoRenew, ct);
+        }, "Add-on renewal saved. It applies at the next renewal.", Back);
+
     public Task<IActionResult> OnPostCancelAsync(bool immediately, string? reason, CancellationToken ct) =>
         RunAsync(() => _billing.CancelSubscriptionAsync(Id, new CancelSubscriptionRequest(immediately, Clean(reason)), ct),
             immediately ? "Subscription cancelled now." : "Subscription will end at the end of the current period.", Back);
