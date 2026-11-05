@@ -22,16 +22,20 @@
 
 @if (r is not null)
 {
-    var totalRevenue = r.UsageRevenue + r.SubscriptionRevenue;
+    // Recurring (subscriptions + add-ons) and usage (QA t2-billing-09: add-on revenue was missing).
+    var totalRevenue = r.UsageRevenue + r.SubscriptionRevenue + r.AddonRevenue;
     <div class="au-stack">
         <div class="au-grid au-grid--4" style="--au-gap:12px">
-            <div class="au-stat"><span class="au-eyebrow">Total revenue</span><div class="au-stat__value">@BillingUi.Money(totalRevenue)</div><div class="au-stat__hint">@cur · subscriptions + usage</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Total revenue</span><div class="au-stat__value">@BillingUi.Money(totalRevenue)</div><div class="au-stat__hint">@cur · subscriptions + add-ons + usage</div></div>
             <div class="au-stat"><span class="au-eyebrow">Subscription revenue</span><div class="au-stat__value">@BillingUi.Money(r.SubscriptionRevenue)</div><div class="au-stat__hint">@cur</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Add-on revenue</span><div class="au-stat__value">@BillingUi.Money(r.AddonRevenue)</div><div class="au-stat__hint">@cur · recurring</div></div>
             <div class="au-stat"><span class="au-eyebrow">Usage revenue</span><div class="au-stat__value">@BillingUi.Money(r.UsageRevenue)</div><div class="au-stat__hint">@cur, after refunds</div></div>
             <div class="au-stat"><span class="au-eyebrow">Usage margin</span><div class="au-stat__value @(r.Margin < 0 ? "au-text-error" : null)">@BillingUi.Money(r.Margin)</div><div class="au-stat__hint">usage revenue − cost Omni paid</div></div>
             <div class="au-stat"><span class="au-eyebrow">Provider cost paid by Omni</span><div class="au-stat__value">@BillingUi.Money(r.ProviderCostPaidByPlatform)</div><div class="au-stat__hint">@cur</div></div>
             <div class="au-stat"><span class="au-eyebrow">Provider cost paid by clients</span><div class="au-stat__value">@BillingUi.Money(r.ProviderCostPaidExternally)</div><div class="au-stat__hint">estimate, not Omni money</div></div>
             <div class="au-stat"><span class="au-eyebrow">Wallet top-ups</span><div class="au-stat__value">@BillingUi.Money(r.TopUps)</div><div class="au-stat__hint">cash received</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Manual adjustments</span><div class="au-stat__value">@BillingUi.Money(r.ManualAdjustments)</div><div class="au-stat__hint">net wallet credit given (+) or taken (−)</div></div>
+            <div class="au-stat"><span class="au-eyebrow">Usage refunds</span><div class="au-stat__value">@BillingUi.Money(r.UsageRefunds)</div><div class="au-stat__hint">back to wallets, already out of usage revenue</div></div>
         </div>
 
         <section class="au-table-card">
