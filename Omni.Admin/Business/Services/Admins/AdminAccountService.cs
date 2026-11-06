@@ -43,6 +43,8 @@ public class AdminAccountService : IAdminAccountService
     public async Task<AdminRow> SetPasswordAsync(string id, string? password, CancellationToken ct = default)
     {
         var admin = await _api.SetPasswordAsync(id, password, ct);
+        // Their open sessions end on their next click (the main app changed the session stamp), not when the remembered answer runs out.
+        _auth.Forget(id);
         await _audit.LogAsync("admin.password_set", "admin_user", id, ct: ct);
         return admin;
     }

@@ -5,8 +5,13 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
 
 - Admins are users of the main app with role `admin` (`identity.users`). The main app checks their sign-in
   (`/api/platform-admin/auth`) and keeps their accounts (`/api/platform-admin/admins`); this portal issues its own cookie and
-  asks the main app on every request (remembered for a minute) whether the admin is still active. Client and member accounts
+  asks the main app on every request (remembered for a minute) whether the admin is still active and still has the same
+  password (a session stamp: setting an admin's password signs their open sessions out). Client and member accounts
   can never sign in here, and admin accounts can never sign in to the client app.
+- Sign-in attempts are limited to 10 per network per 15 minutes (`Common/Helpers/LoginThrottling`); wrong passwords never lock
+  an admin account, so nobody can keep an admin out. The visitor's network is the edge's client-IP header
+  (`Proxy:ClientIpHeader`, CF-Connecting-IP behind Render's Cloudflare, like the main app). Outside development the cookie is
+  always Secure, and forwarded headers make HTTPS redirection and HSTS work behind Render's proxy.
 - Every change made here is recorded in `admin_audit_log` (who, what, when, before/after), shown as readable "field: old → new" lines.
 - Internal only: it shows provider details (Meta ids) that client-facing pages never show.
 

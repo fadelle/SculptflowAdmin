@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
+using Omni.Admin.Common.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Omni.Admin.Business.Contracts.HttpClients.MainApp;
 using Omni.Admin.Business.Contracts.Managers;
@@ -118,7 +120,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         o.Cookie.Name = "omni.admin";
         o.Cookie.HttpOnly = true;
         o.Cookie.SameSite = SameSiteMode.Strict;
-        o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        // Always Secure outside development (QA t6-admin-14): behind Render's proxy every request looked like plain http, so the
+        // cookie went out without Secure. Local development runs on plain http.
+        o.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
         o.ExpireTimeSpan = TimeSpan.FromHours(8);
         o.SlidingExpiration = true;
         o.LoginPath = "/Login";
@@ -140,11 +144,24 @@ builder.Services.AddAuthorization(o =>
     o.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
 });
 
+// Behind Render's proxy the portal only sees plain http: trusting X-Forwarded-Proto makes Request.IsHttps true again, so HTTPS
+// redirection and HSTS work (QA t6-admin-14). Only the address Render appended counts from X-Forwarded-For (ForwardLimit 1), so a
+// client can't choose its own; sign-in throttling keys on the edge's client-IP header (Proxy:ClientIpHeader).
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+// At most LoginThrottling.AttemptsPerWindow sign-in attempts per network per 15 minutes (QA t6-admin-12).
+builder.Services.AddLoginThrottling();
+
 builder.Services.AddRazorPages().AddMvcOptions(o => o.Filters.Add<ScopePageFilter>());
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -158,6 +175,7 @@ app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"),
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

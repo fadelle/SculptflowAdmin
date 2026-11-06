@@ -69,6 +69,8 @@ public class AdminAccountServiceTests
         await Service().SetPasswordAsync("ad2", "new-long-password");
 
         VerifyAudited("admin.password_set", "ad2");
+        // QA t6-admin-13: their open sessions end on their next click, not when the remembered answer runs out.
+        _auth.Verify(a => a.Forget("ad2"), Times.Once);
     }
 
     [Fact]

@@ -24,6 +24,9 @@ public class AdminAuthService : IAdminAuthService
     public const string SignInUnavailable = "Sign-in isn't available right now: the portal couldn't use the main app's admin API. " +
         "Try again in a moment; if it keeps failing, check the portal's MainApp settings.";
 
+    /// <summary>The cookie claim holding the account's session stamp (AdminIdentity.SessionStamp).</summary>
+    public const string SessionClaim = "omni:session";
+
     /// <summary>How long the main app's "still an active admin" answer is trusted before it is asked again.</summary>
     public static readonly TimeSpan RecheckAfter = TimeSpan.FromMinutes(1);
 
@@ -69,18 +72,20 @@ public class AdminAuthService : IAdminAuthService
 
     public static ClaimsPrincipal ToPrincipal(AdminIdentity admin)
     {
-        var identity = new ClaimsIdentity(new[]
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, admin.Id),
-            new Claim(ClaimTypes.Email, admin.Email ?? string.Empty),
-            new Claim(ClaimTypes.Name, DisplayName(admin)),
-        }, CookieAuthenticationDefaults.AuthenticationScheme);
-        return new ClaimsPrincipal(identity);
+            new(ClaimTypes.NameIdentifier, admin.Id),
+            new(ClaimTypes.Email, admin.Email ?? string.Empty),
+            new(ClaimTypes.Name, DisplayName(admin)),
+        };
+        if (!string.IsNullOrEmpty(admin.SessionStamp)) claims.Add(new Claim(SessionClaim, admin.SessionStamp));
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
     }
 
     /// <summary>
-    /// Runs on every request with an admin cookie. The main app says no (deactivated, no longer an admin, gone) → the cookie
-    /// is rejected and removed. A changed name or email is written into a renewed cookie. When the main app can't answer, the
+    /// Runs on every request with an admin cookie. The main app says no (deactivated, no longer an admin, gone), or the admin's
+    /// password was set since this cookie was issued (its session stamp differs, QA t6-admin-13) → the cookie is rejected and
+    /// removed. A changed name or email (or a cookie from before session stamps) is written into a renewed cookie. When the main app can't answer, the
     /// cookie is kept: every page except the audit log reads through the main app anyway (so it shows the Unavailable page),
     /// and a short outage doesn't sign everyone out.
     /// </summary>
@@ -103,7 +108,8 @@ public class AdminAuthService : IAdminAuthService
             }
         }
 
-        if (admin is null)
+        var cookieStamp = context.Principal?.FindFirstValue(SessionClaim);
+        if (admin is null || (cookieStamp is not null && admin.SessionStamp is not null && cookieStamp != admin.SessionStamp))
         {
             context.RejectPrincipal();
             await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -112,7 +118,8 @@ public class AdminAuthService : IAdminAuthService
 
         var current = context.Principal!;
         if (current.FindFirstValue(ClaimTypes.Email) != (admin.Email ?? string.Empty)
-            || current.FindFirstValue(ClaimTypes.Name) != DisplayName(admin))
+            || current.FindFirstValue(ClaimTypes.Name) != DisplayName(admin)
+            || (cookieStamp is null && admin.SessionStamp is not null))
         {
             context.ReplacePrincipal(ToPrincipal(admin));
             context.ShouldRenew = true;

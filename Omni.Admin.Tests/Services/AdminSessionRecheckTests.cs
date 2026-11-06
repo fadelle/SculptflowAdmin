@@ -144,4 +144,46 @@ public class AdminSessionRecheckTests
         Assert.Null(next.Principal);
         VerifySignedOut(Times.Once());
     }
+
+    // ---------------------------------------------------------------- QA t6-admin-13: a new password ends open sessions
+
+    [Fact]
+    public async Task A_cookie_from_before_the_password_was_set_is_signed_out()
+    {
+        _api.Setup(a => a.GetActiveAdminAsync(TestKit.Ada.Id, It.IsAny<CancellationToken>())).ReturnsAsync(TestKit.Ada with { SessionStamp = "NEW0000000000000" });
+        var (context, _) = Request(TestKit.SignedIn(TestKit.Ada with { SessionStamp = "OLD0000000000000" }));
+
+        await AdminAuthService.ValidatePrincipalAsync(context);
+
+        Assert.Null(context.Principal);
+        VerifySignedOut(Times.Once());
+    }
+
+    [Fact]
+    public async Task A_cookie_with_the_current_stamp_is_kept()
+    {
+        var ada = TestKit.Ada with { SessionStamp = "SAME000000000000" };
+        _api.Setup(a => a.GetActiveAdminAsync(ada.Id, It.IsAny<CancellationToken>())).ReturnsAsync(ada);
+        var (context, _) = Request(TestKit.SignedIn(ada));
+
+        await AdminAuthService.ValidatePrincipalAsync(context);
+
+        Assert.NotNull(context.Principal);
+        Assert.False(context.ShouldRenew);
+        VerifySignedOut(Times.Never());
+    }
+
+    [Fact]
+    public async Task A_cookie_from_before_session_stamps_is_renewed_with_the_stamp()
+    {
+        var ada = TestKit.Ada with { SessionStamp = "STAMP00000000000" };
+        _api.Setup(a => a.GetActiveAdminAsync(ada.Id, It.IsAny<CancellationToken>())).ReturnsAsync(ada);
+        var (context, _) = Request(TestKit.SignedIn(TestKit.Ada));
+
+        await AdminAuthService.ValidatePrincipalAsync(context);
+
+        Assert.True(context.ShouldRenew);
+        Assert.Equal("STAMP00000000000", context.Principal!.FindFirstValue(AdminAuthService.SessionClaim));
+        VerifySignedOut(Times.Never());
+    }
 }

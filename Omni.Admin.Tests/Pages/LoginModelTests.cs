@@ -31,7 +31,7 @@ public class LoginModelTests
         var http = new DefaultHttpContext { RequestServices = new ServiceCollection().AddSingleton(_authentication.Object).BuildServiceProvider() };
         var url = new Mock<IUrlHelper>();
         url.Setup(u => u.IsLocalUrl(It.IsAny<string?>())).Returns<string?>(u => u is not null && u.StartsWith('/') && !u.StartsWith("//"));
-        return new LoginModel(_auth.Object, _audit.Object)
+        return new LoginModel(_auth.Object, _audit.Object, Microsoft.Extensions.Logging.Abstractions.NullLogger<LoginModel>.Instance)
         {
             PageContext = new PageContext { HttpContext = http },
             Url = url.Object,
@@ -82,5 +82,19 @@ public class LoginModelTests
         Assert.Equal(message, page.Error);
         Assert.Null(_signedIn);
         _audit.VerifyNoOtherCalls();
+    }
+
+    // QA t6-admin-12: a throttled attempt comes back to the page with the reason.
+    [Fact]
+    public void A_throttled_attempt_shows_why_on_the_sign_in_page()
+    {
+        var page = Page();
+        page.Throttled = true;
+        page.OnGet();
+        Assert.Equal(Omni.Admin.Common.Helpers.LoginThrottling.RejectedMessage, page.Error);
+
+        var plain = Page();
+        plain.OnGet();
+        Assert.Null(plain.Error);
     }
 }

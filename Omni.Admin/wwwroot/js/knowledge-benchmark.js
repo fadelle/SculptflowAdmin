@@ -56,7 +56,11 @@
             note.textContent = 'Generate test cases needs the main app\'s question-generator webhook (N8n__KnowledgeBenchmarkWebhookUrl). Cases can still be added by hand.';
         } else if (generating) {
             note.hidden = false;
-            note.textContent = 'Waiting for the question generator (n8n) to send the questions. This page updates by itself, so you can leave it open or come back later. "Stop generating" stops waiting; n8n may still finish, but its reply will be ignored.';
+            // Since when it waits and when it is given up, so a workflow that never answers is noticed (QA t9-02).
+            var since = d.pendingGenerationSince ? ' since ' + new Date(d.pendingGenerationSince).toLocaleTimeString() : '';
+            var until = d.pendingGenerationTimesOutAt ? ' It is given up at ' + new Date(d.pendingGenerationTimesOutAt).toLocaleTimeString() + ' if nothing comes.' : '';
+            note.textContent = 'Waiting for the question generator (n8n) to send the questions' + since + '. It usually answers within seconds.' + until +
+                ' This page updates by itself, so you can leave it open or come back later. "Stop generating" stops waiting; n8n may still finish, but its reply will be ignored.';
         } else if (note.dataset.busy !== '1') {
             note.hidden = true;
         }
