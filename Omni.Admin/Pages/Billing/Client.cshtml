@@ -354,7 +354,7 @@
             <form method="post" asp-page-handler="SetAddon" asp-route-id="@Model.Id">
                 <h2 class="au-dialog__title" id="set-addon-title">Change add-ons<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
                 <div class="au-dialog__content">
-                    <p class="au-help" style="margin-bottom:16px">Sets how many units of an add-on the client has. Added units are charged from the wallet now (no proration), and every period charges the plan and its add-ons together. Fewer units refund nothing; 0 removes the add-on. Needs an active subscription.</p>
+                    <p class="au-help" style="margin-bottom:16px">Sets how many units of an add-on the client has. Added units are charged from the wallet now (no proration), and every period charges the plan and its add-ons together. Fewer units refund nothing; 0 removes the add-on. Needs an active subscription. A limit the plan already has unlimited can't get units (an add-on held for one ends, uncharged, at the next plan change or renewal).</p>
                     <input type="hidden" name="opId" value="@Model.NewOperationId()" />
                     <div class="au-stack" style="--au-gap:16px">
                         <div class="au-form-field"><label class="au-form-label" for="sa-code">Add-on<span class="au-required">*</span></label>
@@ -363,7 +363,9 @@
                                 @foreach (var a in Model.Addons.Where(a => a.IsActive || s.Addons?.Any(x => x.Code == a.Code) == true).OrderBy(a => a.SortOrder))
                                 {
                                     var has = s.Addons?.FirstOrDefault(x => x.Code == a.Code)?.Quantity ?? 0;
-                                    <option value="@a.Code">@a.Name: @BillingUi.Money(a.UnitPrice, a.Currency) per unit · has @has</option>
+                                    // Units of a limit the plan already has unlimited buy nothing; the main app refuses them (QA t2-billing-06).
+                                    var unlimited = s.Entitlements.Any(e => e.Key == a.EntitlementKey && e.Value == "unlimited");
+                                    <option value="@a.Code" disabled="@(unlimited && has == 0)">@a.Name: @BillingUi.Money(a.UnitPrice, a.Currency) per unit · has @has@(unlimited ? " · already unlimited on this plan" : "")</option>
                                 }
                             </select></div>
                         <div class="au-form-field"><label class="au-form-label" for="sa-qty">Units in total<span class="au-required">*</span></label><input class="au-input" id="sa-qty" type="number" name="quantity" min="0" max="1000" step="1" value="1" required /></div>

@@ -36,6 +36,7 @@ using Omni.Admin.Business.Services.Overview;
 using Omni.Admin.Business.Services.Members;
 using Omni.Admin.Common.Configs;
 using Omni.Admin.Persistence.Contexts;
+using Omni.Admin.Persistence.Helpers;
 using Omni.Admin.Persistence.Contracts;
 using Omni.Admin.Persistence.Contracts.Admins;
 using Omni.Admin.Persistence.Repositories;
@@ -54,6 +55,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "or the ConnectionStrings__Postgres environment variable when hosted.");
 }
 
+// A small cap (Database:MaxPoolSize): the portal shares the Supabase pooler's client limit with the main app (QA t3-inbox-02).
+connectionString = ConnectionPool.WithPoolLimit(connectionString, builder.Configuration.GetValue<int?>("Database:MaxPoolSize"));
 builder.Services.AddDbContext<AdminDbContext>(o => o.UseNpgsql(connectionString));
 
 builder.Services.AddHttpContextAccessor();

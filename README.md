@@ -51,6 +51,8 @@ need a signed-in admin.
    both apps is the main app's `docs/deploy-runbook.md`.
 2. Connection string, same key as the main app:
    `dotnet user-secrets set ConnectionStrings:Postgres "<connection string>"` (hosted: `ConnectionStrings__Postgres`).
+   The portal opens at most `Database:MaxPoolSize` (3) connections: it shares the Supabase pooler's client limit with
+   the main app (QA t3-inbox-02; the main app's deploy runbook, "Database connections and the edge firewall").
 3. Main app connection (required, sign-in goes through it): `MainApp:PublicBaseUrl` (the main app's public URL),
    `MainApp:PlatformAdminApiKey` (a SECRET, user-secrets or `MainApp__PlatformAdminApiKey`) equal to the main app's
    `PlatformAdmin:ApiKey`, and optionally `MainApp:ApiBaseUrl` (where to call the main app; blank = `PublicBaseUrl`).
