@@ -1812,9 +1812,13 @@ a.au-status:hover {
 .au-status__head .au-eyebrow {
   flex: 1;
   min-width: 0;
+  /* up to two lines, then an ellipsis (QA t6-admin-24: "OPEN CONVERSATIONS WIT…") */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 .au-status__head .au-dot {
   background: var(--au-level);
@@ -2634,8 +2638,25 @@ dialog.au-drawer[open] {
    Mobile (<900px) = off-canvas sidebar, <html class="au-side-open">.
    ========================================================================== */
 .au-app {
+  position: relative;
   display: flex;
   min-height: 100vh;
+}
+/* The sidebar's colour down the whole page (QA t6-admin-24: on a long page the dark sidebar stopped at one screen height
+   wherever it didn't stick, e.g. a full-page capture). The sticky sidebar paints over it; the off-canvas phone sidebar has none. */
+@media (min-width: 900px) {
+  .au-app::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: var(--au-sidebar-w);
+    background: var(--au-side-bg-solid);
+    pointer-events: none;
+  }
+  html.au-side-collapsed .au-app::before {
+    width: var(--au-sidebar-w-collapsed);
+  }
 }
 
 /* --- sidebar ------------------------------------------------------------- */

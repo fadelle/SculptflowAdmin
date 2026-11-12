@@ -46,6 +46,18 @@ public static class Ui
         return new HtmlString($"<span class=\"au-chip {tone}\">{text}</span>");
     }
 
+    /// <summary>A channel code as people say it ("whatsapp" → "WhatsApp").</summary>
+    public static string ChannelName(string? channel) => channel?.ToLowerInvariant() switch
+    {
+        "whatsapp" => "WhatsApp",
+        "instagram" => "Instagram",
+        "facebook" => "Messenger",
+        "telegram" => "Telegram",
+        "tiktok" => "TikTok",
+        null or "" => "—",
+        _ => channel
+    };
+
     public static IHtmlContent YesNo(bool value, string yes = "Yes", string no = "No") => Badge(value ? "yes" : "no", value ? yes : no);
 
     /// <summary>A UTC timestamp, shown in the viewer's time zone by site.js (or in <paramref name="timeZone"/> when given).</summary>

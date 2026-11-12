@@ -18,6 +18,9 @@ public interface IChannelAdminService
 
     Task DisconnectAsync(Guid id, CancellationToken ct = default);
 
+    /// <summary>Checks a WhatsApp connection's stored token with Meta and audits the check (QA t8-20).</summary>
+    Task<Omni.Admin.Entities.Dtos.Channels.ChannelCheckResult> CheckAsync(Guid id, CancellationToken ct = default);
+
     Task DisconnectCalendarAsync(Guid id, CancellationToken ct = default);
 
     Task SetCalendarSyncAsync(Guid id, bool enabled, CancellationToken ct = default);

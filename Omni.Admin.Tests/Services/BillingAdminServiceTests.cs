@@ -4,6 +4,8 @@ using Omni.Admin.Business.Contracts.Managers;
 using Omni.Admin.Business.Services.Billing;
 using Omni.Admin.Entities.Dtos.Billing;
 using Omni.Admin.Entities.Requests.Billing;
+using Omni.Admin.Entities.Responses.Billing;
+using Omni.Admin.Common.Enums;
 
 namespace Omni.Admin.Tests.Services;
 
@@ -79,5 +81,41 @@ public class BillingAdminServiceTests
         await Sut().SaveAddonAsync("extra-user", request, default);
         _api.Verify(a => a.SaveAddonAsync("extra-user", request, It.IsAny<CancellationToken>()), Times.Once);
         _audit.Verify(a => a.LogAsync("billing.addon_save", "billing_addon", "extra-user", null, request, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task A_replayed_top_up_or_adjustment_writes_no_second_audit_row()
+    {
+        // QA t6-admin-09: one real top-up showed as four in the audit log (each retry of the form was audited).
+        var entry = Guid.NewGuid();
+        var topUp = new TopUpRequest(1m, "bank", null);
+        _api.SetupSequence(a => a.TopUpAsync(_clientId, topUp, "op-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LedgerResult(entry, 1m, Duplicate: false))
+            .ReturnsAsync(new LedgerResult(entry, 1m, Duplicate: true))
+            .ReturnsAsync(new LedgerResult(entry, 1m, Duplicate: true));
+
+        Assert.True(await Sut().TopUpAsync(_clientId, topUp, "op-1", default));
+        Assert.False(await Sut().TopUpAsync(_clientId, topUp, "op-1", default));
+        Assert.False(await Sut().TopUpAsync(_clientId, topUp, "op-1", default));
+
+        _audit.Verify(a => a.LogAsync("billing.wallet_top_up", "billing_account", _clientId, _clientId,
+            It.Is<object?>(d => System.Text.Json.JsonSerializer.Serialize(d, (System.Text.Json.JsonSerializerOptions?)null).Contains(entry.ToString())
+                && System.Text.Json.JsonSerializer.Serialize(d, (System.Text.Json.JsonSerializerOptions?)null).Contains("op-1")),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        var adjust = new AdjustmentRequest(-1m, "wallet", "correction");
+        _api.Setup(a => a.AdjustAsync(_clientId, adjust, "op-2", It.IsAny<CancellationToken>())).ReturnsAsync(new LedgerResult(entry, 0m, Duplicate: true));
+        Assert.False(await Sut().AdjustAsync(_clientId, adjust, "op-2", default));
+        _audit.Verify(a => a.LogAsync("billing.wallet_adjust", It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<Guid?>(), It.IsAny<object?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void The_portal_offers_the_same_booking_status_moves_as_the_main_app()
+    {
+        // QA t5-ops-03: copy of the main app's BookingStatus.NextFrom.
+        Assert.Empty(BookingStatus.NextFrom(BookingStatus.Canceled));
+        Assert.Empty(BookingStatus.NextFrom(BookingStatus.Rescheduled));
+        Assert.Equal([BookingStatus.NoShow], BookingStatus.NextFrom(BookingStatus.Attended));
+        Assert.Equal([BookingStatus.Confirmed, BookingStatus.Attended, BookingStatus.NoShow, BookingStatus.Canceled], BookingStatus.NextFrom(BookingStatus.Booked));
     }
 }

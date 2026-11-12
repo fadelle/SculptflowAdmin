@@ -21,4 +21,7 @@ public interface IOverviewAdminService
     Task<List<string>> EventTypesAsync(CancellationToken ct = default);
 
     Task<PagedResult<AdminAuditEntry>> AuditAsync(Guid? clientId, string? search, int page, CancellationToken ct = default);
+
+    /// <summary>Every write to the main app's platform-admin API as the main app recorded it, also direct calls (QA t6-admin-23).</summary>
+    Task<PagedResult<PlatformAdminWriteRow>> AdminWritesAsync(Guid? clientId, int page, CancellationToken ct = default);
 }

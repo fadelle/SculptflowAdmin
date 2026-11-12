@@ -32,6 +32,9 @@ public class OverviewAdminService : IOverviewAdminService
 
     public Task<List<string>> EventTypesAsync(CancellationToken ct = default) => _api.EventTypesAsync(ct);
 
+    public Task<PagedResult<PlatformAdminWriteRow>> AdminWritesAsync(Guid? clientId, int page, CancellationToken ct = default) =>
+        _api.AdminWritesAsync(clientId, Math.Max(1, page), ct);
+
     public Task<PagedResult<AdminAuditEntry>> AuditAsync(Guid? clientId, string? search, int page, CancellationToken ct = default) =>
         _audit.ListAsync(clientId, search, page, ct);
 }

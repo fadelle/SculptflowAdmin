@@ -14,6 +14,9 @@ public interface IChannelsApiClient
 
     Task<PlatformAdminChange> DisconnectAsync(Guid id, CancellationToken ct);
 
+    /// <summary>POST {id}/check (QA t8-20): the stored WhatsApp token checked with Meta; the main app records the result.</summary>
+    Task<Omni.Admin.Entities.Dtos.Channels.ChannelCheckResult> CheckAsync(Guid id, CancellationToken ct);
+
     Task<List<CalendarRow>> ListCalendarsAsync(Guid? clientId, CancellationToken ct);
 
     Task<PlatformAdminChange> DisconnectCalendarAsync(Guid id, CancellationToken ct);

@@ -32,4 +32,7 @@ public class OverviewApiClient : MainAppApiClient, IOverviewApiClient
         GetRequiredAsync<PagedResult<EventRow>>("/events" + Query(("clientId", clientId), ("eventType", eventType), ("page", page)), ct);
 
     public Task<List<string>> EventTypesAsync(CancellationToken ct) => GetRequiredAsync<List<string>>("/event-types", ct);
+
+    public Task<PagedResult<PlatformAdminWriteRow>> AdminWritesAsync(Guid? clientId, int page, CancellationToken ct) =>
+        GetRequiredAsync<PagedResult<PlatformAdminWriteRow>>("/admin-writes" + Query(("clientId", clientId), ("page", page)), ct);
 }

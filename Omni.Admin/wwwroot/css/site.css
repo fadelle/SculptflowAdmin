@@ -73,6 +73,22 @@ a.au-stat:hover { border-color: var(--au-primary-light); transform: translateY(-
 .bm-empty td { padding: 24px; text-align: center; color: var(--au-text-2); white-space: normal; }
 .au-table td.bm-question { min-width: 240px; max-width: 380px; white-space: normal; }
 .au-table td.bm-clip { max-width: 300px; }
+/* The client page's go-live checklist (QA t6-admin-28). */
+.au-golive { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.au-golive li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.au-golive li > .au-icon { color: var(--au-text-3); font-size: 20px; }
+.au-golive li.is-done > .au-icon { color: var(--au-success); }
+.au-golive__label { font-weight: 600; min-width: 9rem; }
+.au-golive li.is-done .au-golive__label { font-weight: 500; color: var(--au-text-2); }
+/* A folded "advanced" panel (QA t6-admin-29). */
+.au-advanced > summary { cursor: pointer; display: flex; align-items: baseline; gap: 8px; list-style: none; }
+.au-advanced > summary::-webkit-details-marker { display: none; }
+.au-advanced > summary::before { content: '▸'; color: var(--au-text-3); }
+.au-advanced[open] > summary::before { content: '▾'; }
+/* Several status chips in one cell (the clients table's Channels column, QA t6-admin-24). */
+.au-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+/* A long problem detail wraps instead of being clipped (QA t6-admin-24). */
+.au-table td.au-problem-detail { min-width: 16rem; max-width: 32rem; white-space: normal; overflow-wrap: anywhere; }
 .bm-block { margin-top: 4px; padding: 10px 12px; border: 1px solid var(--au-divider); border-radius: var(--au-r-md); background: var(--au-code-bg); font-size: 0.875rem; white-space: pre-wrap; word-break: break-word; }
 .bm-retrieved td { vertical-align: top; white-space: normal; }
 .bm-retrieved tr.expected-chunk td { background: color-mix(in srgb, var(--au-success) 10%, transparent); }

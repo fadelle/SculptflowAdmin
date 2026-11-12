@@ -24,6 +24,17 @@ public class DetailsModel : AdminPageModel
         return Page();
     }
 
+    /// <summary>"Check connection" (QA t8-20): the stored token asked about the number; the answer is the flash message.</summary>
+    public async Task<IActionResult> OnPostCheckAsync(CancellationToken ct)
+    {
+        Omni.Admin.Entities.Dtos.Channels.ChannelCheckResult? result = null;
+        return await RunAsync(async () => result = await _channels.CheckAsync(Id, ct),
+            () => result is { Ok: true }
+                ? $"Connection works: Meta knows {result.DisplayPhoneNumber}{(string.IsNullOrEmpty(result.VerifiedName) ? "" : " (" + result.VerifiedName + ")")}."
+                : $"Meta refused the stored token: {result?.Error}. The channel now shows it as a warning; the client reconnects WhatsApp to fix it.",
+            new { id = Id });
+    }
+
     public Task<IActionResult> OnPostDisconnectAsync(CancellationToken ct) =>
         RunAsync(() => _channels.DisconnectAsync(Id, ct), "Channel disconnected.", new { id = Id });
 }

@@ -20,6 +20,8 @@ public class ClientModel : MainAppPageModel
     [BindProperty(SupportsGet = true, Name = "p")] public int PageNumber { get; set; } = 1;
     [BindProperty(SupportsGet = true)] public string? Status { get; set; }
     [BindProperty(SupportsGet = true)] public string? EventType { get; set; }
+    [BindProperty(SupportsGet = true)] public DateOnly? From { get; set; }
+    [BindProperty(SupportsGet = true)] public DateOnly? To { get; set; }
 
     // Price check (GET)
     [BindProperty(SupportsGet = true)] public string? QuoteEvent { get; set; }
@@ -38,9 +40,12 @@ public class ClientModel : MainAppPageModel
 
     public string Currency => Overview?.Summary.Currency ?? "";
 
+    /// <summary>?open=top-up (the client page's Top up button, QA t6-admin-28) opens the top-up dialog with the page.</summary>
+    public bool OpenTopUp => Request.Query["open"] == "top-up";
+
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
-        Tab = Tab is "usage" or "ledger" ? Tab : "overview";
+        Tab = Tab is "usage" or "ledger" or "advanced" ? Tab : "overview";
         PageNumber = Math.Max(1, PageNumber);
         var found = true;
         await LoadAsync(async () =>
@@ -53,8 +58,16 @@ public class ClientModel : MainAppPageModel
             }
             if (Tab == "overview")
             {
-                Plans = await _billing.PlansAsync(ct);
-                Addons = await _billing.AddonsAsync(ct);
+                // The dialog lists load together (QA t6-admin-18).
+                var plans = _billing.PlansAsync(ct);
+                var addons = _billing.AddonsAsync(ct);
+                await Task.WhenAll(plans, addons);
+                Plans = plans.Result;
+                Addons = addons.Result;
+            }
+            // Who pays the provider and the price check live on Advanced (QA t6-admin-29).
+            else if (Tab == "advanced")
+            {
                 Modes = await _billing.ProviderBillingModesAsync(ct);
                 if (!string.IsNullOrWhiteSpace(QuoteEvent))
                 {
@@ -62,7 +75,7 @@ public class ClientModel : MainAppPageModel
                     QuoteMissing = Quote is null;
                 }
             }
-            else if (Tab == "usage") Usage = await _billing.UsageAsync(Id, Clean(Status), Clean(EventType), PageNumber, ct);
+            else if (Tab == "usage") Usage = await _billing.UsageAsync(Id, Clean(Status), Clean(EventType), PageNumber, ct, From, To);
             else Ledger = await _billing.LedgerAsync(Id, PageNumber, ct);
         });
         return found ? Page() : NotFound();
@@ -70,12 +83,22 @@ public class ClientModel : MainAppPageModel
 
     private object Back => new { id = Id, tab = Tab };
 
-    public Task<IActionResult> OnPostStartPlanAsync(string? planCode, bool chargeFirstPeriod, string? reason, string? opId, CancellationToken ct) =>
-        RunAsync(() =>
-        {
-            if (string.IsNullOrWhiteSpace(planCode)) throw new ArgumentException("Choose a plan.");
-            return _billing.StartSubscriptionAsync(Id, new StartSubscriptionApiRequest(planCode.Trim(), chargeFirstPeriod, Clean(reason)), opId ?? "", ct);
-        }, chargeFirstPeriod ? "Plan started; its price was charged from the wallet." : "Plan started without charging the first period.", Back);
+    /// <summary>Whether the last money write was new (false: the main app had already applied that operation id).</summary>
+    private bool applied;
+
+    public Task<IActionResult> OnPostStartPlanAsync(string? planCode, bool chargeFirstPeriod, string? reason, bool allowAnotherTrial, string? opId,
+        CancellationToken ct)
+    {
+        SubscriptionResponse? started = null;
+        return RunAsync(async () =>
+            {
+                if (string.IsNullOrWhiteSpace(planCode)) throw new ArgumentException("Choose a plan.");
+                started = await _billing.StartSubscriptionAsync(Id,
+                    new StartSubscriptionApiRequest(planCode.Trim(), chargeFirstPeriod, Clean(reason), allowAnotherTrial), opId ?? "", ct);
+            },
+            () => (chargeFirstPeriod ? "Plan started; its price was charged from the wallet." : "Plan started without charging the first period.")
+                  + BillingUi.OverLimitsNote(started?.OverLimits), Back);
+    }
 
     public Task<IActionResult> OnPostSetAddonAsync(string? addonCode, int quantity, string? opId, CancellationToken ct) =>
         RunAsync(() => _billing.SetClientAddonAsync(Id, addonCode ?? "", quantity, opId ?? "", ct),
@@ -102,15 +125,17 @@ public class ClientModel : MainAppPageModel
         RunAsync(() => _billing.ResumeSubscriptionAsync(Id, ct), "Subscription resumed: it will renew again.", Back);
 
     public Task<IActionResult> OnPostRenewAsync(CancellationToken ct) =>
-        RunAsync(() => _billing.RenewAsync(Id, ct), "Renewal check ran. The subscription below shows the outcome.", Back);
+        RunAsync(async () => renewOutcome = await _billing.RenewAsync(Id, ct), () => BillingUi.RenewOutcome(renewOutcome), Back);
+
+    private string renewOutcome = "";
 
     public Task<IActionResult> OnPostTopUpAsync(decimal amount, string? reference, string? reason, string? opId, CancellationToken ct) =>
-        RunAsync(() => _billing.TopUpAsync(Id, new TopUpRequest(amount, Clean(reference), Clean(reason)), opId ?? "", ct),
-            $"Wallet topped up by {BillingUi.Money(amount)}.", Back);
+        RunAsync(async () => applied = await _billing.TopUpAsync(Id, new TopUpRequest(amount, Clean(reference), Clean(reason)), opId ?? "", ct),
+            () => applied ? $"Wallet topped up by {BillingUi.Money(amount)}." : "That top-up was already applied; nothing changed.", Back);
 
     public Task<IActionResult> OnPostAdjustAsync(decimal amount, string? balanceType, string? reason, string? opId, CancellationToken ct) =>
-        RunAsync(() => _billing.AdjustAsync(Id, new AdjustmentRequest(amount, balanceType ?? "wallet", reason ?? ""), opId ?? "", ct),
-            $"{BillingUi.BalanceLabel(balanceType ?? "wallet")} adjusted by {BillingUi.Money(amount)}.", Back);
+        RunAsync(async () => applied = await _billing.AdjustAsync(Id, new AdjustmentRequest(amount, balanceType ?? "wallet", reason ?? ""), opId ?? "", ct),
+            () => applied ? $"{BillingUi.BalanceLabel(balanceType ?? "wallet")} adjusted by {BillingUi.Money(amount)}." : "That adjustment was already applied; nothing changed.", Back);
 
     public Task<IActionResult> OnPostProviderBillingAsync(Guid accountId, string? providerBilling, string? usageBilling, string? reason, CancellationToken ct) =>
         RunAsync(() =>

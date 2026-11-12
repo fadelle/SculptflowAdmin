@@ -1,7 +1,34 @@
 @page
 @model Omni.Admin.Pages.Audit.IndexModel
 @{ ViewData["Title"] = "Admin audit log"; }
-<div class="au-page-head"><p class="au-page-head__sub">Every sign-in and every change made from this portal.</p></div>
+<div class="au-page-head"><p class="au-page-head__sub">Every sign-in and every change made from this portal, and, under "Main app API", every write the main app received with the admin key, also calls made outside this portal.</p></div>
+<div class="au-tabs" style="margin-bottom:12px">
+    <a class="au-tab @(Model.View != "api" ? "is-active" : "")" href="/Audit@(Model.ClientId is { } c1 ? "?clientId=" + c1 : "")">This portal</a>
+    <a class="au-tab @(Model.View == "api" ? "is-active" : "")" href="/Audit?view=api@(Model.ClientId is { } c2 ? "&clientId=" + c2 : "")">Main app API</a>
+</div>
+@if (Model.Writes is { } writes)
+{
+    <div class="au-table-card">
+        <table class="au-table">
+            <thead><tr><th>When</th><th>Actor (as sent)</th><th>Address</th><th>Request</th><th>Status</th><th>Client</th></tr></thead>
+            <tbody>
+                @foreach (var w in writes.Items)
+                {
+                    <tr>
+                        <td>@Ui.Time(w.OccurredAt)</td>
+                        <td>@w.Actor</td>
+                        <td><code>@w.IpAddress</code></td>
+                        <td><code>@w.Method @w.Path</code></td>
+                        <td>@Ui.Badge(w.StatusCode < 400 ? "ok" : "failed")@w.StatusCode</td>
+                        <td>@if (w.ClientId is { } wc) { <a href="/Clients/Details?id=@wc">Open</a> }</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <partial name="_Pager" model="PagerModel.From(writes)" />
+    </div>
+    return;
+}
 <form class="filters au-toolbar" method="get">
     <div class="au-toolbar__filters">
         <div class="au-field" style="width:300px">

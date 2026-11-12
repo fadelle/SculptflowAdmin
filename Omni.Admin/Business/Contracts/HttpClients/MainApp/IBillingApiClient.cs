@@ -29,7 +29,8 @@ public interface IBillingApiClient
 
     Task<ReconciliationResponse> ReconcileAsync(Guid clientId, CancellationToken ct);
 
-    Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct);
+    Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct,
+        DateOnly? from = null, DateOnly? to = null);
 
     Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clientId, int page, CancellationToken ct);
 
@@ -63,17 +64,18 @@ public interface IBillingApiClient
     /// <summary>DELETE rates/{id}: withdraws a version that hasn't started (QA t2-billing-04).</summary>
     Task CancelScheduledRateAsync(Guid rateId, CancellationToken ct);
 
-    Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
+    Task<SubscriptionResponse> StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
 
     Task CancelSubscriptionAsync(Guid clientId, CancelSubscriptionRequest r, CancellationToken ct);
 
     Task ResumeSubscriptionAsync(Guid clientId, CancellationToken ct);
 
-    Task RenewAsync(Guid clientId, CancellationToken ct);
+    /// <summary>The worker's renewal check now; the main app's outcome (Renewed, NotDue, PastDue, Expired, Cancelled).</summary>
+    Task<string> RenewAsync(Guid clientId, CancellationToken ct);
 
-    Task TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct);
+    Task<LedgerResult> TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct);
 
-    Task AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct);
+    Task<LedgerResult> AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct);
 
     Task RefundAsync(Guid clientId, Guid usageId, RefundRequest r, CancellationToken ct);
 

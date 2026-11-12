@@ -10,7 +10,7 @@ else
     <div class="au-table-scroll">
         <table class="au-table">
             <thead>
-                <tr><th>Client</th><th>Status</th><th>WhatsApp</th><th class="au-right">Members</th><th class="au-right">Contacts</th><th class="au-right">Conversations</th><th>Last message</th><th>Signed up</th></tr>
+                <tr><th>Client</th><th>Status</th><th>Channels</th><th class="au-right">Members</th><th class="au-right">Contacts</th><th class="au-right">Conversations</th><th>Last message</th><th>Signed up</th></tr>
             </thead>
             <tbody>
                 @foreach (var c in Model)
@@ -18,7 +18,21 @@ else
                     <tr data-au-href="/Clients/Details?id=@c.Id">
                         <td><a href="/Clients/Details?id=@c.Id">@c.Name</a><div class="au-caption">@c.Slug @(c.Email is null ? "" : "· " + c.Email)</div></td>
                         <td>@Ui.Badge(c.IsActive ? "active" : "inactive")</td>
-                        <td>@Ui.Badge(c.WhatsAppStatus)</td>
+                        <td>
+                            @if (c.Channels.Count == 0)
+                            {
+                                <span class="au-faint">none</span>
+                            }
+                            else
+                            {
+                                <span class="au-chips">
+                                    @foreach (var ch in c.Channels)
+                                    {
+                                        <span title="@ch.Status">@Ui.Badge(ch.Status, Ui.ChannelName(ch.Channel))</span>
+                                    }
+                                </span>
+                            }
+                        </td>
                         <td class="au-right">@c.MemberCount</td>
                         <td class="au-right">@c.ContactCount</td>
                         <td class="au-right">@c.ConversationCount</td>

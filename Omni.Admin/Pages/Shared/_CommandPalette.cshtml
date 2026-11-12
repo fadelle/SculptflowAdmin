@@ -1,12 +1,14 @@
 @using System.Text.Json
-@* Ctrl/⌘+K quick navigation over every NavTree leaf; an empty query shows Favorites → Recent → All (aurora.js). *@
+@* Ctrl/⌘+K quick navigation over every NavTree leaf; an empty query shows Favorites → Recent → All (aurora.js). A typed
+   query also lists matching clients (the scope endpoint) and searches contacts by name or phone and members by email across
+   every client (QA t6-admin-28: Ctrl+K only searched page names). *@
 @{
     var pages = NavTree.Leaves().Select(l => new { label = l.Item.Label, path = Url.Content("~" + l.Item.Path), trail = l.Trail, icon = l.Item.Icon });
 }
-<dialog class="au-palette" aria-label="Search pages">
+<dialog class="au-palette" aria-label="Search pages, clients, contacts and members" data-clients-endpoint="@Url.Content("~/api/admin/scope/options")" data-base="@Url.Content("~/")">
     <div class="au-palette__search">
         <span class="au-icon" aria-hidden="true">search</span>
-        <input type="text" placeholder="Search pages…" aria-label="Search pages" autocomplete="off" />
+        <input type="text" placeholder="Search pages, clients, contacts, members…" aria-label="Search pages, clients, contacts and members" autocomplete="off" />
         <span class="au-kbd">Esc</span>
     </div>
     <ul class="au-palette__list" role="listbox"></ul>

@@ -43,8 +43,9 @@ public class BillingAdminService : IBillingAdminService
     public Task<ProviderBillingModes> ProviderBillingModesAsync(CancellationToken ct) => _api.ProviderBillingModesAsync(ct);
     public Task<ReconciliationResponse> ReconcileAsync(Guid clientId, CancellationToken ct) => _api.ReconcileAsync(clientId, ct);
 
-    public Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct) =>
-        _api.UsageAsync(clientId, status, eventType, page, ct);
+    public Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct,
+        DateOnly? from = null, DateOnly? to = null) =>
+        _api.UsageAsync(clientId, status, eventType, page, ct, from, to);
 
     public Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clientId, int page, CancellationToken ct) => _api.LedgerAsync(clientId, page, ct);
 
@@ -119,10 +120,12 @@ public class BillingAdminService : IBillingAdminService
         await _audit.LogAsync("billing.rate_cancel_scheduled", "billing_rate", rateId, null, null, ct);
     }
 
-    public async Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct)
+    public async Task<SubscriptionResponse> StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct)
     {
-        await _api.StartSubscriptionAsync(clientId, r, opId, ct);
-        await _audit.LogAsync("billing.subscription_start", "billing_subscription", clientId, clientId, r, ct);
+        var started = await _api.StartSubscriptionAsync(clientId, r, opId, ct);
+        await _audit.LogAsync("billing.subscription_start", "billing_subscription", clientId, clientId,
+            new { r.PlanCode, r.ChargeFirstPeriod, r.Reason, r.AllowAnotherTrial, OperationId = opId }, ct);
+        return started;
     }
 
     public async Task CancelSubscriptionAsync(Guid clientId, CancelSubscriptionRequest r, CancellationToken ct)
@@ -137,22 +140,31 @@ public class BillingAdminService : IBillingAdminService
         await _audit.LogAsync("billing.subscription_resume", "billing_subscription", clientId, clientId, null, ct);
     }
 
-    public async Task RenewAsync(Guid clientId, CancellationToken ct)
+    public async Task<string> RenewAsync(Guid clientId, CancellationToken ct)
     {
-        await _api.RenewAsync(clientId, ct);
-        await _audit.LogAsync("billing.subscription_renew", "billing_subscription", clientId, clientId, null, ct);
+        var outcome = await _api.RenewAsync(clientId, ct);
+        await _audit.LogAsync("billing.subscription_renew", "billing_subscription", clientId, clientId, new { outcome }, ct);
+        return outcome;
     }
 
-    public async Task TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct)
+    // A replay (the main app answers Duplicate for an operation id it already applied) writes no audit row, so one top-up
+    // never reads as four (QA t6-admin-09); a real one records its ledger entry and operation id.
+    public async Task<bool> TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct)
     {
-        await _api.TopUpAsync(clientId, r, opId, ct);
-        await _audit.LogAsync("billing.wallet_top_up", "billing_account", clientId, clientId, r, ct);
+        var result = await _api.TopUpAsync(clientId, r, opId, ct);
+        if (result.Duplicate) return false;
+        await _audit.LogAsync("billing.wallet_top_up", "billing_account", clientId, clientId,
+            new { r.Amount, r.Reference, r.Reason, result.LedgerEntryId, OperationId = opId }, ct);
+        return true;
     }
 
-    public async Task AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct)
+    public async Task<bool> AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct)
     {
-        await _api.AdjustAsync(clientId, r, opId, ct);
-        await _audit.LogAsync("billing.wallet_adjust", "billing_account", clientId, clientId, r, ct);
+        var result = await _api.AdjustAsync(clientId, r, opId, ct);
+        if (result.Duplicate) return false;
+        await _audit.LogAsync("billing.wallet_adjust", "billing_account", clientId, clientId,
+            new { r.Amount, r.BalanceType, r.Reason, result.LedgerEntryId, OperationId = opId }, ct);
+        return true;
     }
 
     public async Task RefundAsync(Guid clientId, Guid usageId, RefundRequest r, CancellationToken ct)

@@ -114,7 +114,7 @@
                                 <tr>
                                     <td>@Ui.Badge("error", p.Kind) <a href="@p.Link">@p.Title</a></td>
                                     <td><a href="/Clients/Details?id=@p.ClientId">@p.ClientName</a></td>
-                                    <td title="@p.Detail">@Ui.Truncate(p.Detail, 120)</td>
+                                    <td class="au-problem-detail" title="@p.Detail">@Ui.Truncate(p.Detail, 240)</td>
                                     <td>@Ui.Time(p.At)</td>
                                 </tr>
                             }

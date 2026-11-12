@@ -66,7 +66,7 @@
     <form method="post" asp-page-handler="Password" asp-route-id="@s.UserId">
         <h2 class="au-dialog__title" id="set-password-title">Set a new password<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
         <div class="au-dialog__content">
-            <div class="au-form-field"><label class="au-form-label" for="sp-password">New password<span class="au-required">*</span></label><input class="au-input" id="sp-password" type="password" name="password" minlength="8" autocomplete="new-password" required /><span class="au-help">At least 8 characters. Replaces their current password.</span></div>
+            <div class="au-form-field"><label class="au-form-label" for="sp-password">New password<span class="au-required">*</span></label><div class="au-row" style="--au-gap:6px"><input class="au-input" id="sp-password" type="password" name="password" minlength="6" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{6,}" autocomplete="new-password" required /><button class="au-btn au-btn--outlined" type="button" data-generate-password="#sp-password">Generate</button></div><span class="au-help">At least 6 characters with an upper-case letter, a lower-case letter and a digit (QA t6-admin-06). "Generate" fills a strong one and copies it, so you can send it to them. Replaces their current password.</span></div>
         </div>
         <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit">Set password</button></div>
     </form>

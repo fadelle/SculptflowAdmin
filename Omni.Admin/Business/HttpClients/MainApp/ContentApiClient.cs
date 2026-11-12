@@ -57,4 +57,10 @@ public class ContentApiClient : MainAppApiClient, IContentApiClient
     public Task<PlatformAdminChange> UpdateSearchSettingsAsync(Guid clientId, int topK, double minimumSimilarity, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Put, $"/knowledge/settings/{clientId}", new SearchSettingsBody(topK, minimumSimilarity),
             null, false, ct);
+
+    public Task<PlatformAdminChange> StartReindexAsync(Guid clientId, CancellationToken ct) =>
+        WriteForAsync<PlatformAdminChange>(HttpMethod.Post, $"/knowledge/reindex/{clientId}", null, null, false, ct);
+
+    public Task<Omni.Admin.Entities.Dtos.Content.KnowledgeReindexProgress?> ReindexProgressAsync(Guid clientId, CancellationToken ct) =>
+        GetAsync<Omni.Admin.Entities.Dtos.Content.KnowledgeReindexProgress>($"/knowledge/reindex/{clientId}", ct);
 }

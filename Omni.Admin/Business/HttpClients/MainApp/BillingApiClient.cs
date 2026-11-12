@@ -40,10 +40,14 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
     public Task<ReconciliationResponse> ReconcileAsync(Guid clientId, CancellationToken ct) =>
         GetRequiredAsync<ReconciliationResponse>($"clients/{clientId}/reconciliation", ct);
 
-    public Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct) =>
+    public Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct,
+        DateOnly? from = null, DateOnly? to = null) =>
         GetRequiredAsync<PagedResponse<AdminUsageRow>>($"clients/{clientId}/usage?page={page}&pageSize=50" +
             (string.IsNullOrWhiteSpace(status) ? "" : "&status=" + Esc(status)) +
-            (string.IsNullOrWhiteSpace(eventType) ? "" : "&eventType=" + Esc(eventType)), ct);
+            (string.IsNullOrWhiteSpace(eventType) ? "" : "&eventType=" + Esc(eventType)) +
+            // Whole UTC days: from the start of "from" to the end of "to" (QA t6-admin-21).
+            (from is { } f ? "&from=" + Esc(f.ToString("yyyy-MM-dd") + "T00:00:00Z") : "") +
+            (to is { } t ? "&to=" + Esc(t.AddDays(1).ToString("yyyy-MM-dd") + "T00:00:00Z") : ""), ct);
 
     public Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clientId, int page, CancellationToken ct) =>
         GetRequiredAsync<PagedResponse<AdminLedgerRow>>($"clients/{clientId}/ledger?page={page}&pageSize=50", ct);
@@ -91,8 +95,8 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
     public Task CancelScheduledRateAsync(Guid rateId, CancellationToken ct) =>
         WriteAsync(HttpMethod.Delete, $"rates/{rateId}", null, null, false, ct);
 
-    public Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription", r, opId, false, ct);
+    public Task<SubscriptionResponse> StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct) =>
+        WriteForAsync<SubscriptionResponse>(HttpMethod.Post, $"clients/{clientId}/subscription", r, opId, false, ct);
 
     public Task CancelSubscriptionAsync(Guid clientId, CancelSubscriptionRequest r, CancellationToken ct) =>
         WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription/cancel", r, null, false, ct);
@@ -100,14 +104,16 @@ public class BillingApiClient : MainAppApiClient, IBillingApiClient
     public Task ResumeSubscriptionAsync(Guid clientId, CancellationToken ct) =>
         WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription/resume", null, null, false, ct);
 
-    public Task RenewAsync(Guid clientId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clients/{clientId}/subscription/renew", null, null, false, ct);
+    public async Task<string> RenewAsync(Guid clientId, CancellationToken ct) =>
+        (await WriteForAsync<RenewOutcome>(HttpMethod.Post, $"clients/{clientId}/subscription/renew", null, null, false, ct)).Outcome ?? "";
 
-    public Task TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clients/{clientId}/wallet/top-ups", r, opId, false, ct);
+    private sealed record RenewOutcome(string? Outcome);
 
-    public Task AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct) =>
-        WriteAsync(HttpMethod.Post, $"clients/{clientId}/wallet/adjustments", r, opId, false, ct);
+    public Task<LedgerResult> TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct) =>
+        WriteForAsync<LedgerResult>(HttpMethod.Post, $"clients/{clientId}/wallet/top-ups", r, opId, false, ct);
+
+    public Task<LedgerResult> AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct) =>
+        WriteForAsync<LedgerResult>(HttpMethod.Post, $"clients/{clientId}/wallet/adjustments", r, opId, false, ct);
 
     public Task RefundAsync(Guid clientId, Guid usageId, RefundRequest r, CancellationToken ct) =>
         WriteAsync(HttpMethod.Post, $"clients/{clientId}/usage/{usageId}/refund", r, null, false, ct);

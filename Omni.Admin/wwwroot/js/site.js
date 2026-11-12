@@ -46,6 +46,17 @@
     }
   });
 
+  // [data-fill="#input"][data-fill-value="25"] puts that value in the input (the top-up dialog's quick amounts).
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-fill]');
+    if (!btn) return;
+    var input = $(btn.getAttribute('data-fill'));
+    if (!input) return;
+    input.value = btn.getAttribute('data-fill-value') || '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  });
+
   // A popup marked data-autoopen opens with the page (e.g. Plans?edit=code).
   $$('dialog[data-autoopen]').forEach(function (d) { if (d.showModal) d.showModal(); });
 
@@ -175,5 +186,22 @@
   doc.addEventListener('click', function (e) {
     var b = e.target.closest('[data-dismiss-alert]');
     if (b) b.closest('.au-alert').remove();
+  });
+  // ---- [data-generate-password="#input"]: fills a strong password the main app accepts (upper, lower, digit; 16 characters),
+  // shows it and copies it (QA t6-admin-06: ops need to hand a password over, not invent one).
+  doc.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('[data-generate-password]');
+    if (!btn) return;
+    var input = doc.querySelector(btn.getAttribute('data-generate-password'));
+    if (!input) return;
+    var sets = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnopqrstuvwxyz', '23456789'];
+    var all = sets.join('');
+    var bytes = new Uint32Array(16);
+    window.crypto.getRandomValues(bytes);
+    var chars = Array.prototype.map.call(bytes, function (b, i) { var set = i < 3 ? sets[i] : all; return set[b % set.length]; });
+    for (var i = chars.length - 1; i > 0; i--) { var j = bytes[i] % (i + 1); var t = chars[i]; chars[i] = chars[j]; chars[j] = t; }
+    input.value = chars.join('');
+    input.type = 'text';
+    if (navigator.clipboard) navigator.clipboard.writeText(input.value).catch(function () {});
   });
 })();

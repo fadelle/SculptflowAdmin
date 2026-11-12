@@ -71,6 +71,7 @@
     <form method="post" asp-page-handler="Delete" asp-route-id="@l.Id">
         <h2 class="au-dialog__title" id="delete-contact-title">Delete this contact for good<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
         <div class="au-dialog__content">
+            <p style="margin-bottom:8px">Contact: <strong dir="auto">@Model.DeleteName</strong></p>
             <p class="au-help" style="margin-bottom:16px">For a privacy request. Deletes the contact with its conversations, messages, bookings, orders, events and notifications in the main app. It can't be undone; export the data first if the person asked for a copy. Billing records keep their amounts without the contact.</p>
             <div class="au-form-field"><label class="au-form-label" for="dc-confirm">Type <span class="au-mono">@Model.DeleteWord</span> to confirm<span class="au-required">*</span></label><input class="au-input" id="dc-confirm" name="confirmation" required autocomplete="off" /></div>
         </div>

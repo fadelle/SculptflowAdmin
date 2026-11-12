@@ -29,6 +29,9 @@ public class ChannelsApiClient : MainAppApiClient, IChannelsApiClient
     public Task<PlatformAdminChange> DisconnectAsync(Guid id, CancellationToken ct) =>
         WriteForAsync<PlatformAdminChange>(HttpMethod.Post, $"/{id}/disconnect", null, null, false, ct);
 
+    public Task<Omni.Admin.Entities.Dtos.Channels.ChannelCheckResult> CheckAsync(Guid id, CancellationToken ct) =>
+        WriteForAsync<Omni.Admin.Entities.Dtos.Channels.ChannelCheckResult>(HttpMethod.Post, $"/{id}/check", null, null, false, ct);
+
     public Task<List<CalendarRow>> ListCalendarsAsync(Guid? clientId, CancellationToken ct) =>
         GetRequiredAsync<List<CalendarRow>>("/calendars" + Query(("clientId", clientId)), ct);
 

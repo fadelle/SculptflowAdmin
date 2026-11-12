@@ -50,6 +50,7 @@ public class DetailsModel : AdminPageModel
 
     /// <summary>What the admin types to confirm a delete (the contact's name, or "delete").</summary>
     public string DeleteWord => ContactAdminService.ConfirmationWord(Contact);
+    public string DeleteName => ContactAdminService.NameForDialog(Contact);
 
     /// <summary>Downloads everything the main app holds about the contact (privacy request).</summary>
     public async Task<IActionResult> OnGetExportAsync(CancellationToken ct)

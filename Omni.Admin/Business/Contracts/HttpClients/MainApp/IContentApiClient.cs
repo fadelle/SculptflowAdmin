@@ -31,4 +31,10 @@ public interface IContentApiClient
     Task<SearchSettingsDetail?> SearchSettingsAsync(Guid clientId, CancellationToken ct);
 
     Task<PlatformAdminChange> UpdateSearchSettingsAsync(Guid clientId, int topK, double minimumSimilarity, CancellationToken ct);
+
+    /// <summary>POST knowledge/reindex/{clientId} (QA t4-ai-15): re-index the client's whole Knowledge Base in the background.</summary>
+    Task<PlatformAdminChange> StartReindexAsync(Guid clientId, CancellationToken ct);
+
+    /// <summary>GET knowledge/reindex/{clientId}: the running or last re-index since the main app started; null when none.</summary>
+    Task<Omni.Admin.Entities.Dtos.Content.KnowledgeReindexProgress?> ReindexProgressAsync(Guid clientId, CancellationToken ct);
 }

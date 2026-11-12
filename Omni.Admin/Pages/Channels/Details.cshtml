@@ -14,6 +14,12 @@
     @if (r.Status != ChannelIntegrationStatus.Disconnected)
     {
         <div class="au-row au-row--wrap">
+            @if (r.Channel == ChannelType.WhatsApp)
+            {
+                <form method="post" asp-page-handler="Check" asp-route-id="@r.Id">
+                    <button class="au-btn au-btn--outlined" type="submit"><span class="au-icon" aria-hidden="true">verified</span>Check connection</button>
+                </form>
+            }
             <form method="post" asp-page-handler="Disconnect" asp-route-id="@r.Id">
                 <button class="au-btn au-btn--danger-outlined" type="submit" data-confirm="Disconnect @r.Channel for @r.Client?.Name? Messages stop flowing until it's reconnected.">Disconnect</button>
             </form>

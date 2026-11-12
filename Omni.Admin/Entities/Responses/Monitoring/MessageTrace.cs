@@ -12,4 +12,7 @@ public record MessageTrace(
     List<Guid> ConversationIds,
     List<Guid> MessageIds,
     bool HasFailure,
-    List<MessageTraceEntry> Entries);
+    List<MessageTraceEntry> Entries,
+    // What the trace came to and why (main app TraceResultRule; added 2026-11-07, QA t6-admin-28). "other" from an older main app.
+    string Outcome = "other",
+    string? OutcomeReason = null);

@@ -34,6 +34,13 @@ public class ChannelAdminService : IChannelAdminService
 
     public Task<List<TikTokRow>> ListTikTokAsync(Guid? clientId, CancellationToken ct = default) => _api.ListTikTokAsync(clientId, ct);
 
+    public async Task<Omni.Admin.Entities.Dtos.Channels.ChannelCheckResult> CheckAsync(Guid id, CancellationToken ct = default)
+    {
+        var result = await _api.CheckAsync(id, ct);
+        await _audit.LogAsync("channel.checked", "channel_integration", id, result.ClientId, new { result.Ok, result.Error }, ct);
+        return result;
+    }
+
     public async Task DisconnectAsync(Guid id, CancellationToken ct = default)
     {
         var change = await _api.DisconnectAsync(id, ct);

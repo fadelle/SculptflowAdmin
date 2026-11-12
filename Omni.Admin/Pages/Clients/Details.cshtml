@@ -15,6 +15,8 @@
     <div class="au-row au-row--wrap">
         <a class="au-btn au-btn--outlined" href="/Clients/BusinessType?id=@c.Id"><span class="au-icon" aria-hidden="true">category</span>Change business type</a>
         <a class="au-btn au-btn--outlined" href="/Billing/Client?id=@c.Id"><span class="au-icon" aria-hidden="true">payments</span>Billing</a>
+        @* Straight to the top-up dialog (QA t6-admin-28: no top-up from the client page). *@
+        <a class="au-btn au-btn--outlined" href="/Billing/Client?id=@c.Id&open=top-up"><span class="au-icon" aria-hidden="true">account_balance_wallet</span>Top up</a>
         <form method="post" asp-page-handler="SetActive" asp-route-id="@c.Id">
             @if (c.IsActive)
             {
@@ -54,6 +56,26 @@
         </div>
     }
 
+    @{ var missing = Model.GoLiveSteps.Count(st => !st.Done); }
+    <section class="au-panel au-panel--round au-panel--pad" id="go-live">
+        <div class="au-panel__head"><h3 class="au-panel__title">Go-live checklist</h3>
+            @Ui.Badge(missing == 0 ? "healthy" : "pending", missing == 0 ? "live" : Ui.Count(missing, "step left", "steps left"))</div>
+        <ul class="au-golive">
+            @foreach (var st in Model.GoLiveSteps)
+            {
+                <li class="@(st.Done ? "is-done" : null)">
+                    <span class="au-icon" aria-hidden="true">@(st.Done ? "check_circle" : "radio_button_unchecked")</span>
+                    <span class="au-golive__label">@st.Label</span>
+                    @if (!st.Done)
+                    {
+                        <span class="au-caption">@st.Hint</span>
+                        @if (st.Link is not null) { <a class="au-panel__link" href="@st.Link">Go →</a> }
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+
     <div class="au-grid au-grid--4" style="--au-gap:12px">
         <a class="au-stat" href="/Members?@q"><span class="au-eyebrow">Active members</span><div class="au-stat__value">@n.Members</div></a>
         <a class="au-stat" href="/Contacts?@q"><span class="au-eyebrow">Contacts</span><div class="au-stat__value">@n.Contacts</div></a>
@@ -92,7 +114,7 @@
         </div>
 
         <div class="au-stack">
-            <section class="au-table-card">
+            <section class="au-table-card" id="members">
                 <div class="au-panel__head"><h3 class="au-panel__title">Member accounts</h3><a class="au-panel__link" href="/Members?@q">View all →</a></div>
                 @if (Model.Members.Count == 0)
                 {
@@ -120,7 +142,7 @@
                 }
             </section>
 
-            <section class="au-table-card">
+            <section class="au-table-card" id="channels">
                 <div class="au-panel__head">
                     <h3 class="au-panel__title">Channels</h3>
                 </div>
@@ -174,7 +196,7 @@
                 <div class="au-form-actions"><button class="au-btn au-btn--primary" type="submit">Save language</button></div>
             </form>
 
-            <section class="au-panel au-panel--round au-panel--pad">
+            <section class="au-panel au-panel--round au-panel--pad" id="account-ai">
                 <div class="au-panel__head"><h3 class="au-panel__title">AI per account</h3></div>
                 @if (Model.InboxSettings is { } inbox)
                 {
@@ -218,8 +240,11 @@
                 }
             </section>
 
-            <form class="au-panel au-panel--round au-panel--pad" method="post" asp-page-handler="SearchSettings" asp-route-id="@c.Id">
-                <div class="au-panel__head"><h3 class="au-panel__title">Knowledge search (AI retrieval)</h3></div>
+            @* Developer tuning, folded away (QA t6-admin-29: "Top K", "Minimum similarity", "HNSW" mean nothing to ops). *@
+            <details class="au-panel au-panel--round au-panel--pad au-advanced">
+                <summary><span class="au-panel__title">Knowledge search tuning</span> <span class="au-caption">advanced · for developers</span></summary>
+                <p class="au-help" style="margin:8px 0 16px">How many knowledge passages the AI reads per question and how close they must match. Leave these unless the search benchmark shows a problem.</p>
+            <form method="post" asp-page-handler="SearchSettings" asp-route-id="@c.Id">
                 @if (Model.SearchSettings is null)
                 {
                     var noSettings = new EmptyStateModel("No search settings row for this client.", "manage_search");
@@ -235,17 +260,29 @@
                     </dl>
                     <div class="au-form-grid">
                         <div class="au-form-field">
-                            <label class="au-form-label" for="ks-topk">Top K (1 to 20)</label>
-                            <input class="au-input" id="ks-topk" type="number" name="topK" min="1" max="20" value="@s.TopK" />
+                            <label class="au-form-label" for="ks-topk">Top K (@s.MinTopK to @s.MaxTopK)</label>
+                            <input class="au-input" id="ks-topk" type="number" name="topK" min="@s.MinTopK" max="@s.MaxTopK" required value="@s.TopK" />
                         </div>
                         <div class="au-form-field">
                             <label class="au-form-label" for="ks-min">Minimum similarity (0 to 1)</label>
-                            <input class="au-input" id="ks-min" type="number" name="minimumSimilarity" min="0" max="1" step="0.01" value="@s.MinimumSimilarity.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                            <input class="au-input" id="ks-min" type="number" name="minimumSimilarity" min="0" max="1" step="0.01" required value="@s.MinimumSimilarity.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
                         </div>
                     </div>
                     <div class="au-form-actions"><button class="au-btn au-btn--primary" type="submit">Save search settings</button></div>
                 }
             </form>
+            @if (Model.SearchSettings is not null)
+            {
+                @* QA t4-ai-15: apply new chunk settings to what is already there. *@
+                <form method="post" asp-page-handler="Reindex" asp-route-id="@c.Id" class="au-row au-row--wrap" style="margin-top:12px">
+                    <button class="au-btn au-btn--outlined au-btn--sm" type="submit" disabled="@(Model.Reindex?.Running == true)" data-confirm="Re-index all of @c.Name's knowledge? Every entry is embedded again (AI provider usage).">Re-index all knowledge</button>
+                    @if (Model.Reindex is { } ri)
+                    {
+                        <span class="au-caption">@(ri.Running ? $"Running: {ri.Done} of {ri.Total} entries" : $"Last re-index: {ri.Total - ri.Failed} of {ri.Total} entries" + (ri.Failed > 0 ? $", {ri.Failed} kept their old version" : ""))</span>
+                    }
+                </form>
+            }
+            </details>
         </div>
     </div>
 

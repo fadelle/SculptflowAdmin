@@ -38,20 +38,21 @@
         <a class="au-tab @(Model.Tab == "overview" ? "is-active" : null)" href="@TabUrl("overview")"><span class="au-icon" aria-hidden="true">dashboard</span>Overview</a>
         <a class="au-tab @(Model.Tab == "usage" ? "is-active" : null)" href="@TabUrl("usage")"><span class="au-icon" aria-hidden="true">receipt_long</span>Usage records</a>
         <a class="au-tab @(Model.Tab == "ledger" ? "is-active" : null)" href="@TabUrl("ledger")"><span class="au-icon" aria-hidden="true">account_balance</span>Ledger</a>
+        <a class="au-tab @(Model.Tab == "advanced" ? "is-active" : null)" href="@TabUrl("advanced")"><span class="au-icon" aria-hidden="true">tune</span>Advanced</a>
     </div>
 
     @if (Model.Tab == "overview")
     {
         <div class="au-stack">
+            @* Three plain numbers for ops (QA t6-admin-29); wallet, included credit, reserved and the ledger check are on Advanced. *@
+            @{ var next = BillingUi.NextCharge(s); }
             <div class="au-grid au-grid--3" style="--au-gap:12px">
-                <div class="au-stat"><span class="au-eyebrow">Plan</span><div class="au-stat__value" style="font-size:18px">@(s.PlanName ?? "No plan")</div>
-                    @if (s.PlanPrice is not null) { <div class="au-stat__hint">@BillingUi.Money(s.PlanPrice, cur) per @s.BillingPeriod</div> }</div>
-                <div class="au-stat"><span class="au-eyebrow">Subscription</span><div class="au-stat__value" style="font-size:18px">@Ui.Badge(s.SubscriptionStatus ?? "none", s.SubscriptionStatus is null ? "none" : null)</div>
-                    <div class="au-stat__hint @(s.HasAccess ? null : "au-text-error")">@(s.HasAccess ? "features available" : "features blocked")</div></div>
-                <div class="au-stat"><span class="au-eyebrow">Wallet</span><div class="au-stat__value @(s.WalletBalance < 0 ? "au-text-error" : null)">@BillingUi.Money(s.WalletBalance)</div><div class="au-stat__hint">@cur</div></div>
-                <div class="au-stat"><span class="au-eyebrow">Included credit left</span><div class="au-stat__value">@BillingUi.Money(s.IncludedCreditRemaining)</div><div class="au-stat__hint">of @BillingUi.Money(s.PlanIncludedCredit, cur) this period</div></div>
-                <div class="au-stat"><span class="au-eyebrow">Reserved</span><div class="au-stat__value">@BillingUi.Money(s.ReservedAmount)</div><div class="au-stat__hint">@o.OpenReservations open</div></div>
-                <div class="au-stat"><span class="au-eyebrow">Spendable</span><div class="au-stat__value @(s.Spendable <= 0 ? "au-text-error" : null)">@BillingUi.Money(s.Spendable)</div><div class="au-stat__hint">wallet + credit − reserved</div></div>
+                <div class="au-stat"><span class="au-eyebrow">Plan</span><div class="au-stat__value" style="font-size:18px">@(s.PlanName ?? "No plan") @Ui.Badge(s.SubscriptionStatus ?? "none", s.SubscriptionStatus is null ? "none" : null)</div>
+                    <div class="au-stat__hint @(s.HasAccess ? null : "au-text-error")">@(s.PlanPrice is not null ? BillingUi.Money(s.PlanPrice, cur) + " per " + s.BillingPeriod + " · " : "")@(s.HasAccess ? "features available" : "features blocked")</div></div>
+                <div class="au-stat"><span class="au-eyebrow">Money left</span><div class="au-stat__value @(s.Spendable <= 0 ? "au-text-error" : null)">@BillingUi.Money(s.Spendable, cur)</div>
+                    <div class="au-stat__hint">wallet @BillingUi.Money(s.WalletBalance) + free plan credit @BillingUi.Money(s.IncludedCreditRemaining)@(s.ReservedAmount > 0 ? " − " + BillingUi.Money(s.ReservedAmount) + " held for sends in progress" : "")</div></div>
+                <div class="au-stat"><span class="au-eyebrow">@next.Label</span><div class="au-stat__value" style="font-size:18px">@(next.At is { } at ? Ui.Time(at) : Ui.OrDash(null))</div>
+                    @if (next.Note is not null) { <div class="au-stat__hint">@next.Note</div> }</div>
             </div>
 
             <div class="au-grid au-grid--2" style="align-items:start">
@@ -131,7 +132,7 @@
                                                 <td>
                                                     <form method="post" asp-page-handler="AddonRenewal" asp-route-id="@Model.Id">
                                                         <input type="hidden" name="addonCode" value="@a.Code" />
-                                                        <select class="au-select au-select--sm" name="choice" aria-label="At renewal: @a.Name" onchange="this.form.requestSubmit()">
+                                                        <select class="au-select au-select--sm" name="choice" aria-label="At renewal: @a.Name" data-autosubmit>
                                                             <option value="default" selected="@(a.AutoRenew is null)">Default (@(a.AutoRenew is null ? (a.Renews ? "renews" : "ends") : "setting"))</option>
                                                             <option value="yes" selected="@(a.AutoRenew == true)">Renews (charged)</option>
                                                             <option value="no" selected="@(a.AutoRenew == false)">Ends</option>
@@ -170,19 +171,203 @@
                             </div>
                         }
                     </section>
-                    <section class="au-panel au-panel--round au-panel--pad">
-                        <div class="au-panel__head"><h3 class="au-panel__title">Ledger check</h3></div>
-                        @{ var r = o.Reconciliation; }
-                        <dl class="au-detail-rows">
-                            <div class="au-detail-row"><dt>Wallet</dt><dd>@BillingUi.Money(r.WalletBalance) · ledger @BillingUi.Money(r.WalletLedgerTotal)</dd></div>
-                            <div class="au-detail-row"><dt>Included credit</dt><dd>@BillingUi.Money(r.IncludedCreditBalance) · ledger @BillingUi.Money(r.IncludedCreditLedgerTotal)</dd></div>
-                            <div class="au-detail-row"><dt>Reserved</dt><dd>@BillingUi.Money(r.ReservedAmount) · open reservations @BillingUi.Money(r.OpenReservationsTotal)</dd></div>
-                            <div class="au-detail-row"><dt>Result</dt><dd>@Ui.Badge(r.IsBalanced ? "healthy" : "error", r.IsBalanced ? "balanced" : "NOT balanced: investigate before changing money")</dd></div>
-                        </dl>
-                    </section>
                 </div>
             </div>
 
+            <section class="au-table-card">
+                <div class="au-panel__head"><h3 class="au-panel__title">Usage this period (since @Ui.Time(s.UsageSince))</h3></div>
+                @if (o.UsageWithCosts.Count == 0)
+                {
+                    var noUsage = new EmptyStateModel("No usage this period.", "monitoring");
+                    <partial name="_EmptyState" model="noUsage" />
+                }
+                else
+                {
+                    <div class="au-table-scroll">
+                        <table class="au-table">
+                            <thead><tr><th>Event</th><th>Channel</th><th>Who pays the provider</th><th class="au-right">Count</th><th class="au-right">Quantity</th><th class="au-right">Charged</th><th class="au-right">Provider cost</th><th class="au-right">Margin</th></tr></thead>
+                            <tbody>
+                                @foreach (var u in o.UsageWithCosts)
+                                {
+                                    <tr><td>@BillingUi.EventLabel(u.EventType)</td><td>@u.Channel</td><td>@BillingUi.ResponsibilityLabel(u.ProviderBilling)</td>
+                                        <td class="au-right">@u.Count</td><td class="au-right">@BillingUi.Number(u.Quantity)</td><td class="au-right">@BillingUi.Money(u.Amount)</td>
+                                        <td class="au-right">@BillingUi.Money(u.ProviderCost)</td><td class="au-right @(u.Margin < 0 ? "au-text-error" : null)">@BillingUi.Money(u.Margin)</td></tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr><th colspan="5">Total (@cur)</th><th class="au-right">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.Amount))</th><th class="au-right">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.ProviderCost))</th><th class="au-right">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.Margin))</th></tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="au-pager"><span class="au-pager__count">Provider cost is shown whoever paid it; margin only subtracts cost Omni paid itself.</span></div>
+                }
+            </section>
+        </div>
+
+        <dialog class="au-dialog au-dialog--sm" id="start-plan" aria-labelledby="start-plan-title">
+            <form method="post" asp-page-handler="StartPlan" asp-route-id="@Model.Id">
+                <h2 class="au-dialog__title" id="start-plan-title">@(sub is null ? "Start a plan" : "Change plan")<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+                <div class="au-dialog__content">
+                    <p class="au-help" style="margin-bottom:16px">Starts a new period now (no proration). The previous period's included credit expires and the new plan's credit is granted.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="au-stack" style="--au-gap:16px">
+                        <div class="au-form-field"><label class="au-form-label" for="sp-plan">Plan<span class="au-required">*</span></label>
+                            <select class="au-select" id="sp-plan" name="planCode" required>
+                                <option value="">Choose…</option>
+                                @foreach (var p in Model.Plans.Where(p => p.IsActive))
+                                {
+                                    <option value="@p.Code" selected="@(p.Code == sub?.PlanCode)">@p.Name (@p.Code): @(p.TrialDays is int days ? $"{days}-day free trial" : $"{BillingUi.Money(p.Price, p.Currency)} / {p.BillingPeriod}"), credit @BillingUi.Money(p.IncludedUsageCredit)</option>
+                                }
+                            </select>
+                        </div>
+                        <label class="au-check"><input type="checkbox" name="chargeFirstPeriod" value="true" checked /> Charge the first period from the wallet (untick for a free first period)</label>
+                        <label class="au-check"><input type="checkbox" name="allowAnotherTrial" value="true" /> Allow another trial (a client gets one trial; tick only to give a second one on purpose)</label>
+                        <div class="au-form-field"><label class="au-form-label" for="sp-reason">Reason (optional, internal: the client doesn't see it)</label><input class="au-input" id="sp-reason" name="reason" maxlength="500" /></div>
+                    </div>
+                </div>
+                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Start this plan for @o.ClientName now?">@(sub is null ? "Start plan" : "Change plan")</button></div>
+            </form>
+        </dialog>
+        <dialog class="au-dialog au-dialog--sm" id="set-addon" aria-labelledby="set-addon-title">
+            <form method="post" asp-page-handler="SetAddon" asp-route-id="@Model.Id">
+                <h2 class="au-dialog__title" id="set-addon-title">Change add-ons<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+                <div class="au-dialog__content">
+                    <p class="au-help" style="margin-bottom:16px">Sets how many units of an add-on the client has. Added units are charged from the wallet now (no proration), and every period charges the plan and its add-ons together. Fewer units refund nothing; 0 removes the add-on. Needs an active subscription. A limit the plan already has unlimited can't get units (an add-on held for one ends, uncharged, at the next plan change or renewal).</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="au-stack" style="--au-gap:16px">
+                        <div class="au-form-field"><label class="au-form-label" for="sa-code">Add-on<span class="au-required">*</span></label>
+                            <select class="au-select" id="sa-code" name="addonCode" required>
+                                <option value="">Choose…</option>
+                                @foreach (var a in Model.Addons.Where(a => a.IsActive || s.Addons?.Any(x => x.Code == a.Code) == true).OrderBy(a => a.SortOrder))
+                                {
+                                    var has = s.Addons?.FirstOrDefault(x => x.Code == a.Code)?.Quantity ?? 0;
+                                    // Units of a limit the plan already has unlimited buy nothing; the main app refuses them (QA t2-billing-06).
+                                    var unlimited = s.Entitlements.Any(e => e.Key == a.EntitlementKey && e.Value == "unlimited");
+                                    <option value="@a.Code" disabled="@(unlimited && has == 0)">@a.Name: @BillingUi.Money(a.UnitPrice, a.Currency) per unit · has @has@(unlimited ? " · already unlimited on this plan" : "")</option>
+                                }
+                            </select></div>
+                        <div class="au-form-field"><label class="au-form-label" for="sa-qty">Units in total<span class="au-required">*</span></label><input class="au-input" id="sa-qty" type="number" name="quantity" min="0" max="1000" step="1" value="1" required /></div>
+                    </div>
+                </div>
+                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Set these add-on units for @o.ClientName? Added units are charged from the wallet now.">Set units</button></div>
+            </form>
+        </dialog>
+        <dialog class="au-dialog" id="top-up" aria-labelledby="top-up-title" data-autoopen="@(Model.OpenTopUp ? "" : null)">
+            <form method="post" asp-page-handler="TopUp" asp-route-id="@Model.Id">
+                <h2 class="au-dialog__title" id="top-up-title">Top up the wallet<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+                <div class="au-dialog__content">
+                    <p class="au-help" style="margin-bottom:16px">Record money the client paid Omni outside the app.</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="au-stack" style="--au-gap:16px">
+                        <div class="au-form-field"><label class="au-form-label" for="tu-amount">Amount (@cur)<span class="au-required">*</span></label><input class="au-input" id="tu-amount" type="number" name="amount" min="0.01" step="0.01" required />
+                            @* Quick amounts (QA t6-admin-28); any other amount can still be typed. *@
+                            <div class="au-row au-row--wrap" style="--au-gap:6px;margin-top:6px">
+                                @foreach (var quick in BillingUi.QuickTopUps)
+                                {
+                                    <button class="au-btn au-btn--outlined au-btn--sm" type="button" data-fill="#tu-amount" data-fill-value="@quick">@quick @cur</button>
+                                }
+                            </div></div>
+                        <div class="au-form-field"><label class="au-form-label" for="tu-ref">Payment reference (optional)</label><input class="au-input" id="tu-ref" name="reference" maxlength="200" placeholder="Invoice or transfer number" /></div>
+                        <div class="au-form-field"><label class="au-form-label" for="tu-note">Note (optional, internal: the client doesn't see it)</label><input class="au-input" id="tu-note" name="reason" maxlength="500" /></div>
+                    </div>
+                </div>
+                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Add this amount to @o.ClientName's wallet?">Top up</button></div>
+            </form>
+        </dialog>
+        <dialog class="au-dialog" id="adjust" aria-labelledby="adjust-title">
+            <form method="post" asp-page-handler="Adjust" asp-route-id="@Model.Id">
+                <h2 class="au-dialog__title" id="adjust-title">Manual adjustment<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+                <div class="au-dialog__content">
+                    <p class="au-help" style="margin-bottom:16px">A correction, positive or negative. It's written to the ledger with your name and the reason. The reason is an internal note: the client only sees the kind of entry (Adjustment, Top-up...).</p>
+                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
+                    <div class="au-stack" style="--au-gap:16px">
+                        <div class="au-form-field"><label class="au-form-label" for="ad-balance">Balance</label>
+                            <select class="au-select" id="ad-balance" name="balanceType">@foreach (var b in BillingVocab.BalanceTypes) { <option value="@b">@BillingUi.BalanceLabel(b)</option> }</select></div>
+                        <div class="au-form-field"><label class="au-form-label" for="ad-amount">Amount (@cur, negative to deduct)<span class="au-required">*</span></label><input class="au-input" id="ad-amount" type="number" name="amount" step="0.01" required /></div>
+                        <div class="au-form-field"><label class="au-form-label" for="ad-reason">Reason (internal)<span class="au-required">*</span></label><input class="au-input" id="ad-reason" name="reason" maxlength="500" required /></div>
+                    </div>
+                </div>
+                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Apply this adjustment?">Apply adjustment</button></div>
+            </form>
+        </dialog>
+        @if (sub is not null && sub.Status is "active" or "past_due")
+        {
+            <dialog class="au-dialog" id="cancel-sub" aria-labelledby="cancel-sub-title">
+                <form method="post" asp-page-handler="Cancel" asp-route-id="@Model.Id">
+                    <h2 class="au-dialog__title" id="cancel-sub-title">Cancel the subscription<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
+                    <div class="au-dialog__content">
+                        <p class="au-help" style="margin-bottom:16px">"At period end" keeps everything working until @Ui.Time(sub.CurrentPeriodEnd). "Cancel now" stops sending, campaigns and the AI for this client right away.</p>
+                        <div class="au-form-field"><label class="au-form-label" for="cs-reason">Reason (optional)</label><input class="au-input" id="cs-reason" name="reason" maxlength="500" /></div>
+                    </div>
+                    <div class="au-dialog__actions" style="flex-wrap:wrap">
+                        <button class="au-btn" type="button" data-close>Keep it</button>
+                        @if (!sub.CancelAtPeriodEnd)
+                        {
+                            <button class="au-btn au-btn--outlined" type="submit" name="immediately" value="false" data-confirm="End the subscription at the end of the current period?">Cancel at period end</button>
+                        }
+                        <button class="au-btn au-btn--danger" type="submit" name="immediately" value="true" data-confirm="Cancel now? Sending, campaigns and the AI stop for this client right away.">Cancel now</button>
+                    </div>
+                </form>
+            </dialog>
+        }
+    }
+    else if (Model.Tab == "advanced")
+    {
+        @* Internal figures for whoever investigates money (QA t6-admin-29: kept off the overview). *@
+        <div class="au-stack">
+            <div class="au-grid au-grid--3" style="--au-gap:12px">
+                <div class="au-stat"><span class="au-eyebrow">Plan</span><div class="au-stat__value" style="font-size:18px">@(s.PlanName ?? "No plan")</div>
+                    @if (s.PlanPrice is not null) { <div class="au-stat__hint">@BillingUi.Money(s.PlanPrice, cur) per @s.BillingPeriod</div> }</div>
+                <div class="au-stat"><span class="au-eyebrow">Subscription</span><div class="au-stat__value" style="font-size:18px">@Ui.Badge(s.SubscriptionStatus ?? "none", s.SubscriptionStatus is null ? "none" : null)</div>
+                    <div class="au-stat__hint @(s.HasAccess ? null : "au-text-error")">@(s.HasAccess ? "features available" : "features blocked")</div></div>
+                <div class="au-stat"><span class="au-eyebrow">Wallet</span><div class="au-stat__value @(s.WalletBalance < 0 ? "au-text-error" : null)">@BillingUi.Money(s.WalletBalance)</div><div class="au-stat__hint">@cur</div></div>
+                <div class="au-stat"><span class="au-eyebrow">Included credit left</span><div class="au-stat__value">@BillingUi.Money(s.IncludedCreditRemaining)</div><div class="au-stat__hint">of @BillingUi.Money(s.PlanIncludedCredit, cur) this period</div></div>
+                <div class="au-stat"><span class="au-eyebrow">Reserved</span><div class="au-stat__value">@BillingUi.Money(s.ReservedAmount)</div><div class="au-stat__hint">@o.OpenReservations open</div></div>
+                <div class="au-stat"><span class="au-eyebrow">Spendable</span><div class="au-stat__value @(s.Spendable <= 0 ? "au-text-error" : null)">@BillingUi.Money(s.Spendable)</div><div class="au-stat__hint">wallet + credit − reserved</div></div>
+            </div>
+            <div class="au-grid au-grid--2" style="align-items:start">
+                <section class="au-panel au-panel--round au-panel--pad">
+                    <div class="au-panel__head"><h3 class="au-panel__title">Ledger check</h3></div>
+                    @{ var r = o.Reconciliation; }
+                    <dl class="au-detail-rows">
+                        <div class="au-detail-row"><dt>Wallet</dt><dd>@BillingUi.Money(r.WalletBalance) · ledger @BillingUi.Money(r.WalletLedgerTotal)</dd></div>
+                        <div class="au-detail-row"><dt>Included credit</dt><dd>@BillingUi.Money(r.IncludedCreditBalance) · ledger @BillingUi.Money(r.IncludedCreditLedgerTotal)</dd></div>
+                        <div class="au-detail-row"><dt>Reserved</dt><dd>@BillingUi.Money(r.ReservedAmount) · open reservations @BillingUi.Money(r.OpenReservationsTotal)</dd></div>
+                        <div class="au-detail-row"><dt>Result</dt><dd>@Ui.Badge(r.IsBalanced ? "healthy" : "error", r.IsBalanced ? "balanced" : "NOT balanced: investigate before changing money")</dd></div>
+                    </dl>
+                </section>
+                @* A plain GET form (not form.filters): nothing submits until "Check price". *@
+                <form class="au-panel au-panel--round au-panel--pad" method="get">
+                    <div class="au-panel__head"><h3 class="au-panel__title">Price check</h3></div>
+                    <p class="au-help" style="margin:-8px 0 16px">What Omni would charge this client for one unit right now, and which rate card prices it.</p>
+                    <input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="tab" value="advanced" />
+                    <div class="au-form-grid">
+                        <div class="au-form-field au-span-2"><label class="au-form-label" for="qc-event">What is sent<span class="au-required">*</span></label><select class="au-select" id="qc-event" name="quoteEvent" required><option value="">Choose what to price</option>@foreach (var e in BillingVocab.EventTypes) { <option value="@e" selected="@(e == Model.QuoteEvent)">@BillingUi.EventLabel(e)</option> }</select></div>
+                        <div class="au-form-field"><label class="au-form-label" for="qc-country">Country (ISO 2, optional)</label><input class="au-input" id="qc-country" name="quoteCountry" value="@Model.QuoteCountry" maxlength="2" /></div>
+                        <div class="au-form-field"><label class="au-form-label" for="qc-provider">Provider (optional)</label><input class="au-input" id="qc-provider" name="quoteProvider" value="@Model.QuoteProvider" placeholder="meta" /></div>
+                        <div class="au-form-field au-span-2"><label class="au-form-label" for="qc-billing">Who pays the provider</label>
+                            <select class="au-select" id="qc-billing" name="quoteBilling"><option value="">Omni pays provider (default)</option>
+                                @foreach (var m in Model.Modes?.Modes ?? []) { if (m.Value != "platform_funded") { <option value="@m.Value" selected="@(m.Value == Model.QuoteBilling)">@m.Label (usage fee)</option> } }
+                            </select></div>
+                    </div>
+                    <div class="au-form-actions"><button class="au-btn au-btn--outlined" type="submit"><span class="au-icon" aria-hidden="true">sell</span>Check price</button></div>
+                    @if (Model.Quote is { } q)
+                    {
+                        <dl class="au-detail-rows" style="margin-top:16px">
+                            <div class="au-detail-row"><dt>Charge</dt><dd><strong>@BillingUi.Money(q.UnitPrice, q.Currency)</strong> per @q.Unit</dd></div>
+                            <div class="au-detail-row"><dt>Provider cost</dt><dd>@BillingUi.Money(q.UnitProviderCost, q.Currency)</dd></div>
+                            <div class="au-detail-row"><dt>Priced by</dt><dd><a href="/Billing/Rates?code=@q.RateCardCode">@q.RateCardCode</a> (@q.RateSource card)</dd></div>
+                        </dl>
+                    }
+                    else if (Model.QuoteMissing)
+                    {
+                        <div class="au-alert au-alert--error" role="alert" style="margin-top:16px">
+                            <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
+                            <div class="au-alert__body">No rate card prices this for this client, so a charged message of this type would be refused.</div>
+                        </div>
+                    }
+                </form>
+            </div>
             <section class="au-table-card">
                 <div class="au-panel__head"><h3 class="au-panel__title">Messaging accounts: who pays the provider</h3></div>
                 <p class="au-caption" style="padding:0 16px 12px;margin:0">Set per connected account. "Omni pays provider" means Omni charges the client for the usage from its credit and wallet. In the other modes usage is only recorded, unless you turn on a Omni usage fee (priced by rates set for that mode). Changes apply to new messages only.</p>
@@ -223,7 +408,7 @@
                                             <dialog class="au-dialog au-dialog--sm" style="white-space:normal" id="pb-@acc.ChannelIntegrationId" aria-labelledby="pb-title-@acc.ChannelIntegrationId">
                                                 <h2 class="au-dialog__title" id="pb-title-@acc.ChannelIntegrationId">Who pays for @acc.Channel · @acc.DisplayName<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
                                                 <div class="au-dialog__content">
-                                                    <form method="post" asp-page-handler="ProviderBilling" asp-route-id="@Model.Id">
+                                                    <form method="post" asp-page-handler="ProviderBilling" asp-route-id="@Model.Id" asp-route-tab="advanced">
                                                         <input type="hidden" name="accountId" value="@acc.ChannelIntegrationId" />
                                                         <div class="au-stack" style="--au-gap:16px">
                                                             <div class="au-form-field"><label class="au-form-label" for="pb-who-@acc.ChannelIntegrationId">Who pays the provider</label><select class="au-select" id="pb-who-@acc.ChannelIntegrationId" name="providerBilling">
@@ -245,7 +430,7 @@
                                                     @if (hasOverride)
                                                     {
                                                         <hr class="au-divider" />
-                                                        <form method="post" asp-page-handler="ResetProviderBilling" asp-route-id="@Model.Id">
+                                                        <form method="post" asp-page-handler="ResetProviderBilling" asp-route-id="@Model.Id" asp-route-tab="advanced">
                                                             <input type="hidden" name="accountId" value="@acc.ChannelIntegrationId" />
                                                             <div class="au-form-field"><label class="au-form-label" for="pb-reset-@acc.ChannelIntegrationId">Or go back to the default</label><input class="au-input" id="pb-reset-@acc.ChannelIntegrationId" name="reason" placeholder="Reason for reset (required)" maxlength="500" required /></div>
                                                             <div class="au-form-actions"><button class="au-btn au-btn--outlined" type="submit">Back to default</button></div>
@@ -261,170 +446,7 @@
                     </div>
                 }
             </section>
-
-            <section class="au-table-card">
-                <div class="au-panel__head"><h3 class="au-panel__title">Usage this period (since @Ui.Time(s.UsageSince))</h3></div>
-                @if (o.UsageWithCosts.Count == 0)
-                {
-                    var noUsage = new EmptyStateModel("No usage this period.", "monitoring");
-                    <partial name="_EmptyState" model="noUsage" />
-                }
-                else
-                {
-                    <div class="au-table-scroll">
-                        <table class="au-table">
-                            <thead><tr><th>Event</th><th>Channel</th><th>Who pays the provider</th><th class="au-right">Count</th><th class="au-right">Quantity</th><th class="au-right">Charged</th><th class="au-right">Provider cost</th><th class="au-right">Margin</th></tr></thead>
-                            <tbody>
-                                @foreach (var u in o.UsageWithCosts)
-                                {
-                                    <tr><td>@BillingUi.EventLabel(u.EventType)</td><td>@u.Channel</td><td>@BillingUi.ResponsibilityLabel(u.ProviderBilling)</td>
-                                        <td class="au-right">@u.Count</td><td class="au-right">@BillingUi.Number(u.Quantity)</td><td class="au-right">@BillingUi.Money(u.Amount)</td>
-                                        <td class="au-right">@BillingUi.Money(u.ProviderCost)</td><td class="au-right @(u.Margin < 0 ? "au-text-error" : null)">@BillingUi.Money(u.Margin)</td></tr>
-                                }
-                            </tbody>
-                            <tfoot>
-                                <tr><th colspan="5">Total (@cur)</th><th class="au-right">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.Amount))</th><th class="au-right">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.ProviderCost))</th><th class="au-right">@BillingUi.Money(o.UsageWithCosts.Sum(u => u.Margin))</th></tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <div class="au-pager"><span class="au-pager__count">Provider cost is shown whoever paid it; margin only subtracts cost Omni paid itself.</span></div>
-                }
-            </section>
-
-            <div class="au-grid au-grid--2" style="align-items:start">
-                @* A plain GET form (not form.filters): nothing submits until "Check price". *@
-                <form class="au-panel au-panel--round au-panel--pad" method="get">
-                    <div class="au-panel__head"><h3 class="au-panel__title">Price check</h3></div>
-                    <p class="au-help" style="margin:-8px 0 16px">What Omni would charge this client for one unit right now, and which rate card prices it.</p>
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    <div class="au-form-grid">
-                        <div class="au-form-field au-span-2"><label class="au-form-label" for="qc-event">Event type<span class="au-required">*</span></label><input class="au-input" id="qc-event" name="quoteEvent" list="event-types" value="@Model.QuoteEvent" required /></div>
-                        <div class="au-form-field"><label class="au-form-label" for="qc-country">Country (ISO 2, optional)</label><input class="au-input" id="qc-country" name="quoteCountry" value="@Model.QuoteCountry" maxlength="2" /></div>
-                        <div class="au-form-field"><label class="au-form-label" for="qc-provider">Provider (optional)</label><input class="au-input" id="qc-provider" name="quoteProvider" value="@Model.QuoteProvider" placeholder="meta" /></div>
-                        <div class="au-form-field au-span-2"><label class="au-form-label" for="qc-billing">Who pays the provider</label>
-                            <select class="au-select" id="qc-billing" name="quoteBilling"><option value="">Omni pays provider (default)</option>
-                                @foreach (var m in Model.Modes?.Modes ?? []) { if (m.Value != "platform_funded") { <option value="@m.Value" selected="@(m.Value == Model.QuoteBilling)">@m.Label (usage fee)</option> } }
-                            </select></div>
-                    </div>
-                    <div class="au-form-actions"><button class="au-btn au-btn--outlined" type="submit"><span class="au-icon" aria-hidden="true">sell</span>Check price</button></div>
-                    @if (Model.Quote is { } q)
-                    {
-                        <dl class="au-detail-rows" style="margin-top:16px">
-                            <div class="au-detail-row"><dt>Charge</dt><dd><strong>@BillingUi.Money(q.UnitPrice, q.Currency)</strong> per @q.Unit</dd></div>
-                            <div class="au-detail-row"><dt>Provider cost</dt><dd>@BillingUi.Money(q.UnitProviderCost, q.Currency)</dd></div>
-                            <div class="au-detail-row"><dt>Priced by</dt><dd><a href="/Billing/Rates?code=@q.RateCardCode">@q.RateCardCode</a> (@q.RateSource card)</dd></div>
-                        </dl>
-                    }
-                    else if (Model.QuoteMissing)
-                    {
-                        <div class="au-alert au-alert--error" role="alert" style="margin-top:16px">
-                            <span class="au-icon au-alert__icon" aria-hidden="true">error</span>
-                            <div class="au-alert__body">No rate card prices this for this client, so a charged message of this type would be refused.</div>
-                        </div>
-                    }
-                </form>
-            </div>
         </div>
-        <datalist id="event-types">@foreach (var e in BillingVocab.EventTypes) { <option value="@e"></option> }</datalist>
-
-        <dialog class="au-dialog au-dialog--sm" id="start-plan" aria-labelledby="start-plan-title">
-            <form method="post" asp-page-handler="StartPlan" asp-route-id="@Model.Id">
-                <h2 class="au-dialog__title" id="start-plan-title">@(sub is null ? "Start a plan" : "Change plan")<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
-                <div class="au-dialog__content">
-                    <p class="au-help" style="margin-bottom:16px">Starts a new period now (no proration). The previous period's included credit expires and the new plan's credit is granted.</p>
-                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
-                    <div class="au-stack" style="--au-gap:16px">
-                        <div class="au-form-field"><label class="au-form-label" for="sp-plan">Plan<span class="au-required">*</span></label>
-                            <select class="au-select" id="sp-plan" name="planCode" required>
-                                <option value="">Choose…</option>
-                                @foreach (var p in Model.Plans.Where(p => p.IsActive))
-                                {
-                                    <option value="@p.Code" selected="@(p.Code == sub?.PlanCode)">@p.Name (@p.Code): @(p.TrialDays is int days ? $"{days}-day free trial" : $"{BillingUi.Money(p.Price, p.Currency)} / {p.BillingPeriod}"), credit @BillingUi.Money(p.IncludedUsageCredit)</option>
-                                }
-                            </select>
-                        </div>
-                        <label class="au-check"><input type="checkbox" name="chargeFirstPeriod" value="true" checked /> Charge the first period from the wallet (untick for a free first period)</label>
-                        <div class="au-form-field"><label class="au-form-label" for="sp-reason">Reason (optional)</label><input class="au-input" id="sp-reason" name="reason" maxlength="500" /></div>
-                    </div>
-                </div>
-                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Start this plan for @o.ClientName now?">@(sub is null ? "Start plan" : "Change plan")</button></div>
-            </form>
-        </dialog>
-        <dialog class="au-dialog au-dialog--sm" id="set-addon" aria-labelledby="set-addon-title">
-            <form method="post" asp-page-handler="SetAddon" asp-route-id="@Model.Id">
-                <h2 class="au-dialog__title" id="set-addon-title">Change add-ons<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
-                <div class="au-dialog__content">
-                    <p class="au-help" style="margin-bottom:16px">Sets how many units of an add-on the client has. Added units are charged from the wallet now (no proration), and every period charges the plan and its add-ons together. Fewer units refund nothing; 0 removes the add-on. Needs an active subscription. A limit the plan already has unlimited can't get units (an add-on held for one ends, uncharged, at the next plan change or renewal).</p>
-                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
-                    <div class="au-stack" style="--au-gap:16px">
-                        <div class="au-form-field"><label class="au-form-label" for="sa-code">Add-on<span class="au-required">*</span></label>
-                            <select class="au-select" id="sa-code" name="addonCode" required>
-                                <option value="">Choose…</option>
-                                @foreach (var a in Model.Addons.Where(a => a.IsActive || s.Addons?.Any(x => x.Code == a.Code) == true).OrderBy(a => a.SortOrder))
-                                {
-                                    var has = s.Addons?.FirstOrDefault(x => x.Code == a.Code)?.Quantity ?? 0;
-                                    // Units of a limit the plan already has unlimited buy nothing; the main app refuses them (QA t2-billing-06).
-                                    var unlimited = s.Entitlements.Any(e => e.Key == a.EntitlementKey && e.Value == "unlimited");
-                                    <option value="@a.Code" disabled="@(unlimited && has == 0)">@a.Name: @BillingUi.Money(a.UnitPrice, a.Currency) per unit · has @has@(unlimited ? " · already unlimited on this plan" : "")</option>
-                                }
-                            </select></div>
-                        <div class="au-form-field"><label class="au-form-label" for="sa-qty">Units in total<span class="au-required">*</span></label><input class="au-input" id="sa-qty" type="number" name="quantity" min="0" max="1000" step="1" value="1" required /></div>
-                    </div>
-                </div>
-                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Set these add-on units for @o.ClientName? Added units are charged from the wallet now.">Set units</button></div>
-            </form>
-        </dialog>
-        <dialog class="au-dialog" id="top-up" aria-labelledby="top-up-title">
-            <form method="post" asp-page-handler="TopUp" asp-route-id="@Model.Id">
-                <h2 class="au-dialog__title" id="top-up-title">Top up the wallet<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
-                <div class="au-dialog__content">
-                    <p class="au-help" style="margin-bottom:16px">Record money the client paid Omni outside the app.</p>
-                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
-                    <div class="au-stack" style="--au-gap:16px">
-                        <div class="au-form-field"><label class="au-form-label" for="tu-amount">Amount (@cur)<span class="au-required">*</span></label><input class="au-input" id="tu-amount" type="number" name="amount" min="0.01" step="0.01" required /></div>
-                        <div class="au-form-field"><label class="au-form-label" for="tu-ref">Payment reference (optional)</label><input class="au-input" id="tu-ref" name="reference" maxlength="200" placeholder="Invoice or transfer number" /></div>
-                        <div class="au-form-field"><label class="au-form-label" for="tu-note">Note (optional)</label><input class="au-input" id="tu-note" name="reason" maxlength="500" /></div>
-                    </div>
-                </div>
-                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Add this amount to @o.ClientName's wallet?">Top up</button></div>
-            </form>
-        </dialog>
-        <dialog class="au-dialog" id="adjust" aria-labelledby="adjust-title">
-            <form method="post" asp-page-handler="Adjust" asp-route-id="@Model.Id">
-                <h2 class="au-dialog__title" id="adjust-title">Manual adjustment<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
-                <div class="au-dialog__content">
-                    <p class="au-help" style="margin-bottom:16px">A correction, positive or negative. It's written to the ledger with your name and the reason.</p>
-                    <input type="hidden" name="opId" value="@Model.NewOperationId()" />
-                    <div class="au-stack" style="--au-gap:16px">
-                        <div class="au-form-field"><label class="au-form-label" for="ad-balance">Balance</label>
-                            <select class="au-select" id="ad-balance" name="balanceType">@foreach (var b in BillingVocab.BalanceTypes) { <option value="@b">@BillingUi.BalanceLabel(b)</option> }</select></div>
-                        <div class="au-form-field"><label class="au-form-label" for="ad-amount">Amount (@cur, negative to deduct)<span class="au-required">*</span></label><input class="au-input" id="ad-amount" type="number" name="amount" step="0.01" required /></div>
-                        <div class="au-form-field"><label class="au-form-label" for="ad-reason">Reason<span class="au-required">*</span></label><input class="au-input" id="ad-reason" name="reason" maxlength="500" required /></div>
-                    </div>
-                </div>
-                <div class="au-dialog__actions"><button class="au-btn" type="button" data-close>Cancel</button><button class="au-btn au-btn--primary" type="submit" data-confirm="Apply this adjustment?">Apply adjustment</button></div>
-            </form>
-        </dialog>
-        @if (sub is not null && sub.Status is "active" or "past_due")
-        {
-            <dialog class="au-dialog" id="cancel-sub" aria-labelledby="cancel-sub-title">
-                <form method="post" asp-page-handler="Cancel" asp-route-id="@Model.Id">
-                    <h2 class="au-dialog__title" id="cancel-sub-title">Cancel the subscription<button class="au-icon-btn au-icon-btn--sm" type="button" data-close aria-label="Close"><span class="au-icon" aria-hidden="true">close</span></button></h2>
-                    <div class="au-dialog__content">
-                        <p class="au-help" style="margin-bottom:16px">"At period end" keeps everything working until @Ui.Time(sub.CurrentPeriodEnd). "Cancel now" stops sending, campaigns and the AI for this client right away.</p>
-                        <div class="au-form-field"><label class="au-form-label" for="cs-reason">Reason (optional)</label><input class="au-input" id="cs-reason" name="reason" maxlength="500" /></div>
-                    </div>
-                    <div class="au-dialog__actions" style="flex-wrap:wrap">
-                        <button class="au-btn" type="button" data-close>Keep it</button>
-                        @if (!sub.CancelAtPeriodEnd)
-                        {
-                            <button class="au-btn au-btn--outlined" type="submit" name="immediately" value="false" data-confirm="End the subscription at the end of the current period?">Cancel at period end</button>
-                        }
-                        <button class="au-btn au-btn--danger" type="submit" name="immediately" value="true" data-confirm="Cancel now? Sending, campaigns and the AI stop for this client right away.">Cancel now</button>
-                    </div>
-                </form>
-            </dialog>
-        }
     }
     else if (Model.Tab == "usage" && Model.Usage is { } usage)
     {
@@ -438,6 +460,8 @@
                     </select>
                 </div>
                 <div class="au-field" style="width:240px"><label class="au-label" for="f-event">Event type</label><input class="au-input" id="f-event" name="eventType" list="event-types" value="@Model.EventType" /></div>
+                <div class="au-field" style="width:160px"><label class="au-label" for="f-from">From (UTC day)</label><input class="au-input" id="f-from" type="date" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" /></div>
+                <div class="au-field" style="width:160px"><label class="au-label" for="f-to">To (UTC day)</label><input class="au-input" id="f-to" type="date" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" /></div>
             </div>
             <div class="au-toolbar__actions">
                 <span class="au-toolbar__meta">@Ui.Count(usage.Total, "record", "records")</span>

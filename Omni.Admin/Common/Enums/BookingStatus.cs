@@ -17,4 +17,16 @@ public static class BookingStatus
     /// <summary>Whether an booking in this status occupies its time slot. Canceled frees it; Rescheduled means the
     /// booking moved elsewhere. Everything else (booked, confirmed, attended, no-show) holds the time.</summary>
     public static bool BlocksTime(string status) => status != Canceled && status != Rescheduled;
+
+    /// <summary>(Copy of the main app's BookingStatus.NextFrom; QA t5-ops-03.) The statuses a booking can move to: booked and
+    /// confirmed can be confirmed, unconfirmed, marked attended / no-show (once started) or canceled; an outcome can be
+    /// corrected; canceled and rescheduled are final.</summary>
+    public static IReadOnlyList<string> NextFrom(string current) => current switch
+    {
+        Booked => [Confirmed, Attended, NoShow, Canceled],
+        Confirmed => [Booked, Attended, NoShow, Canceled],
+        Attended => [NoShow],
+        NoShow => [Attended],
+        _ => []
+    };
 }

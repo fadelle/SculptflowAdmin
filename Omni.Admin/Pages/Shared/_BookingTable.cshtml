@@ -22,13 +22,20 @@ else
                         <td>@(a.ServiceName ?? "—")</td>
                         <td>@Ui.Badge(a.Status)</td>
                         <td>
+                            @if (BookingStatus.NextFrom(a.Status).Count == 0)
+                            {
+                                <span class="au-caption">Final</span>
+                            }
+                            else
+                            {
                             <form class="au-row" style="--au-gap:6px" method="post" action="/Bookings?handler=Status">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@a.Id" />
                                 <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-                                <select class="au-select au-select--sm" style="width:170px" name="status" aria-label="New status">@foreach (var s in BookingStatus.All) { <option value="@s" selected="@(s == a.Status)">@s.Replace('_', ' ')</option> }</select>
+                                <select class="au-select au-select--sm" style="width:170px" name="status" aria-label="New status">@foreach (var s in BookingStatus.NextFrom(a.Status).Prepend(a.Status)) { <option value="@s" selected="@(s == a.Status)">@s.Replace('_', ' ')</option> }</select>
                                 <button class="au-btn au-btn--outlined au-btn--sm" type="submit">Set</button>
                             </form>
+                            }
                         </td>
                     </tr>
                 }

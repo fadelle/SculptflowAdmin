@@ -16,5 +16,8 @@ public interface IOverviewApiClient
 
     Task<PagedResult<EventRow>> EventsAsync(Guid? clientId, string? eventType, int page, CancellationToken ct);
 
+    /// <summary>The main app's own record of every write to its platform-admin API (QA t6-admin-23).</summary>
+    Task<PagedResult<PlatformAdminWriteRow>> AdminWritesAsync(Guid? clientId, int page, CancellationToken ct);
+
     Task<List<string>> EventTypesAsync(CancellationToken ct);
 }

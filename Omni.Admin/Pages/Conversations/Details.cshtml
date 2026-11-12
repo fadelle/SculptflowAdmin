@@ -46,6 +46,19 @@
     @if (c.IsServiceWindowOpen) { @Ui.Time(c.ServiceWindowExpiresAt) }
 </div>
 
+@if (Model.LastAnswer is { } why && Model.LastCustomerMessage is { } lastIn)
+{
+    @* QA t6-admin-28: the bot's story in plain words, without opening the trace. *@
+    <div class="au-alert @(why.Answered ? "au-alert--success" : "au-alert--warning")" role="status" style="margin-bottom:16px" id="why-no-answer">
+        <span class="au-icon au-alert__icon" aria-hidden="true">@(why.Answered ? "check_circle" : "help")</span>
+        <div class="au-alert__body">
+            <div class="au-alert__title">@(why.Answered ? "Last customer message" : "Why didn't the bot answer?") · @why.Headline</div>
+            <div>@why.Detail <span class="au-caption">(message of @Ui.Time(lastIn.CreatedAt))</span></div>
+        </div>
+        @if (why.FixLink is not null) { <a class="au-btn au-btn--outlined au-btn--sm" href="@why.FixLink" style="margin-inline-start:auto">@why.FixLabel</a> }
+    </div>
+}
+
 <section class="au-panel au-panel--round au-panel--pad">
     <div class="au-panel__head">
         <h3 class="au-panel__title">Messages (@Model.Messages.Count@(Model.Messages.Count >= 500 ? ", latest 500" : ""))</h3>

@@ -33,9 +33,10 @@ public class IndexModel : AdminPageModel
     }
 
     /// <summary>Posted from the shared bookings table (also embedded on contact pages); goes back where it came from.</summary>
-    public async Task<IActionResult> OnPostStatusAsync(Guid id, string status, string? returnUrl, CancellationToken ct)
+    public async Task<IActionResult> OnPostStatusAsync(Guid id, string? status, string? returnUrl, CancellationToken ct)
     {
-        await RunAsync(() => _contacts.SetBookingStatusAsync(id, status, ct), $"Booking marked {status.Replace('_', ' ')}.");
+        // A tampered form without a status is refused by the main app, not a NullReferenceException here (QA t6-admin-16).
+        await RunAsync(() => _contacts.SetBookingStatusAsync(id, status ?? "", ct), $"Booking marked {status?.Replace('_', ' ')}.");
         return LocalRedirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/Bookings");
     }
 }

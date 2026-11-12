@@ -21,10 +21,11 @@ public class ContactAdminServiceTests
             fullName, first, last, "+9611000000", null, null, null, null, null, "new", "unqualified", null, null, null, null, null, true, null,
             null, null, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow));
 
+    // DELETE confirms, whatever the name (QA t6-admin-26); the name is shown in the dialog instead.
     [Theory]
-    [InlineData("Rana Haddad", "  rana   HADDAD ")]
-    [InlineData(null, "delete")]
-    public async Task The_typed_name_confirms_the_delete(string? name, string typed)
+    [InlineData("[QA] Contact Two عربي 😀", "DELETE")]
+    [InlineData(null, " delete ")]
+    public async Task Typing_DELETE_confirms_the_delete(string? name, string typed)
     {
         Contact(name);
         _api.Setup(a => a.DeleteContactAsync(_id, It.IsAny<CancellationToken>())).ReturnsAsync(new PlatformAdminChange(_clientId));
@@ -38,11 +39,21 @@ public class ContactAdminServiceTests
     public async Task A_wrong_name_deletes_nothing_and_a_missing_contact_is_not_found()
     {
         Contact(null, "Rana", "Haddad");
-        var ex = await Assert.ThrowsAsync<ArgumentException>(() => Sut().DeleteContactAsync(_id, "Rana"));
-        Assert.Contains("Rana Haddad", ex.Message);
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => Sut().DeleteContactAsync(_id, "Rana Haddad"));
+        Assert.Contains("DELETE", ex.Message);
         _api.Verify(a => a.DeleteContactAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => Sut().DeleteContactAsync(Guid.NewGuid(), "x"));
+    }
+
+    [Fact]
+    public void The_dialog_names_the_contact_or_its_phone()
+    {
+        static ContactDetail With(string? full) => new(Guid.NewGuid(), Guid.NewGuid(), null, null, null, full, null, null, "+9611000000",
+            null, null, null, null, null, "new", "unqualified", null, null, null, null, null, true, null, null, null, DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow);
+        Assert.Equal("Rana Haddad", ContactAdminService.NameForDialog(With(" Rana Haddad ")));
+        Assert.Equal("+9611000000", ContactAdminService.NameForDialog(With(null)));
     }
 
     [Fact]

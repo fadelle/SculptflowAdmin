@@ -59,6 +59,24 @@ public class ContentAdminService : IContentAdminService
         await _audit.LogAsync(active ? "knowledge.activated" : "knowledge.deactivated", "knowledge_document", id, change.ClientId, ct: ct);
     }
 
+    public async Task StartReindexAsync(Guid clientId, CancellationToken ct = default)
+    {
+        await _api.StartReindexAsync(clientId, ct);
+        await _audit.LogAsync("knowledge.reindex_started", "client", clientId, clientId, null, ct);
+    }
+
+    public async Task<Omni.Admin.Entities.Dtos.Content.KnowledgeReindexProgress?> TryReindexProgressAsync(Guid clientId, CancellationToken ct = default)
+    {
+        try
+        {
+            return await _api.ReindexProgressAsync(clientId, ct);
+        }
+        catch (Omni.Admin.Common.Exceptions.MainAppApiException)
+        {
+            return null;
+        }
+    }
+
     public async Task UpdateSearchSettingsAsync(Guid clientId, int topK, double minimumSimilarity, CancellationToken ct = default)
     {
         var before = await _api.SearchSettingsAsync(clientId, ct);

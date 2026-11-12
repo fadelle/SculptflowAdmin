@@ -34,7 +34,8 @@ public interface IBillingAdminService
 
     Task<ReconciliationResponse> ReconcileAsync(Guid clientId, CancellationToken ct);
 
-    Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct);
+    Task<PagedResponse<AdminUsageRow>> UsageAsync(Guid clientId, string? status, string? eventType, int page, CancellationToken ct,
+        DateOnly? from = null, DateOnly? to = null);
 
     Task<PagedResponse<AdminLedgerRow>> LedgerAsync(Guid clientId, int page, CancellationToken ct);
 
@@ -68,17 +69,21 @@ public interface IBillingAdminService
     /// <summary>Withdraws a rate version that hasn't started; the previous version keeps applying (audited).</summary>
     Task CancelScheduledRateAsync(Guid rateId, CancellationToken ct);
 
-    Task StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
+    /// <summary>Starts or changes the plan; the answer lists the limits the client is now over (QA t2-billing-11).</summary>
+    Task<SubscriptionResponse> StartSubscriptionAsync(Guid clientId, StartSubscriptionApiRequest r, string opId, CancellationToken ct);
 
     Task CancelSubscriptionAsync(Guid clientId, CancelSubscriptionRequest r, CancellationToken ct);
 
     Task ResumeSubscriptionAsync(Guid clientId, CancellationToken ct);
 
-    Task RenewAsync(Guid clientId, CancellationToken ct);
+    /// <summary>Runs the renewal check now and says what happened (QA t6-admin-21).</summary>
+    Task<string> RenewAsync(Guid clientId, CancellationToken ct);
 
-    Task TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct);
+    /// <summary>False when the main app says the operation was already applied (a replayed form): nothing new, no audit row.</summary>
+    Task<bool> TopUpAsync(Guid clientId, TopUpRequest r, string opId, CancellationToken ct);
 
-    Task AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct);
+    /// <summary>False when the operation was already applied (see TopUpAsync).</summary>
+    Task<bool> AdjustAsync(Guid clientId, AdjustmentRequest r, string opId, CancellationToken ct);
 
     Task RefundAsync(Guid clientId, Guid usageId, RefundRequest r, CancellationToken ct);
 

@@ -71,8 +71,14 @@ public class ContactAdminService : IContactAdminService
         return change.ClientId ?? contact.ClientId;
     }
 
-    /// <summary>What the admin types to confirm a delete: the contact's name, or "delete" when it has none.</summary>
-    public static string ConfirmationWord(ContactDetail contact) => DisplayName(contact) ?? "delete";
+    /// <summary>What the admin types to confirm a delete: always DELETE (any case). The dialog shows the contact's name instead of
+    /// asking for it (QA t6-admin-26: typing "[QA] Contact Two عربي 😀" exactly is hard on a Latin keyboard).</summary>
+    public const string DeleteWord = "DELETE";
+
+    public static string ConfirmationWord(ContactDetail contact) => DeleteWord;
+
+    /// <summary>The name the delete dialog shows, or the phone when the contact has no name.</summary>
+    public static string NameForDialog(ContactDetail contact) => DisplayName(contact) ?? contact.Phone ?? "this contact";
 
     private static string? DisplayName(ContactDetail c)
     {

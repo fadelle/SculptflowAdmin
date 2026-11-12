@@ -36,6 +36,7 @@ using Omni.Admin.Business.Services.Overview;
 using Omni.Admin.Business.Services.Members;
 using Omni.Admin.Common.Configs;
 using Omni.Admin.Persistence.Contexts;
+using Omni.Admin.Middleware;
 using Omni.Admin.Persistence.Helpers;
 using Omni.Admin.Persistence.Contracts;
 using Omni.Admin.Persistence.Contracts.Admins;
@@ -165,6 +166,7 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseMiddleware<SecurityHeadersMiddleware>(); // CSP, nosniff, no framing (QA t6-admin-15)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

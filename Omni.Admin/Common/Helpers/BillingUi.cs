@@ -19,6 +19,22 @@ public static class BillingUi
     /// <summary>Invariant decimal for an input's value attribute.</summary>
     public static string Input(decimal value) => value.ToString(CultureInfo.InvariantCulture);
 
+    /// <summary>The top-up dialog's one-click amounts (QA t6-admin-28).</summary>
+    public static readonly int[] QuickTopUps = [10, 25, 50, 100, 250];
+
+    /// <summary>The overview's third number (QA t6-admin-29): when the client is next charged, or when its plan ends, in plain words.</summary>
+    public static (string Label, DateTimeOffset? At, string? Note) NextCharge(Entities.Responses.Billing.ClientBillingSummary s) =>
+        s.SubscriptionStatus switch
+        {
+            null or "" or "none" => ("Next charge", null, "no plan yet"),
+            "expired" or "cancelled" => ("Plan ended", s.EndedAt ?? s.CurrentPeriodEnd, "start a plan to charge again"),
+            "past_due" => ("Renewal unpaid", s.GraceEndsAt ?? s.CurrentPeriodEnd,
+                s.GraceEndsAt is null ? "top up the wallet so it renews" : "features stop then unless the wallet is topped up"),
+            _ when s.CancelAtPeriodEnd => ("Plan ends on", s.CurrentPeriodEnd, "cancelled at period end: no next charge"),
+            _ when s.TrialDays is > 0 => ("Trial ends on", s.CurrentPeriodEnd, "it ends instead of renewing: start a paid plan before then"),
+            _ => ("Next charge on", s.CurrentPeriodEnd, s.PlanPrice is null ? null : $"{Money(s.PlanPrice, s.Currency)} from the wallet")
+        };
+
     /// <summary>"whatsapp_marketing_message" → "WhatsApp marketing message", "ai_reply" → "AI reply".</summary>
     public static string EventLabel(string eventType)
     {
@@ -41,4 +57,31 @@ public static class BillingUi
     };
 
     public static string BalanceLabel(string balanceType) => balanceType == "included_credit" ? "Included credit" : "Wallet";
+
+    /// <summary>What "Run renewal now" did, from the main app's outcome (QA t6-admin-21: it always said "Renewal check ran").</summary>
+    public static string RenewOutcome(string outcome) => outcome switch
+    {
+        "Renewed" => "Renewed: the new period started and its price was charged.",
+        "NotDue" => "Nothing to do: the current period hasn't ended yet.",
+        "PastDue" => "Couldn't renew: the wallet doesn't cover the plan. The subscription is past due; top up and run it again.",
+        "Expired" => "The subscription has expired (a trial ended, or the grace period ran out unpaid).",
+        "Cancelled" => "The subscription ended: it was set to cancel at the period's end.",
+        _ => "Renewal check ran. The subscription below shows the outcome."
+    };
+
+    /// <summary>" Now over the plan: Seats 3 of 1, AI bots 1 of 0. Deactivate what's extra or add units." after a plan change
+    /// that leaves the client over its limits (QA t2-billing-11); empty when everything fits.</summary>
+    public static string OverLimitsNote(IReadOnlyList<Entities.Responses.Billing.OverLimitRow>? over) =>
+        over is not { Count: > 0 } ? ""
+            : " Now over the plan: " + string.Join(", ", over.Select(o => $"{LimitName(o.Key)} {o.Used} of {o.Limit}"))
+              + ". Deactivate what's extra (members, channels, bots) or add units below.";
+
+    private static string LimitName(string key) => key switch
+    {
+        "max_users" => "Seats",
+        "max_channel_connections" => "Channels",
+        "max_whatsapp_numbers" => "WhatsApp numbers",
+        "max_ai_bots" => "AI bots",
+        _ => key
+    };
 }

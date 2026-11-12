@@ -455,6 +455,33 @@
     var list = dlg.querySelector('.au-palette__list');
     var results = [];
     var index = 0;
+    // Records, not only pages (QA t6-admin-28): matching clients come from the scope endpoint; contacts and members are
+    // searched on their own list pages, across every client.
+    var clientsEndpoint = dlg.getAttribute('data-clients-endpoint');
+    var base = (dlg.getAttribute('data-base') || '/').replace(/\/$/, '');
+    var clientHits = { q: '', items: [] };
+    var clientTimer = null;
+    function findClients(q) {
+      if (!clientsEndpoint) return;
+      clearTimeout(clientTimer);
+      if (q.length < 2) { clientHits = { q: '', items: [] }; return; }
+      clientTimer = setTimeout(function () {
+        var url = clientsEndpoint + '?take=5&q=' + encodeURIComponent(q);
+        fetch(url, { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+          .then(function (res) { return res.ok ? res.json() : { items: [] }; })
+          .then(function (page) {
+            if (input.value.trim() !== q) return; // the admin typed on
+            clientHits = {
+              q: q,
+              items: (page.items || []).map(function (o) {
+                return { label: o.name, path: base + '/Clients/Details?id=' + encodeURIComponent(o.id), icon: 'domain', trail: o.sub ? [o.sub] : [] };
+              }),
+            };
+            render();
+          })
+          .catch(function () { /* the pages and "search everywhere" still work */ });
+      }, 200);
+    }
 
     function byPath(path) {
       for (var i = 0; i < pages.length; i++) if (pages[i].path === path) return pages[i];
@@ -486,6 +513,19 @@
             })
             .slice(0, 40),
         });
+        var raw = input.value.trim();
+        if (clientHits.q === raw && clientHits.items.length) groups.push({ title: 'Clients', items: clientHits.items });
+        if (raw.length >= 2) {
+          var enc = encodeURIComponent(raw);
+          groups.push({
+            title: 'Search every client',
+            items: [
+              { label: 'Clients named "' + raw + '"', path: base + '/Clients?q=' + enc, icon: 'domain', trail: ['name, slug or email'] },
+              { label: 'Contacts matching "' + raw + '"', path: base + '/Contacts?q=' + enc, icon: 'person_search', trail: ['name or phone'] },
+              { label: 'Member accounts matching "' + raw + '"', path: base + '/Members?q=' + enc, icon: 'badge', trail: ['name or email'] },
+            ],
+          });
+        }
       }
       return groups;
     }
@@ -537,6 +577,7 @@
     input.addEventListener('input', function () {
       index = 0;
       render();
+      findClients(input.value.trim());
     });
     input.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -992,6 +1033,16 @@
     $$('[aria-busy="true"]').forEach(function (b) {
       b.removeAttribute('aria-busy');
     });
+  });
+
+  // No inline handlers (the Content-Security-Policy refuses them; QA t6-admin-15): [data-history-back] goes back,
+  // select[data-autosubmit] submits its form when it changes.
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('[data-history-back]')) history.back();
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target;
+    if (el.matches && el.matches('select[data-autosubmit]') && el.form) el.form.requestSubmit();
   });
 
   window.Aurora = { theme: theme, toast: toast, confirm: confirmDialog, copy: copy, progress: progress, dialog: dialog };

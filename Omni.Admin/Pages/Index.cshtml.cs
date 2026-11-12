@@ -33,11 +33,19 @@ public class IndexModel : AdminPageModel
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        Totals = await _overview.TotalsAsync(ct);
-        Daily = await _overview.DailyMessagesAsync(14, ct);
-        Problems = await _overview.ProblemsAsync(ct);
-        RecentClients = await _overview.RecentClientsAsync(8, ct);
-        Errors = await _logs.TrySummaryAsync(ct);
-        Traces = await _traces.TrySummaryAsync(ct);
+        // Six independent tiles: load them together (QA t6-admin-18: the dashboard took 7-8 s one call after another).
+        var totals = _overview.TotalsAsync(ct);
+        var daily = _overview.DailyMessagesAsync(14, ct);
+        var problems = _overview.ProblemsAsync(ct);
+        var recent = _overview.RecentClientsAsync(8, ct);
+        var errors = _logs.TrySummaryAsync(ct);
+        var traces = _traces.TrySummaryAsync(ct);
+        await Task.WhenAll(totals, daily, problems, recent, errors, traces);
+        Totals = totals.Result;
+        Daily = daily.Result;
+        Problems = problems.Result;
+        RecentClients = recent.Result;
+        Errors = errors.Result;
+        Traces = traces.Result;
     }
 }

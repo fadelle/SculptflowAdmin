@@ -14,19 +14,26 @@ writes the **same Supabase Postgres database** as the main app (`..\SculptFlowAp
   always Secure, and forwarded headers make HTTPS redirection and HSTS work behind Render's proxy.
 - Every change made here is recorded in `admin_audit_log` (who, what, when, before/after), shown as readable "field: old → new" lines.
 - Internal only: it shows provider details (Meta ids) that client-facing pages never show.
+- Security headers on every page (`Middleware/SecurityHeadersMiddleware`): a strict Content-Security-Policy with
+  `script-src 'self'`, so no inline script or `on…=` handler (QA t6-admin-15): the theme starts from `wwwroot/js/theme-init.js`,
+  "back" links use `data-history-back` and auto-submitting selects `data-autosubmit` (aurora.js). `SecurityHeadersTests` fail on
+  a page with an inline script.
+- Navigation (QA t6-admin-24/27): ops pages first (Dashboard; Clients: clients, member accounts, contacts, conversations,
+  bookings; Billing; Admins: users and audit log), developer pages folded into "Developer tools". Ctrl+K finds pages and
+  clients, and searches contacts (name or phone) and members (email) across every client.
 
 ## What it covers
 
 | Area | See | Change |
 |---|---|---|
-| Dashboard | Totals across clients, messages per day, a "needs attention" list (broken channels/calendars, failing sends, stuck campaigns, failed website scrapes), newest clients | |
-| Clients | Every tenant with counts; per client: details, member, channels, dashboard language, Inbox settings (AI bot switches), KB search settings, admin history | **New client** (name, business type, plan, language, owner email: the main app opens it and emails the owner a link to set their password; "Send the owner invite again" on a client nobody has joined yet), edit details, activate/deactivate, set the dashboard's default language (English, Arabic, French), turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
+| Dashboard | Totals across clients, messages per day, a "needs attention" list (broken channels/calendars, failing sends, stuck campaigns, failed website scrapes), newest clients (with every channel and its status) | |
+| Clients | Every client with counts and its channels; per client: a **go-live checklist** (client active, owner signed in, channel connected, AI answering, plan active, wallet funded, each with a link), details, members, channels, dashboard language, Inbox settings (AI bot switches), KB search tuning (folded, for developers) and re-index, admin history | **New client** (name, business type, plan, language, owner email: the main app opens it and emails the owner a link to set their password; "Send the owner invite again" on a client nobody has joined yet), edit details, activate/deactivate, set the dashboard's default language (English, Arabic, French), turn the AI bot on/off for new and reopened conversations, tune KB retrieval |
 | Member accounts | All main-app users with client, membership, sign-in methods, own dashboard language ("Business default" when none) | Lock/unlock sign-in, deactivate/reactivate membership, set password, mark email confirmed |
-| Contacts | All contacts with filters; per contact: conversations, bookings, events, opt-out | Status, qualification, marketing opt-in, notes; export a contact's data (JSON) and delete it for good for a privacy request |
-| Conversations | All threads; full message timeline | Hand to member / return to AI, close/reopen |
+| Contacts | All contacts with filters; per contact: conversations, bookings, events, opt-out | Status, qualification, marketing opt-in, notes; export a contact's data (JSON) and delete it for good for a privacy request (type DELETE; the dialog shows the name) |
+| Conversations | All threads; full message timeline; "Why didn't the bot answer?" in plain words for the last customer message, with a link to fix it | Hand to member / return to AI, close/reopen |
 | Messages | Every message, failed-only filter | |
 | Bookings | All, in client time | Change status |
-| Billing | Every client's plan, wallet, included credit; per client: subscription (free trials), add-ons, who pays the provider per messaging account, usage this period with provider cost and margin, usage records, ledger, ledger check, price check; plans; rate cards and versioned rates; revenue report | Start/change/cancel/resume plans, top up the wallet, manual adjustments, refunds, set who pays per account, create/edit plans (incl. free-trial days), the add-on catalog and each client's add-on units, rate cards, add/end rates. All through the main app's billing API (below) |
+| Billing | Every client's plan, wallet, included credit; per client: an overview with three numbers (plan, money left, next charge), subscription (free trials), add-ons, usage this period with provider cost and margin, usage records (date filters), ledger, and an **Advanced** tab (wallet / credit / reserved, ledger check, who pays the provider per messaging account, price check); plans; rate cards and versioned rates; revenue report | Start/change/cancel/resume plans (allow another trial; says when the client is over a limit), run the renewal now (says what happened), top up the wallet (quick amounts; the client page's Top up opens it), manual adjustments, refunds, set who pays per account, create/edit plans (incl. free-trial days), the add-on catalog and each client's add-on units, rate cards, add/end rates. All through the main app's billing API (below) |
 | Channels & integrations | WhatsApp/Instagram/Facebook/Telegram connections with health events; calendars; TikTok | Disconnect; pause/resume calendar sync |
 | WhatsApp token check | Asks Meta what permissions a token has and which client WhatsApp business accounts it sees (embedded-signup diagnostic) | Inspect a token or code (nothing stored) |
 | WhatsApp templates | All templates and their approval status | |

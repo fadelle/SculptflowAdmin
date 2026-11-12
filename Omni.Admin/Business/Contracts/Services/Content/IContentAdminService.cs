@@ -34,4 +34,10 @@ public interface IContentAdminService
     Task SetDocumentActiveAsync(Guid id, bool active, CancellationToken ct = default);
 
     Task UpdateSearchSettingsAsync(Guid clientId, int topK, double minimumSimilarity, CancellationToken ct = default);
+
+    /// <summary>Starts the client's Knowledge Base re-index and audits it (QA t4-ai-15).</summary>
+    Task StartReindexAsync(Guid clientId, CancellationToken ct = default);
+
+    /// <summary>The running or last re-index, or null (also when the main app couldn't answer: the panel just shows nothing).</summary>
+    Task<Omni.Admin.Entities.Dtos.Content.KnowledgeReindexProgress?> TryReindexProgressAsync(Guid clientId, CancellationToken ct = default);
 }
